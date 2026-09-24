@@ -111,6 +111,7 @@
     $("stDone").textContent = done.length;
     $("stTotal").textContent = todo.reduce((n, i) => n + (i.qty || 1), 0);
     $("shareBtn").classList.toggle("hidden", !todo.length);
+    $("downloadBtn").classList.toggle("hidden", !items.length);
     lastNewId = null;
   }
 
@@ -358,6 +359,42 @@
     }
     // Sin menú de compartir: abre WhatsApp directamente con el mensaje.
     location.href = "https://wa.me/?text=" + encodeURIComponent(text);
+  };
+
+  /* ---------- descargar la lista al teléfono ---------- */
+  function listFile() {
+    const d = new Date();
+    const pad = n => String(n).padStart(2, "0");
+    const stamp = d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+    const fecha = d.toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    const line = (i, box) => box + " " + i.name + (i.qty > 1 ? " (×" + i.qty + ")" : "") + (i.detail ? " — " + i.detail : "");
+    const todo = items.filter(i => !i.done);
+    const done = items.filter(i => i.done);
+    let text = "MI LISTA DEL SÚPER\n" + fecha.charAt(0).toUpperCase() + fecha.slice(1) + "\n\n";
+    text += "POR COMPRAR (" + todo.length + ")\n" + (todo.length ? todo.map(i => line(i, "☐")).join("\n") : "Nada pendiente") + "\n";
+    if (done.length) text += "\nEN EL CARRITO (" + done.length + ")\n" + done.map(i => line(i, "☑")).join("\n") + "\n";
+    const name = "lista-super-" + stamp + ".txt";
+    return { name, blob: new Blob(["\ufeff" + text], { type: "text/plain;charset=utf-8" }) };
+  }
+  $("downloadBtn").onclick = async () => {
+    const { name, blob } = listFile();
+    // En iPhone se usa el menú de compartir, que tiene "Guardar en Archivos".
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if (ios && navigator.canShare) {
+      try {
+        const file = new File([blob], name, { type: "text/plain" });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: "Mi lista del súper" });
+          return;
+        }
+      } catch (e) { if (e && e.name === "AbortError") return; }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = name; a.rel = "noopener";
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    toast("Lista guardada en Descargas");
   };
 
   // Al abrir un enlace de lista enviada, ofrece agregarla.

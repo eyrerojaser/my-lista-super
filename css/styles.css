@@ -93,6 +93,15 @@ button{cursor:pointer}
 .share{flex:none;display:flex;align-items:center;gap:8px;height:42px;padding:0 16px 0 14px;border:0;border-radius:14px;
   background:var(--plum);color:var(--on-plum);font-weight:700;font-size:.92rem;box-shadow:var(--shadow)}
 .share svg{color:var(--mango)}
+.list-actions{display:flex;gap:8px;flex:none}
+.dl{flex:none;display:flex;align-items:center;gap:7px;height:42px;padding:0 14px 0 12px;border:0;border-radius:14px;
+  background:var(--surface);color:var(--ink);font-weight:700;font-size:.92rem;box-shadow:var(--shadow)}
+.dl svg{color:var(--plum-2)}
+.dl:active{transform:scale(.97)}
+.list-head > div:first-child{min-width:0}
+.list-head h1{white-space:nowrap}
+@media (max-width:420px){.dl{padding:0 13px}.dl svg{display:none}}
+@media (max-width:350px){.share,.dl{padding:0 11px;font-size:.84rem}.share svg{display:none}}
 .share:active{transform:scale(.97)}
 .sheet-list{list-style:none;margin:0 0 4px;padding:0;max-height:38vh;overflow:auto;border-radius:16px;background:var(--bg)}
 .sheet-list li{display:flex;align-items:center;gap:10px;padding:8px 12px;font-weight:600;font-size:.95rem}

@@ -54,7 +54,7 @@
 
   <form class="manual" id="manualForm" autocomplete="off">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-    <input id="typeIn" type="text" placeholder="Agregar manualmente…" enterkeyhint="done" aria-label="Agregar producto manualmente">
+    <input id="typeIn" type="text" placeholder="Agregar por nombre…" enterkeyhint="done" aria-label="Agregar producto por nombre">
     <button type="submit">Agregar</button>
   </form>
 
@@ -66,10 +66,16 @@
 
   <div class="list-head">
     <div><h1>Mi lista</h1><div class="count" id="count"></div></div>
+    <div class="list-actions">
+    <button class="dl hidden" id="downloadBtn" type="button">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+      Descargar
+    </button>
     <button class="share hidden" id="shareBtn" type="button">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/></svg>
       Enviar lista
     </button>
+    </div>
   </div>
   <div class="bar" id="bar"><div id="barFill"></div></div>
 
