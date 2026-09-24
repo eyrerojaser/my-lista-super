@@ -1,6 +1,6 @@
 /* Service worker: permite abrir la app sin internet.
    Cambia VERSION cada vez que subas cambios para que los teléfonos se actualicen. */
-const VERSION = "v1.2.0";
+const VERSION = "v1.3.0";
 const SHELL = "shell-" + VERSION;
 const IMAGES = "product-images";
 const FILES = [
@@ -10,6 +10,8 @@ const FILES = [
   "js/app.js",
   "js/products.js",
   "js/scanner.js",
+  "js/freezer.js",
+  "js/freezer-date.js",
   "vendor/zxing.min.js",
   "fonts/bricolage-grotesque.woff2",
   "manifest.webmanifest",
@@ -47,6 +49,23 @@ self.addEventListener("fetch", event => {
     return;
   }
 
+  // Lector de fechas (archivos grandes): se descargan una vez y se guardan.
+  if (url.origin === self.location.origin && url.pathname.includes("/vendor/tesseract/")) {
+    event.respondWith(
+      caches.open("ocr-v1").then(async c => {
+        const cached = await c.match(req, { ignoreSearch: true });
+        if (cached) return cached;
+        const res = await fetch(req);
+        if (res.ok) c.put(req, res.clone());
+        return res;
+      })
+    );
+    return;
+  }
+
+  // Las funciones del servidor (avisos) nunca se guardan.
+  if (url.origin === self.location.origin && url.pathname.startsWith("/api/")) return;
+
   // Archivos de la app: copia guardada y se actualiza en segundo plano.
   if (url.origin === self.location.origin) {
     event.respondWith(
@@ -83,3 +102,29 @@ async function trim(cache, max) {
   const keys = await cache.keys();
   for (let i = 0; i < keys.length - max; i++) await cache.delete(keys[i]);
 }
+
+/* ---------- Freezer Scan: avisos ---------- */
+self.addEventListener("push", event => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch { data = { body: event.data && event.data.text() }; }
+  const title = data.title || "❄️ Freezer: úsalo pronto";
+  event.waitUntil(self.registration.showNotification(title, {
+    body: data.body || "Tienes productos del freezer que vencen pronto.",
+    icon: "icons/icon-192.png",
+    badge: "icons/icon-192.png",
+    tag: data.tag || "freezer",
+    data: { url: data.url || "./?freezer=1" },
+  }));
+});
+
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+  const target = new URL((event.notification.data && event.notification.data.url) || "./?freezer=1", self.location.href).href;
+  event.waitUntil((async () => {
+    const all = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const c of all) {
+      if ("focus" in c) { await c.navigate(target).catch(() => {}); return c.focus(); }
+    }
+    return self.clients.openWindow(target);
+  })());
+});

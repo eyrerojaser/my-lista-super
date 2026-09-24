@@ -45,7 +45,37 @@ Queda un ícono propio en tu pantalla de inicio y se abre a pantalla completa, c
 
 **Comprar.** Toca el círculo o el nombre del producto para marcarlo como comprado. Con *Quitar comprados* limpias la lista, y puedes deshacerlo si fue sin querer.
 
+**Agregar por nombre.** Escribe el nombre del producto en la barra *Agregar por nombre* (por ejemplo, "Swiss Cheese") y toca *Agregar*.
+
+**Descargar la lista.** Toca *Descargar* para guardar tu lista como archivo de texto, con lo que falta por comprar y lo que ya está en el carrito. En Android queda en *Descargas*; en iPhone se abre el menú de compartir y eliges *Guardar en Archivos*.
+
+**Enviar la lista.** Toca *Enviar lista* y elige WhatsApp (o cualquier app de mensajes). La otra persona recibe la lista escrita para leerla directo en el chat, y un enlace: si lo abre, la app le pregunta si quiere agregar esos productos a su lista para ir marcándolos en la tienda. En iPhone, conviene copiar ese enlace y abrirlo en Safari.
+
+**Freezer Scan.** Toca el botón *❄️ Freezer* arriba a la derecha. Ahí llevas la cuenta de lo que tienes congelado, aparte de Mi lista:
+
+1. Toca *Empezar* y escanea el código de barras del producto (o usa *Sin código de barras* para cosas como carne del carnicero o comida hecha en casa).
+2. Se abre un segundo escáner, solo para la fecha: apunta a la fecha impresa (EXP, BEST BY, USE BY) dentro del recuadro. Cuando la lee, confirmas con *Usar*. Si no la lee, toca *Escribir fecha*: puedes elegirla en el calendario o usar +1, +3 o +6 meses.
+3. El producto queda guardado con su fecha, los días que faltan y una barra que cambia de color: verde, naranja a 7 días y rojo a 3 días o menos.
+4. Tres días antes de la fecha recibes un aviso en el teléfono (ver *Avisos del freezer* abajo).
+5. Cuando lo uses, toca *Usado* y se quita de la lista (con opción de deshacer).
+
+El lector de fechas funciona sin internet. La primera vez tarda unos segundos en prepararse. Lee mejor las fechas impresas en tinta clara y con buena luz; las de puntitos en empaques arrugados a veces no se leen, y para eso está *Escribir fecha*.
+
 **Guardado.** La lista se guarda en el teléfono, así que sigue ahí aunque cierres la app o reinicies el teléfono. Ten en cuenta que vive solo en ese teléfono: si borras los datos del navegador o desinstalas la app, se borra la lista.
+
+## Avisos del freezer
+
+Para que los avisos lleguen aunque la app esté cerrada, la app usa unas pequeñas funciones de servidor en Netlify (carpeta `netlify/`). No hay que configurar nada: las claves se crean solas la primera vez.
+
+1. **Tiene que estar publicada con GitHub + Netlify.** Con *Netlify Drop* (arrastrar la carpeta) las funciones no se instalan; en ese caso los avisos solo aparecen al abrir la app.
+2. **En el teléfono**, abre Freezer Scan y toca *Activar avisos*, luego *Permitir*.
+   - **iPhone:** necesita iOS 16.4 o más nuevo y la app instalada en la pantalla de inicio (abierta desde el ícono, no desde Safari).
+   - **Android:** funciona desde Chrome o con la app instalada.
+3. Los avisos se revisan cada hora y llegan a partir de las 9 de la mañana (tu hora), una vez por producto.
+
+Para comprobar que las funciones quedaron publicadas: en Netlify entra a tu sitio → **Logs → Functions**. Deben aparecer `push-key`, `freezer-sync` y `freezer-notify`.
+
+Solo se guarda en el servidor lo necesario para avisarte: el nombre y la fecha de cada producto del freezer. Mi lista nunca sale del teléfono.
 
 ## Cambiar algo después
 
@@ -62,11 +92,16 @@ css/styles.css          Diseño
 js/app.js               Lista, escáner y pantallas
 js/scanner.js           Lectura del código de barras con la cámara
 js/products.js          Identificación del producto por código
+js/freezer.js           Freezer Scan: pantalla, pasos y avisos
+js/freezer-date.js      Freezer Scan: lector de fechas con la cámara
 vendor/zxing.min.js     Lector de códigos de barras (para iPhone y navegadores sin lector propio)
+vendor/tesseract/       Lector de texto para las fechas (funciona sin internet)
+netlify/                Funciones del servidor para los avisos del freezer
+package.json            Librerías que usan esas funciones
 fonts/                  Tipografía
 icons/                  Íconos de la app
 ```
 
 ## Créditos
 
-Datos de productos de [Open Food Facts](https://world.openfoodfacts.org), bajo licencia Open Database License. Lector de códigos [ZXing](https://github.com/zxing-js/library), licencia Apache 2.0 (ver `vendor/ZXING-LICENSE`). Tipografía Bricolage Grotesque, licencia SIL Open Font License (ver `fonts/OFL-LICENSE`).
+Datos de productos de [Open Food Facts](https://world.openfoodfacts.org), bajo licencia Open Database License. Lector de códigos [ZXing](https://github.com/zxing-js/library), licencia Apache 2.0 (ver `vendor/ZXING-LICENSE`). Lector de texto [Tesseract.js](https://github.com/naptha/tesseract.js), licencia Apache 2.0. Tipografía Bricolage Grotesque, licencia SIL Open Font License (ver `fonts/OFL-LICENSE`).

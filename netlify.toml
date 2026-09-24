@@ -2,6 +2,11 @@
 [build]
   publish = "."
 
+# Funciones del servidor para los avisos de Freezer Scan
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
 [[headers]]
   for = "/*"
   [headers.values]
