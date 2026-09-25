@@ -51,6 +51,14 @@ Queda un ícono propio en tu pantalla de inicio y se abre a pantalla completa, c
 
 **Enviar la lista.** Toca *Enviar lista* y elige WhatsApp (o cualquier app de mensajes). La otra persona recibe la lista escrita para leerla directo en el chat, y un enlace: si lo abre, la app le pregunta si quiere agregar esos productos a su lista para ir marcándolos en la tienda. En iPhone, conviene copiar ese enlace y abrirlo en Safari.
 
+**Mis Compras.** En Mi lista, toca *Mis Compras* para abrir el calendario de tus visitas al súper:
+
+1. Toca el día en que fuiste y luego *Registrar compra*. Escribe cuánto gastaste, la tienda si quieres, y sube la foto del recibo (puedes tomarla en ese momento o elegirla de tus fotos).
+2. Arriba se suma solo el **TOTAL GASTADO DEL MES**. En el calendario, cada día con compras muestra cuánto gastaste.
+3. Con las flechas cambias de mes para consultar los meses anteriores. Todo queda guardado en el teléfono.
+4. Con el lápiz editas una compra (monto, fecha, tienda, cambiar o quitar la foto) y con el bote de basura la borras (con opción de deshacer). Toca la foto para verla en grande.
+5. *Descargar resumen mensual* guarda un archivo (.csv) con cada fecha de compra, lo que gastaste y el total del mes. Se abre en Excel, Google Sheets o Numbers.
+
 **Freezer Scan.** Toca el botón *❄️ Freezer* arriba a la derecha. Ahí llevas la cuenta de lo que tienes congelado, aparte de Mi lista:
 
 1. Toca *Empezar* y escanea el código de barras del producto (o usa *Sin código de barras* para carne del carnicero o comida hecha en casa). Si la cámara en vivo no lo lee, toca *Tomar foto*: una foto sale más nítida y se lee mejor.
@@ -93,6 +101,7 @@ css/styles.css          Diseño
 js/app.js               Lista, escáner y pantallas
 js/scanner.js           Lectura del código de barras con la cámara
 js/products.js          Identificación del producto por código
+js/compras.js           Mis Compras: calendario, gastos y fotos de recibos
 js/freezer.js           Freezer Scan: pantalla, pasos y avisos
 js/freezer-date.js      Freezer Scan: lector de fechas con la cámara
 vendor/zxing.min.js     Lector de códigos de barras (para iPhone y navegadores sin lector propio)

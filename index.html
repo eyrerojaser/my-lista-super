@@ -65,6 +65,13 @@
     <div class="stat"><b id="stTotal">0</b><span>Unidades</span></div>
   </div>
 
+  <button class="pc-link" id="comprasBtn" type="button">
+    <span class="pc-link-ico" aria-hidden="true">🧾</span>
+    <span class="pc-link-txt"><b>Mis Compras</b><small id="pcLinkSub">Registra lo que gastas en el súper</small></span>
+    <span class="pc-link-amt" id="pcLinkAmt"></span>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+  </button>
+
   <div class="list-head">
     <div><h1>Mi lista</h1><div class="count" id="count"></div></div>
     <div class="list-actions">
@@ -260,10 +267,102 @@
 
 <div id="fzToast" class="toast hidden" role="status" aria-live="polite"><span id="fzToastTxt"></span><button id="fzToastUndo" type="button" class="hidden">Deshacer</button></div>
 
+
+<!-- ================= MIS COMPRAS ================= -->
+<section id="comprasView" class="pc-view hidden" aria-label="Mis Compras">
+  <div class="band pc-band">
+    <div class="band-in">
+      <div class="pc-top">
+        <button class="fz-round" id="pcBack" type="button" aria-label="Volver a Mi lista">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div class="pc-title"><small>Gastos del súper</small><b>Mis Compras</b></div>
+      </div>
+      <div class="pc-total">
+        <div class="pc-month">
+          <button class="pc-nav" id="pcPrev" type="button" aria-label="Mes anterior"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <span id="pcMonth"></span>
+          <button class="pc-nav" id="pcNext" type="button" aria-label="Mes siguiente"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+        </div>
+        <small>TOTAL GASTADO DEL MES</small>
+        <b id="pcTotal">$0.00</b>
+        <span id="pcVisits">Sin compras este mes</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="pc-main">
+    <div class="pc-cal">
+      <div class="pc-week" aria-hidden="true"><span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span></div>
+      <div class="pc-grid" id="pcGrid" role="grid"></div>
+    </div>
+
+    <div class="pc-day">
+      <div class="pc-day-head">
+        <b id="pcDayTitle"></b>
+        <button class="pc-add" id="pcAdd" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Registrar compra
+        </button>
+      </div>
+      <p class="pc-day-empty" id="pcDayEmpty">No hay compras registradas este día.</p>
+      <ul class="pc-records" id="pcDayList"></ul>
+    </div>
+
+    <button class="pc-download" id="pcDownload" type="button">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+      Descargar resumen mensual
+    </button>
+
+    <div class="pc-head"><h2>Compras del mes</h2><span id="pcCount" class="fz-count"></span></div>
+    <p class="pc-day-empty pc-month-empty" id="pcMonthEmpty">Toca un día del calendario para registrar tu primera compra.</p>
+    <ul class="pc-records pc-month-list" id="pcMonthList"></ul>
+  </div>
+</section>
+
+<!-- Mis Compras: registrar / editar -->
+<div id="pcSheet" class="sheet-wrap hidden" role="dialog" aria-modal="true" aria-labelledby="pcSheetTitle">
+  <form class="sheet pc-sheet" id="pcForm" autocomplete="off" novalidate>
+    <h2 id="pcSheetTitle">Registrar compra</h2>
+    <label class="pc-field"><span>Fecha</span><input id="pcDate" type="date" required></label>
+    <label class="pc-field"><span>¿Cuánto gastaste?</span>
+      <span class="pc-money"><span aria-hidden="true">$</span><input id="pcAmount" type="text" inputmode="decimal" placeholder="0.00" enterkeyhint="done"></span>
+    </label>
+    <p class="pc-error hidden" id="pcError">Escribe cuánto gastaste, por ejemplo 45.30</p>
+    <label class="pc-field"><span>Tienda (opcional)</span><input id="pcStore" type="text" placeholder="Ej. H-E-B, Walmart" maxlength="40"></label>
+    <div class="pc-field"><span>Foto del recibo</span>
+      <div class="pc-photo">
+        <div class="pc-photo-prev" id="pcPhotoPrev"><span>🧾</span></div>
+        <div class="pc-photo-btns">
+          <label class="pc-photo-btn" for="pcPhotoIn" id="pcPhotoLabel">Subir foto del recibo</label>
+          <button class="pc-photo-remove hidden" id="pcPhotoRemove" type="button">Quitar foto</button>
+        </div>
+      </div>
+      <input id="pcPhotoIn" class="fz-file" type="file" accept="image/*" tabindex="-1" aria-hidden="true">
+    </div>
+    <div class="sheet-actions">
+      <button type="button" class="ghost" id="pcCancel">Cancelar</button>
+      <button type="submit" class="primary" id="pcSave">Guardar</button>
+    </div>
+    <button type="button" class="pc-delete hidden" id="pcDelete">Borrar esta compra</button>
+  </form>
+</div>
+
+<!-- Mis Compras: ver la foto del recibo -->
+<div id="pcViewer" class="pc-viewer hidden" role="dialog" aria-modal="true" aria-label="Foto del recibo">
+  <img id="pcViewerImg" alt="Foto del recibo">
+  <button class="round pc-viewer-close" id="pcViewerClose" type="button" aria-label="Cerrar">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+</div>
+
+<div id="pcToast" class="toast hidden" role="status" aria-live="polite"><span id="pcToastTxt"></span><button id="pcToastUndo" type="button" class="hidden">Deshacer</button></div>
+
 <script src="js/products.js"></script>
 <script src="js/scanner.js"></script>
 <script src="js/app.js"></script>
 <script src="js/freezer-date.js"></script>
 <script src="js/freezer.js"></script>
+<script src="js/compras.js"></script>
 </body>
 </html>
