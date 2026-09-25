@@ -292,6 +292,15 @@
   </div>
 
   <div class="pc-main">
+    <label class="pc-scan" for="rcIn" role="button" tabindex="0">
+      <span class="pc-scan-ico" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+      </span>
+      <span class="pc-scan-txt"><b>Escanear recibo</b><small>Lee la tienda, la fecha, los productos y el total</small></span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </label>
+    <input id="rcIn" class="fz-file" type="file" accept="image/*" tabindex="-1" aria-hidden="true">
+
     <div class="pc-cal">
       <div class="pc-week" aria-hidden="true"><span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span></div>
       <div class="pc-grid" id="pcGrid" role="grid"></div>
@@ -344,7 +353,46 @@
       <button type="button" class="ghost" id="pcCancel">Cancelar</button>
       <button type="submit" class="primary" id="pcSave">Guardar</button>
     </div>
+    <button type="button" class="pc-items-btn hidden" id="pcItemsBtn">Ver y corregir productos</button>
     <button type="button" class="pc-delete hidden" id="pcDelete">Borrar esta compra</button>
+  </form>
+</div>
+
+<!-- Mis Compras: leyendo recibo -->
+<div id="rcBusy" class="rc-busy hidden" role="dialog" aria-modal="true" aria-label="Leyendo el recibo">
+  <div class="rc-busy-card">
+    <div class="rc-busy-img"><img id="rcBusyImg" alt=""></div>
+    <b id="rcBusyTxt">Leyendo el recibo…</b>
+    <div class="rc-prog" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div id="rcProg"></div></div>
+    <small>Puede tardar unos segundos. Mantén la app abierta.</small>
+    <button type="button" class="rc-busy-cancel" id="rcBusyCancel">Cancelar</button>
+  </div>
+</div>
+
+<!-- Mis Compras: revisar el recibo antes de guardar -->
+<div id="rcSheet" class="sheet-wrap hidden" role="dialog" aria-modal="true" aria-labelledby="rcTitle">
+  <form class="sheet pc-sheet rc-sheet" id="rcForm" autocomplete="off" novalidate>
+    <div class="rc-head">
+      <div><h2 id="rcTitle">Revisa el recibo</h2><p class="rc-note" id="rcNote">Corrige lo que haga falta antes de guardar.</p></div>
+      <button type="button" class="rc-photo" id="rcPhoto" aria-label="Ver la foto del recibo"><img id="rcPhotoImg" alt=""></button>
+    </div>
+    <label class="pc-field"><span>Tienda</span><input id="rcStore" type="text" maxlength="40" placeholder="Ej. H-E-B"></label>
+    <label class="pc-field"><span>Fecha de la compra</span><input id="rcDate" type="date"></label>
+    <div class="pc-field">
+      <span>Productos (<span id="rcCount">0</span>)</span>
+      <ul class="rc-items" id="rcItems"></ul>
+      <button type="button" class="rc-additem" id="rcAddItem">+ Agregar producto</button>
+    </div>
+    <div class="rc-sum"><span>Suma de productos</span><b id="rcItemsSum">$0.00</b></div>
+    <div class="rc-sum" id="rcDiffRow"><span id="rcDiffLbl">Impuestos y otros</span><b id="rcDiff">$0.00</b></div>
+    <label class="pc-field rc-total"><span>Total pagado</span>
+      <span class="pc-money"><span aria-hidden="true">$</span><input id="rcTotal" type="text" inputmode="decimal" placeholder="0.00" enterkeyhint="done"></span>
+    </label>
+    <p class="pc-error hidden" id="rcError">Escribe el total del recibo, por ejemplo 45.30</p>
+    <div class="sheet-actions">
+      <button type="button" class="ghost" id="rcCancel">Cancelar</button>
+      <button type="submit" class="primary" id="rcSave">Guardar compra</button>
+    </div>
   </form>
 </div>
 
@@ -363,6 +411,7 @@
 <script src="js/app.js"></script>
 <script src="js/freezer-date.js"></script>
 <script src="js/freezer.js"></script>
+<script src="js/recibo.js"></script>
 <script src="js/compras.js"></script>
 </body>
 </html>
