@@ -53,13 +53,14 @@ Queda un ícono propio en tu pantalla de inicio y se abre a pantalla completa, c
 
 **Freezer Scan.** Toca el botón *❄️ Freezer* arriba a la derecha. Ahí llevas la cuenta de lo que tienes congelado, aparte de Mi lista:
 
-1. Toca *Empezar* y escanea el código de barras del producto (o usa *Sin código de barras* para cosas como carne del carnicero o comida hecha en casa).
-2. Se abre un segundo escáner, solo para la fecha: apunta a la fecha impresa (EXP, BEST BY, USE BY) dentro del recuadro. Cuando la lee, confirmas con *Usar*. Si no la lee, toca *Escribir fecha*: puedes elegirla en el calendario o usar +1, +3 o +6 meses.
-3. El producto queda guardado con su fecha, los días que faltan y una barra que cambia de color: verde, naranja a 7 días y rojo a 3 días o menos.
-4. Tres días antes de la fecha recibes un aviso en el teléfono (ver *Avisos del freezer* abajo).
-5. Cuando lo uses, toca *Usado* y se quita de la lista (con opción de deshacer).
+1. Toca *Empezar* y escanea el código de barras del producto (o usa *Sin código de barras* para carne del carnicero o comida hecha en casa). Si la cámara en vivo no lo lee, toca *Tomar foto*: una foto sale más nítida y se lee mejor.
+2. Se abre un segundo escáner, solo para la fecha. Apunta a la fecha impresa dentro del recuadro. Abajo vas viendo lo que está leyendo ("Leyendo: …") para que sepas si estás bien apuntada. Reconoce si dice **Freeze By, Sell By, Use By o Best By**. Cuando la lee dos veces igual, te la muestra para que confirmes con *Usar* o toques *Reintentar*.
+3. Si en 20 segundos no encuentra una fecha, propone **la fecha de hoy como entrada al freezer**, y ese producto se cuenta para usarse dentro de 3 meses. También puedes tocar *Tomar foto* o *Escribir fecha*.
+4. El producto queda guardado con su nombre, el tipo y la fecha, los días que faltan y una barra de color. La lista se ordena sola: arriba lo que vence antes, marcado con **Usar primero**.
+5. Tres días antes de la fecha recibes un aviso en el teléfono (ver *Avisos del freezer* abajo).
+6. Cuando lo uses, toca *Usado* y se quita de la lista (con opción de deshacer).
 
-El lector de fechas funciona sin internet. La primera vez tarda unos segundos en prepararse. Lee mejor las fechas impresas en tinta clara y con buena luz; las de puntitos en empaques arrugados a veces no se leen, y para eso está *Escribir fecha*.
+El lector de fechas funciona sin internet. La primera vez tarda unos segundos en prepararse. Las fechas de puntitos a veces se leen con algún número cambiado (un 0 como 8, por ejemplo); la app corrige los errores más comunes, pero revisa siempre la fecha antes de tocar *Usar*.
 
 **Guardado.** La lista se guarda en el teléfono, así que sigue ahí aunque cierres la app o reinicies el teléfono. Ten en cuenta que vive solo en ese teléfono: si borras los datos del navegador o desinstalas la app, se borra la lista.
 

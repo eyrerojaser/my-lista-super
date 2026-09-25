@@ -1,6 +1,6 @@
 /* Service worker: permite abrir la app sin internet.
    Cambia VERSION cada vez que subas cambios para que los teléfonos se actualicen. */
-const VERSION = "v1.3.0";
+const VERSION = "v1.4.0";
 const SHELL = "shell-" + VERSION;
 const IMAGES = "product-images";
 const FILES = [
@@ -28,7 +28,7 @@ self.addEventListener("install", event => {
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k.startsWith("shell-") && k !== SHELL).map(k => caches.delete(k))))
+      .then(keys => Promise.all(keys.filter(k => (k.startsWith("shell-") && k !== SHELL) || k === "ocr-v1").map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -52,7 +52,7 @@ self.addEventListener("fetch", event => {
   // Lector de fechas (archivos grandes): se descargan una vez y se guardan.
   if (url.origin === self.location.origin && url.pathname.includes("/vendor/tesseract/")) {
     event.respondWith(
-      caches.open("ocr-v1").then(async c => {
+      caches.open("ocr-v2").then(async c => {
         const cached = await c.match(req, { ignoreSearch: true });
         if (cached) return cached;
         const res = await fetch(req);
@@ -66,17 +66,19 @@ self.addEventListener("fetch", event => {
   // Las funciones del servidor (avisos) nunca se guardan.
   if (url.origin === self.location.origin && url.pathname.startsWith("/api/")) return;
 
-  // Archivos de la app: copia guardada y se actualiza en segundo plano.
+  // Archivos de la app: primero la versión nueva de internet (así nunca se queda una versión vieja);
+  // si no hay señal o tarda más de 4 segundos, la copia guardada.
   if (url.origin === self.location.origin) {
-    event.respondWith(
-      caches.match(req, { ignoreSearch: true }).then(cached => {
-        const net = fetch(req).then(res => {
-          if (res.ok) { const copy = res.clone(); caches.open(SHELL).then(c => c.put(req, copy)); }
-          return res;
-        }).catch(() => cached);
-        return cached || net;
-      })
-    );
+    event.respondWith((async () => {
+      const cached = await caches.match(req, { ignoreSearch: true });
+      const net = fetch(req).then(res => {
+        if (res.ok) { const copy = res.clone(); caches.open(SHELL).then(c => c.put(req, copy)); }
+        return res;
+      });
+      if (!cached) return net;
+      const timeout = new Promise(r => setTimeout(() => r(cached), 4000));
+      return Promise.race([net.catch(() => cached), timeout]);
+    })());
     return;
   }
 

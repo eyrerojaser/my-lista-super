@@ -32,6 +32,17 @@
     if (n === -1) return "Venció ayer";
     return "Venció hace " + -n + " días";
   }
+  const ENTRY_DAYS = 90; // sin fecha impresa: usar dentro de 3 meses desde que entró al freezer
+  function addDays(iso, n) {
+    const [y, m, d] = iso.split("-").map(Number); const t = new Date(y, m - 1, d + n);
+    return t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0") + "-" + String(t.getDate()).padStart(2, "0");
+  }
+  const dueOf = it => it.due || (it.type === "entry" ? addDays(it.date, ENTRY_DAYS) : it.date);
+  function dateLine(it) {
+    if (it.type === "entry") return "Entró: " + fmtDate(it.date) + " · usar antes del " + fmtDate(dueOf(it));
+    const label = (window.FreezerDate && FreezerDate.TYPE_LABEL[it.type]) || "Fecha";
+    return label + ": " + fmtDate(it.date);
+  }
   function addMonths(months) {
     const d = new Date(); const day = d.getDate();
     d.setDate(1); d.setMonth(d.getMonth() + months);
@@ -49,17 +60,19 @@
     } else t.textContent = p.emoji || "🧊";
     return t;
   }
-  function row(it) {
-    const n = daysLeft(it.date);
-    const total = Math.max(1, dayNum(it.date) - dayNum(it.added || todayISO()));
+  function row(it, first) {
+    const due = dueOf(it);
+    const n = daysLeft(due);
+    const total = Math.max(1, dayNum(due) - dayNum(it.added || todayISO()));
     const pct = Math.max(0, Math.min(100, (n / total) * 100));
     const li = document.createElement("li");
     li.className = "fz-item" + (n <= WARN_DAYS ? " urgent" : n <= 7 ? " soon" : "") + (it.id === lastNewId ? " new" : "");
     const r = document.createElement("div"); r.className = "fz-row";
     const info = document.createElement("div"); info.className = "fz-info";
     const b = document.createElement("b"); b.textContent = it.name;
-    const s = document.createElement("small"); s.textContent = "Fecha: " + fmtDate(it.date);
+    const s = document.createElement("small"); s.textContent = dateLine(it);
     info.append(b, s);
+    if (first) { const c = document.createElement("span"); c.className = "fz-first"; c.textContent = "Usar primero"; info.append(c); }
     const used = document.createElement("button"); used.type = "button"; used.className = "fz-used"; used.textContent = "Usado";
     used.setAttribute("aria-label", "Marcar como usado y quitar: " + it.name);
     used.onclick = () => removeItem(it.id);
@@ -76,11 +89,12 @@
     return li;
   }
   function render() {
-    items.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
-    $("fzList").replaceChildren(...items.map(row));
+    items.sort((a, b) => (dueOf(a) < dueOf(b) ? -1 : dueOf(a) > dueOf(b) ? 1 : 0));
+    // "Usar primero": el que vence antes y cualquiera que venza en 3 días o menos.
+    $("fzList").replaceChildren(...items.map((it, i) => row(it, items.length > 1 && (i === 0 || daysLeft(dueOf(it)) <= WARN_DAYS))));
     $("fzEmpty").classList.toggle("hidden", items.length > 0);
     $("fzCount").textContent = items.length ? (items.length === 1 ? "1 producto" : items.length + " productos") : "";
-    const soon = items.filter(i => daysLeft(i.date) <= WARN_DAYS);
+    const soon = items.filter(i => daysLeft(dueOf(i)) <= WARN_DAYS);
     const badge = $("fzBadge");
     badge.textContent = soon.length; badge.classList.toggle("hidden", !soon.length);
     const al = $("fzAlert");
@@ -96,8 +110,11 @@
     lastNewId = null;
   }
 
-  function addItem(p, date) {
-    const it = { id: uid(), name: p.name, emoji: p.emoji || "🧊", img: p.img || "", code: p.code || "", date, added: todayISO() };
+  function addItem(p, info) {
+    if (typeof info === "string") info = { date: info, type: "date" };
+    const it = { id: uid(), name: p.name, emoji: p.emoji || "🧊", img: p.img || "", code: p.code || "",
+      date: info.date, type: info.type || "date", added: todayISO() };
+    it.due = dueOf(it);
     items.push(it); lastNewId = it.id;
     render(); save();
     toast("Guardado en el freezer: " + it.name);
@@ -167,14 +184,24 @@
       $("fzScanFound").classList.add("hidden");
       $("fzScanMsg").textContent = "Abriendo cámara…";
       $("fzScanner").classList.remove("hidden");
-      let handled = false;
+      handled = false;
+      productScanner.pause(0); // borra cualquier pausa que haya quedado de un escaneo anterior
       try {
         await productScanner.start(async code => {
           if (handled) return; handled = true;
           productScanner.pause(60000);
+          FreezerDateReader.warmup(); // prepara el lector de fechas mientras se busca el producto
           beep(); if (navigator.vibrate) navigator.vibrate(40);
           $("fzScanMsg").textContent = "";
           showFound({ name: "Buscando producto…", emoji: "🔎" }, "Código " + code);
+          await identify(code);
+        });
+        $("fzScanMsg").textContent = "Coloca el código de barras dentro del recuadro";
+      } catch (e) { $("fzScanMsg").textContent = camError(e) + " Puedes tomar una foto o escribir el nombre."; }
+    });
+  }
+  let handled = false;
+  async function identify(code) {
           const res = await Products.lookup(code);
           if (res.status === "found") return finishProduct(res.product);
           const name = await ask({
@@ -184,10 +211,73 @@
           });
           if (!name) { handled = false; $("fzScanFound").classList.add("hidden"); productScanner.pause(800); return; }
           finishProduct(res.status === "unknown" ? Products.remember(code, name) : { name, code, emoji: Products.emojiFor([], name) });
-        });
-        $("fzScanMsg").textContent = "Coloca el código de barras dentro del recuadro";
-      } catch (e) { $("fzScanMsg").textContent = camError(e) + " Puedes escribir el nombre."; }
+  }
+
+  /* ---------- lectura desde foto (más nítida que el video) ---------- */
+  let zxingP = null;
+  function loadZX() {
+    if (window.ZXing) return Promise.resolve(window.ZXing);
+    if (!zxingP) zxingP = new Promise((res, rej) => {
+      const sc = document.createElement("script"); sc.src = "vendor/zxing.min.js";
+      sc.onload = () => res(window.ZXing); sc.onerror = () => { zxingP = null; rej(new Error("zxing")); };
+      document.head.appendChild(sc);
     });
+    return zxingP;
+  }
+  const normCode = c => { c = String(c).trim(); return /^\d{12}$/.test(c) ? "0" + c : c; };
+  async function barcodeFromPhoto(file) {
+    const img = await FreezerDateReader.loadImage(file);
+    if ("BarcodeDetector" in window) {
+      try {
+        const det = new BarcodeDetector({ formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128"] });
+        const found = await det.detect(img);
+        if (found && found.length) return normCode(found[0].rawValue);
+      } catch {}
+    }
+    const Z = await loadZX();
+    const hints = new Map();
+    hints.set(Z.DecodeHintType.POSSIBLE_FORMATS, [Z.BarcodeFormat.EAN_13, Z.BarcodeFormat.EAN_8, Z.BarcodeFormat.UPC_A, Z.BarcodeFormat.UPC_E, Z.BarcodeFormat.CODE_128]);
+    hints.set(Z.DecodeHintType.TRY_HARDER, true);
+    const reader = new Z.MultiFormatReader(); reader.setHints(hints);
+    const canvas = document.createElement("canvas"), ctx = canvas.getContext("2d", { willReadFrequently: true });
+    for (const size of [1400, 900, 2000]) for (const rot of [0, 90]) {
+      const k = Math.min(1, size / Math.max(img.width, img.height));
+      const w = Math.round(img.width * k), h = Math.round(img.height * k);
+      canvas.width = rot ? h : w; canvas.height = rot ? w : h;
+      ctx.save();
+      if (rot) { ctx.translate(canvas.width / 2, canvas.height / 2); ctx.rotate(Math.PI / 2); ctx.drawImage(img, -w / 2, -h / 2, w, h); }
+      else ctx.drawImage(img, 0, 0, w, h);
+      ctx.restore();
+      try {
+        const bmp = new Z.BinaryBitmap(new Z.HybridBinarizer(new Z.HTMLCanvasElementLuminanceSource(canvas)));
+        const r = reader.decodeWithState(bmp);
+        if (r) return normCode(r.getText());
+      } catch {} finally { reader.reset(); }
+    }
+    return null;
+  }
+  $("fzScanPhotoIn").addEventListener("click", () => productScanner.pause(120000));
+  $("fzScanPhotoIn").onchange = async e => {
+    const file = e.target.files && e.target.files[0]; e.target.value = "";
+    if (!file) { productScanner.pause(300); return; }
+    $("fzScanMsg").textContent = "Buscando el código en la foto…";
+    let code = null;
+    try { code = await barcodeFromPhoto(file); } catch {}
+    if (code && !handled) {
+      handled = true; beep(); FreezerDateReader.warmup();
+      showFound({ name: "Buscando producto…", emoji: "🔎" }, "Código " + code);
+      $("fzScanMsg").textContent = "";
+      await identify(code);
+    } else {
+      $("fzScanMsg").textContent = "No encontré un código en la foto. Acércate más o escribe el nombre.";
+      await restartIfEnded(productScanner, () => productScanner.start(c => { if (!handled) { handled = true; productScanner.pause(60000); beep(); FreezerDateReader.warmup(); showFound({ name: "Buscando producto…", emoji: "🔎" }, "Código " + c); identify(c); } }));
+      productScanner.pause(300);
+    }
+  };
+  // Si al tomar la foto el teléfono apagó la cámara en vivo, se vuelve a encender.
+  async function restartIfEnded(sc, startFn) {
+    const tr = sc.stream && sc.stream.getVideoTracks()[0];
+    if (!tr || tr.readyState === "ended") { try { sc.stop(); await startFn(); } catch {} }
   }
   function showFound(p, sub) {
     const box = $("fzScanFound"); box.replaceChildren(thumb(p));
@@ -213,7 +303,31 @@
 
   /* ---------- paso 2: escáner de fecha (nuevo, solo de Freezer) ---------- */
   const dateReader = new FreezerDateReader($("fzDateVideo"), $("fzDateWin"));
-  let dateOpen = false, dateResolve = null, foundDate = null;
+  let dateOpen = false, dateResolve = null, foundDate = null, noDateTimer = null;
+  const NO_DATE_SECONDS = 20;
+  function showDateResult(info) {
+    foundDate = info;
+    const lbl = document.querySelector("#fzDateFound .fz-found-txt small");
+    if (info.type === "entry") {
+      lbl.textContent = "No se encontró fecha impresa";
+      $("fzDateValue").textContent = "Entrada: hoy";
+      $("fzDateDays").textContent = "Usar antes del " + fmtDate(addDays(info.date, ENTRY_DAYS));
+    } else {
+      lbl.textContent = (FreezerDate.TYPE_LABEL[info.type] || "Fecha") + " · fecha leída";
+      $("fzDateValue").textContent = fmtDate(info.date);
+      $("fzDateDays").textContent = daysText(daysLeft(info.date));
+    }
+    $("fzDateFound").classList.remove("hidden");
+    $("fzDateMsg").textContent = "";
+  }
+  function armNoDate() {
+    clearTimeout(noDateTimer);
+    noDateTimer = setTimeout(() => {
+      if (!dateOpen || foundDate) return;
+      dateReader.pause(true);
+      showDateResult({ date: todayISO(), type: "entry" });
+    }, NO_DATE_SECONDS * 1000);
+  }
   function openDateScanner(product) {
     return new Promise(async resolve => {
       dateResolve = resolve; dateOpen = true; foundDate = null;
@@ -226,32 +340,35 @@
       $("fzDateMsg").textContent = "Abriendo cámara…";
       $("fzDateScanner").classList.remove("hidden");
       try {
-        await dateReader.start((date) => {
+        await dateReader.start((info) => {
+          clearTimeout(noDateTimer);
           beep(); if (navigator.vibrate) navigator.vibrate(40);
-          foundDate = date;
-          $("fzDateValue").textContent = fmtDate(date);
-          $("fzDateDays").textContent = daysText(daysLeft(date));
-          $("fzDateFound").classList.remove("hidden");
-          $("fzDateMsg").textContent = "";
+          showDateResult(info);
         }, status => {
-          $("fzDateMsg").textContent = status === "loading"
-            ? "Preparando el lector de fechas…"
-            : "Apunta a la fecha impresa (EXP, BEST BY, USE BY) dentro del recuadro";
+          if (status === "loading") $("fzDateMsg").textContent = "Preparando el lector de fechas…";
+          else { $("fzDateMsg").textContent = "Apunta a la fecha impresa (Freeze By, Sell By, Use By, Best By)"; armNoDate(); }
+        }, text => {
+          // Muestra lo que está viendo para ayudar a apuntar.
+          if (foundDate) return;
+          const t = text.replace(/\s+/g, " ").trim().slice(0, 42);
+          if (t.length >= 3) $("fzDateMsg").textContent = "Leyendo: " + t;
         });
         if (dateReader.hasTorch()) $("fzTorch").classList.remove("hidden");
       } catch (e) {
-        $("fzDateMsg").textContent = (e && e.name ? camError(e) : "No se pudo iniciar el lector de fechas.") + " Toca Escribir fecha.";
+        const msg = e && e.name && e.name !== "Error" ? camError(e) : "No se pudo preparar el lector de fechas.";
+        $("fzDateMsg").textContent = msg + " Toma una foto o escribe la fecha.";
+        armNoDate();
       }
     });
   }
   function closeDateScanner(result) {
     if (!dateOpen) return;
-    dateOpen = false; dateReader.stop();
+    dateOpen = false; dateReader.stop(); clearTimeout(noDateTimer);
     $("fzDateScanner").classList.add("hidden");
     const r = dateResolve; dateResolve = null; if (r) r(result || null);
   }
   $("fzCloseDate").onclick = () => closeDateScanner(null);
-  $("fzDateRetry").onclick = () => { foundDate = null; $("fzDateFound").classList.add("hidden"); $("fzDateMsg").textContent = "Leyendo…"; dateReader.pause(false); };
+  $("fzDateRetry").onclick = () => { foundDate = null; $("fzDateFound").classList.add("hidden"); $("fzDateMsg").textContent = "Leyendo…"; dateReader.pause(false); armNoDate(); };
   $("fzDateUse").onclick = () => { if (foundDate) closeDateScanner(foundDate); };
   $("fzTorch").onclick = async () => {
     const on = $("fzTorch").getAttribute("aria-pressed") !== "true";
@@ -264,22 +381,37 @@
     });
   }
   $("fzDateType").onclick = async () => {
+    dateReader.pause(true); clearTimeout(noDateTimer);
+    const d = await typeDate(foundDate && foundDate.type !== "entry" ? foundDate.date : null);
+    if (d) closeDateScanner({ date: d, type: "date" });
+    else if (!foundDate) { dateReader.pause(false); armNoDate(); }
+  };
+  $("fzDatePhotoIn").addEventListener("click", () => { dateReader.pause(true); clearTimeout(noDateTimer); });
+  $("fzDatePhotoIn").onchange = async e => {
+    const file = e.target.files && e.target.files[0]; e.target.value = "";
+    if (!file) { if (!foundDate) { dateReader.pause(false); armNoDate(); } return; }
+    $("fzDateFound").classList.add("hidden");
+    $("fzDateMsg").textContent = "Leyendo la fecha en la foto…";
+    let info = null;
+    try { info = await FreezerDateReader.readPhoto(file); } catch {}
+    if (!dateOpen) return;
+    if (info) { beep(); showDateResult(info); return; }
+    // Sin fecha en la foto: se usa hoy como entrada al freezer.
+    showDateResult({ date: todayISO(), type: "entry" });
+    await restartIfEnded(dateReader, () => dateReader.start(i => { clearTimeout(noDateTimer); beep(); showDateResult(i); }));
     dateReader.pause(true);
-    const d = await typeDate(foundDate);
-    if (d) closeDateScanner(d); else if (!foundDate) dateReader.pause(false);
   };
 
   /* ---------- flujo completo ---------- */
   async function startFlow(product) {
     if (!product) product = await openProductScanner();
     if (!product) return;
-    const date = await openDateScanner(product);
-    if (!date) { toast("No se guardó " + product.name); return; }
-    addItem(product, date);
+    const info = await openDateScanner(product);
+    if (!info) { toast("No se guardó " + product.name); return; }
+    addItem(product, info);
   }
-  $("fzScanBtn").onclick = () => { FreezerDateReader.warmup(); startFlow(); };
+  $("fzScanBtn").onclick = () => startFlow();
   $("fzNoCode").onclick = async () => {
-    FreezerDateReader.warmup();
     const name = await ask({ title: "Nombre del producto", text: "Por ejemplo: carne molida, tamales, pan.", placeholder: "Ej. Carne molida", ok: "Continuar" });
     if (name) startFlow({ name, emoji: Products.emojiFor([], name) });
   };
@@ -343,7 +475,7 @@
         body: JSON.stringify({
           subscription: sub.toJSON(),
           tz: Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Chicago",
-          items: items.map(i => ({ id: i.id, name: i.name, date: i.date })),
+          items: items.map(i => ({ id: i.id, name: i.name, date: dueOf(i) })),
         }),
       });
       if (!r.ok) return;
@@ -383,15 +515,15 @@
     if (!info || info.mode === "push") return;
     if (!("Notification" in window) || Notification.permission !== "granted") return;
     let done = {}; try { done = JSON.parse(localStorage.getItem(LOCAL_NOTIFIED)) || {}; } catch {}
-    const due = items.filter(i => daysLeft(i.date) <= WARN_DAYS && !done[i.id + "|" + i.date]);
+    const due = items.filter(i => daysLeft(dueOf(i)) <= WARN_DAYS && !done[i.id + "|" + dueOf(i)]);
     if (!due.length) return;
     try {
       const reg = await navigator.serviceWorker.ready;
       await reg.showNotification("❄️ Freezer: úsalo pronto", {
-        body: due.map(i => i.name + " — " + daysText(daysLeft(i.date)).toLowerCase()).join("\n"),
+        body: due.map(i => i.name + " — " + daysText(daysLeft(dueOf(i))).toLowerCase()).join("\n"),
         icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: "freezer", data: { url: "./?freezer=1" },
       });
-      due.forEach(i => { done[i.id + "|" + i.date] = 1; });
+      due.forEach(i => { done[i.id + "|" + dueOf(i)] = 1; });
       localStorage.setItem(LOCAL_NOTIFIED, JSON.stringify(done));
     } catch {}
   }

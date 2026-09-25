@@ -302,3 +302,7 @@ ul{list-style:none;margin:0;padding:0}
 .fz-primary{background:var(--ice-a)!important;color:#EAF8FD!important}
 .sheet input[type="date"]{-webkit-appearance:none;appearance:none;display:block;min-height:52px}
 @media (prefers-reduced-motion: reduce){.fz-hero:active{transform:none}.fz-item.new,.fz-found{animation:none}}
+
+.fz-file{position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0}
+.fz-photo{display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-user-select:none;user-select:none}
+.fz-first{display:inline-block;margin-top:5px;padding:2px 8px;border-radius:999px;background:var(--mango);color:var(--on-mango);font-size:.72rem;font-weight:800;letter-spacing:.01em}
