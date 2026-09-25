@@ -57,8 +57,7 @@ Queda un ícono propio en tu pantalla de inicio y se abre a pantalla completa, c
 2. Arriba se suma solo el **TOTAL GASTADO DEL MES**. En el calendario, cada día con compras muestra cuánto gastaste.
 3. Con las flechas cambias de mes para consultar los meses anteriores. Todo queda guardado en el teléfono.
 4. Con el lápiz editas una compra (monto, fecha, tienda, cambiar o quitar la foto) y con el bote de basura la borras (con opción de deshacer). Toca la foto para verla en grande.
-5. **Escanear recibo:** toca *Escanear recibo* y toma una foto del recibo completo (o elígela de tus fotos). La app lee la tienda, la fecha, cada producto con su precio y el total, y te lo muestra para que corrijas lo que haga falta: puedes cambiar nombres y precios, quitar o agregar productos y ajustar el total. Si la suma de productos no coincide con el total, te muestra la diferencia (normalmente son impuestos). Al tocar *Guardar compra* se registra en el día del recibo, se suma al total del mes y la foto queda guardada como respaldo. Después puedes volver a ver y corregir los productos desde el lápiz → *Ver y corregir productos*. Consejo: pon el recibo sobre una superficie oscura, estirado y con buena luz.
-6. *Descargar resumen mensual* guarda un archivo (.csv) con cada fecha de compra, lo que gastaste y el total del mes. Se abre en Excel, Google Sheets o Numbers.
+5. *Descargar resumen mensual* guarda un archivo (.csv) con cada fecha de compra, lo que gastaste y el total del mes. Se abre en Excel, Google Sheets o Numbers.
 
 **Freezer Scan.** Toca el botón *❄️ Freezer* arriba a la derecha. Ahí llevas la cuenta de lo que tienes congelado, aparte de Mi lista:
 
@@ -103,7 +102,6 @@ js/app.js               Lista, escáner y pantallas
 js/scanner.js           Lectura del código de barras con la cámara
 js/products.js          Identificación del producto por código
 js/compras.js           Mis Compras: calendario, gastos y fotos de recibos
-js/recibo.js            Mis Compras: lectura de recibos (tienda, fecha, productos, total)
 js/freezer.js           Freezer Scan: pantalla, pasos y avisos
 js/freezer-date.js      Freezer Scan: lector de fechas con la cámara
 vendor/zxing.min.js     Lector de códigos de barras (para iPhone y navegadores sin lector propio)
