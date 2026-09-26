@@ -57,7 +57,11 @@ Queda un ícono propio en tu pantalla de inicio y se abre a pantalla completa, c
 2. Arriba se suma solo el **TOTAL GASTADO DEL MES**. En el calendario, cada día con compras muestra cuánto gastaste.
 3. Con las flechas cambias de mes para consultar los meses anteriores. Todo queda guardado en el teléfono.
 4. Con el lápiz editas una compra (monto, fecha, tienda, cambiar o quitar la foto) y con el bote de basura la borras (con opción de deshacer). Toca la foto para verla en grande.
-5. *Descargar resumen mensual* guarda un archivo (.csv) con cada fecha de compra, lo que gastaste y el total del mes. Se abre en Excel, Google Sheets o Numbers.
+Debajo del total del mes aparecen, lado a lado, las dos formas de guardar un recibo: **Escanear recibo** y **Tomar foto**.
+
+5. **Tomar foto:** si solo quieres guardar la foto del recibo como respaldo, toca *Tomar foto*. Se abre el registro de compra con la foto ya puesta; tú escribes el total.
+6. **Escanear recibo** (funciona mejor con recibos de hasta 20 productos): toca *Escanear recibo* y toma una foto del recibo completo (o elígela de tus fotos). La app lee la tienda, la fecha, cada producto con su precio y el total, y te lo muestra para que corrijas lo que haga falta: puedes cambiar nombres y precios, quitar o agregar productos y ajustar el total. Si la suma de productos no coincide con el total, te muestra la diferencia: si es parecida a los impuestos del recibo dice *Impuestos y otros*, y si es mayor te avisa que hay *productos no leídos*. El total del recibo siempre se guarda completo. Al tocar *Guardar compra* se registra en el día del recibo, se suma al total del mes y la foto queda guardada como respaldo. Después puedes volver a ver y corregir los productos desde el lápiz → *Ver y corregir productos*. Consejo: pon el recibo sobre una superficie oscura, estirado y con buena luz.
+7. *Descargar resumen mensual* guarda un archivo (.csv) con cada fecha de compra, lo que gastaste y el total del mes. Se abre en Excel, Google Sheets o Numbers.
 
 **Freezer Scan.** Toca el botón *❄️ Freezer* arriba a la derecha. Ahí llevas la cuenta de lo que tienes congelado, aparte de Mi lista:
 
@@ -86,6 +90,10 @@ Para comprobar que las funciones quedaron publicadas: en Netlify entra a tu siti
 
 Solo se guarda en el servidor lo necesario para avisarte: el nombre y la fecha de cada producto del freezer. Mi lista nunca sale del teléfono.
 
+## ¿Cómo sé que tengo la versión nueva?
+
+Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 1.6.2*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
+
 ## Cambiar algo después
 
 Si modificas cualquier archivo, abre `sw.js` y cambia el número de `VERSION` (por ejemplo de `v1.0.0` a `v1.0.1`). Así los teléfonos saben que hay una versión nueva. La actualización se aplica la segunda vez que abras la app.
@@ -102,6 +110,7 @@ js/app.js               Lista, escáner y pantallas
 js/scanner.js           Lectura del código de barras con la cámara
 js/products.js          Identificación del producto por código
 js/compras.js           Mis Compras: calendario, gastos y fotos de recibos
+js/recibo.js            Mis Compras: lectura de recibos (tienda, fecha, productos, total)
 js/freezer.js           Freezer Scan: pantalla, pasos y avisos
 js/freezer-date.js      Freezer Scan: lector de fechas con la cámara
 vendor/zxing.min.js     Lector de códigos de barras (para iPhone y navegadores sin lector propio)

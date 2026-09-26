@@ -148,7 +148,8 @@
     const info = document.createElement("div"); info.className = "pc-rec-info";
     const b = document.createElement("b"); b.textContent = fmt(r.cents);
     const s = document.createElement("small");
-    s.textContent = [withDate ? shortDate(r.date) : "", r.store || "", r.photo ? "" : "Sin foto"].filter(Boolean).join(" · ") || "Compra";
+    const nItems = Array.isArray(r.items) ? r.items.length : 0;
+    s.textContent = [withDate ? shortDate(r.date) : "", r.store || "", nItems ? (nItems === 1 ? "1 producto" : nItems + " productos") : "", r.photo ? "" : "Sin foto"].filter(Boolean).join(" · ") || "Compra";
     info.append(b, s);
     if (withDate) { info.style.cursor = "pointer"; info.onclick = () => { selected = r.date; render(); $("pcDayTitle").scrollIntoView({ behavior: "smooth", block: "center" }); }; }
     const ed = document.createElement("button"); ed.type = "button"; ed.className = "pc-icon"; ed.setAttribute("aria-label", "Editar compra de " + fmt(r.cents));
@@ -198,6 +199,7 @@
     $("pcStore").value = rec ? rec.store || "" : "";
     $("pcError").classList.add("hidden");
     $("pcDelete").classList.toggle("hidden", !rec);
+    $("pcItemsBtn").classList.toggle("hidden", !(rec && Array.isArray(rec.items)));
     setPreview(rec && rec.photo ? await photoURL(rec.id) : null);
     $("pcSheet").classList.remove("hidden");
     if (!rec) setTimeout(() => $("pcAmount").focus(), 80);
@@ -315,6 +317,199 @@
     clearTimeout(toastTimer); toastTimer = setTimeout(() => $("pcToast").classList.add("hidden"), 5500);
   }
 
+  /* ---------- tomar foto del recibo (sin leerlo) ---------- */
+  $("pcQuickPhotoIn").onchange = async e => {
+    const file = e.target.files && e.target.files[0]; e.target.value = "";
+    if (!file) return;
+    await openSheet(null);
+    $("pcPhotoLabel").textContent = "Preparando foto…";
+    try {
+      draftPhoto = await shrinkReceipt(file);
+      if (draftURL) URL.revokeObjectURL(draftURL);
+      draftURL = URL.createObjectURL(draftPhoto);
+      setPreview(draftURL);
+    } catch { setPreview(null); toast("No se pudo abrir esa foto. Prueba con otra."); }
+  };
+
+  /* ---------- escanear recibo ---------- */
+  let rcToken = 0;          // para ignorar una lectura cancelada
+  let rcPhoto = null;       // Blob de la foto (nueva) o null si se edita una compra existente
+  let rcPhotoURL = null;
+  let rcEditing = null;     // compra existente cuyos productos se corrigen
+  let rcTax = null;         // impuestos leídos del recibo (si se encontraron)
+
+  function rcProgress(p, msg) {
+    $("rcProg").style.width = Math.round(p * 100) + "%";
+    $("rcProg").parentElement.setAttribute("aria-valuenow", String(Math.round(p * 100)));
+    if (msg) $("rcBusyTxt").textContent = msg;
+  }
+  $("rcIn").onchange = async e => {
+    const file = e.target.files && e.target.files[0]; e.target.value = "";
+    if (!file) return;
+    const token = ++rcToken;
+    rcEditing = null;
+    if (rcPhotoURL) URL.revokeObjectURL(rcPhotoURL);
+    rcPhotoURL = URL.createObjectURL(file);
+    $("rcBusyImg").src = rcPhotoURL;
+    rcProgress(0.02, "Leyendo el recibo…");
+    $("rcBusy").classList.remove("hidden");
+    let parsed = null, failed = false;
+    try {
+      // La foto se guarda un poco más grande que las normales para que el recibo se pueda leer después.
+      const photoP = shrinkReceipt(file);
+      const text = await ReceiptOCR.read(file, (p, m) => { if (token === rcToken) rcProgress(p, m); });
+      parsed = ReceiptParser.parse(text, new Date());
+      rcPhoto = await photoP;
+    } catch (err) {
+      failed = true;
+      try { rcPhoto = await shrinkReceipt(file); } catch { rcPhoto = file; }
+    }
+    if (token !== rcToken) return; // se canceló
+    $("rcBusy").classList.add("hidden");
+    openReview(parsed || { store: "", date: null, items: [], total: null }, failed);
+  };
+  $("rcBusyCancel").onclick = () => { rcToken++; $("rcBusy").classList.add("hidden"); };
+
+  async function shrinkReceipt(file) {
+    let img;
+    try { img = await createImageBitmap(file); }
+    catch {
+      img = await new Promise((res, rej) => { const u = URL.createObjectURL(file), i = new Image();
+        i.onload = () => { URL.revokeObjectURL(u); res(i); }; i.onerror = () => { URL.revokeObjectURL(u); rej(new Error("img")); }; i.src = u; });
+    }
+    const k = Math.min(1, 2600 / Math.max(img.width, img.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    return new Promise(res => c.toBlob(b => res(b || file), "image/jpeg", 0.82));
+  }
+
+  const centsToInput = c => (c / 100).toFixed(2);
+  function parseSigned(v) {
+    v = String(v || "").trim();
+    const neg = /^-|-$/.test(v);
+    const c = parseAmount(v.replace(/-/g, ""));
+    return c === null ? null : (neg ? -c : c);
+  }
+  function itemRow(it) {
+    const li = document.createElement("li"); li.className = "rc-item";
+    const name = document.createElement("input"); name.type = "text"; name.className = "rc-name";
+    name.value = it ? it.name : ""; name.placeholder = "Producto"; name.maxLength = 60; name.setAttribute("aria-label", "Nombre del producto");
+    const pw = document.createElement("span"); pw.className = "rc-price";
+    const dollar = document.createElement("span"); dollar.textContent = "$";
+    const price = document.createElement("input"); price.type = "text"; price.inputMode = "decimal";
+    price.value = it ? centsToInput(it.cents) : ""; price.placeholder = "0.00"; price.setAttribute("aria-label", "Precio");
+    pw.append(dollar, price);
+    const del = document.createElement("button"); del.type = "button"; del.className = "rc-del"; del.textContent = "×";
+    del.setAttribute("aria-label", "Quitar producto");
+    del.onclick = () => { li.remove(); updateSums(); };
+    name.oninput = price.oninput = updateSums;
+    li.append(name, pw, del);
+    return li;
+  }
+  function readItems() {
+    return Array.from($("rcItems").children).map(li => {
+      const [name, price] = li.querySelectorAll("input");
+      return { name: name.value.trim().slice(0, 60), cents: parseSigned(price.value) };
+    });
+  }
+  function updateSums() {
+    const items = readItems().filter(i => i.cents !== null);
+    const sumItems = items.reduce((n, i) => n + i.cents, 0);
+    $("rcCount").textContent = $("rcItems").children.length;
+    $("rcItemsSum").textContent = fmt(sumItems);
+    const total = parseAmount($("rcTotal").value);
+    const row = $("rcDiffRow");
+    if (total === null || !items.length) { row.classList.add("hidden"); return; }
+    const diff = total - sumItems;
+    // Si la diferencia es mayor que los impuestos del recibo (o muy grande), faltan productos por leer.
+    const knownTax = rcTax !== null ? rcTax : null;
+    const missing = diff > 0 && (knownTax !== null ? diff - knownTax > 100 : diff > total * 0.12);
+    row.classList.toggle("hidden", Math.abs(diff) < 1);
+    row.classList.toggle("warn", diff < 0 || missing);
+    $("rcDiffLbl").textContent = diff < 0 ? "Los productos suman más que el total"
+      : missing ? "Productos no leídos e impuestos" : "Impuestos y otros";
+    $("rcDiff").textContent = fmt(Math.abs(diff));
+  }
+  $("rcTotal").oninput = updateSums;
+  $("rcAddItem").onclick = () => { const li = itemRow(null); $("rcItems").append(li); li.querySelector("input").focus(); updateSums(); };
+
+  function openReview(data, failed, existingPhotoURL) {
+    rcTax = data.subtotal !== null && data.subtotal !== undefined && data.total ? Math.max(0, data.total - data.subtotal)
+      : (data.tax ? data.tax : null);
+    const readSum = (data.items || []).reduce((n, i) => n + i.cents, 0);
+    const looksIncomplete = !!(data.total && data.items && data.items.length &&
+      (rcTax !== null ? data.total - readSum - rcTax > 100 : data.total - readSum > data.total * 0.12));
+    $("rcTitle").textContent = rcEditing ? "Productos de la compra" : "Revisa el recibo";
+    const found = data.items && data.items.length;
+    $("rcNote").textContent = failed
+      ? "No se pudo leer el recibo. Escribe los datos; la foto se guardará igual."
+      : rcEditing ? "Corrige lo que haga falta y guarda."
+      : found && looksIncomplete
+        ? "Parece que no se leyeron todos los productos (funciona mejor con recibos de hasta 20). El total sí se guarda completo; agrega los que falten si quieres."
+      : found ? "Revisa y corrige lo que haga falta antes de guardar."
+      : "No encontré productos claros. Agrégalos o guarda solo el total.";
+    $("rcPhotoImg").src = existingPhotoURL || rcPhotoURL || "";
+    $("rcPhoto").classList.toggle("hidden", !(existingPhotoURL || rcPhotoURL));
+    $("rcStore").value = data.store || "";
+    $("rcDate").value = data.date || selected;
+    $("rcDate").max = todayISO();
+    $("rcItems").replaceChildren(...(data.items || []).map(itemRow));
+    $("rcTotal").value = data.total ? centsToInput(data.total) : "";
+    $("rcError").classList.add("hidden");
+    updateSums();
+    $("rcSheet").classList.remove("hidden");
+    $("rcSheet").querySelector(".sheet").scrollTop = 0;
+  }
+  function closeReview() {
+    $("rcSheet").classList.add("hidden");
+    rcEditing = null; rcPhoto = null;
+    if (rcPhotoURL) { URL.revokeObjectURL(rcPhotoURL); rcPhotoURL = null; }
+  }
+  $("rcCancel").onclick = () => {
+    if (!rcEditing) toast("No se guardó el recibo");
+    closeReview();
+  };
+  $("rcPhoto").onclick = () => { const u = $("rcPhotoImg").src; if (u) { $("pcViewerImg").src = u; $("pcViewer").classList.remove("hidden"); } };
+
+  $("rcForm").onsubmit = async e => {
+    e.preventDefault();
+    let total = parseAmount($("rcTotal").value);
+    const items = readItems().filter(i => i.name || i.cents !== null)
+      .map(i => ({ name: i.name || "Producto", cents: i.cents === null ? 0 : i.cents }));
+    // Sin total pero con productos: se usa la suma.
+    if (total === null && items.length) { const s = items.reduce((n, i) => n + i.cents, 0); if (s > 0) total = s; }
+    if (!total) { $("rcError").classList.remove("hidden"); $("rcTotal").focus(); return; }
+    const date = /^\d{4}-\d{2}-\d{2}$/.test($("rcDate").value) ? $("rcDate").value : selected;
+    const store = $("rcStore").value.trim().slice(0, 40);
+    let r;
+    if (rcEditing) {
+      r = rcEditing;
+      Object.assign(r, { date, cents: total, store, items });
+    } else {
+      r = { id: uid(), created: Date.now(), photo: false, date, cents: total, store, items, scanned: true };
+      if (rcPhoto) {
+        try { await putPhoto(r.id, rcPhoto); r.photo = true; }
+        catch { toast("La compra se guardó, pero la foto no. Puedes agregarla con el lápiz."); }
+      }
+      records.push(r);
+    }
+    save();
+    const isNew = !rcEditing;
+    selected = date; const d = parseISO(date); viewY = d.getFullYear(); viewM = d.getMonth();
+    closeReview(); render();
+    toast(isNew ? "Recibo guardado: " + fmt(total) + (items.length ? " · " + items.length + " productos" : "") : "Cambios guardados");
+  };
+
+  // Desde "Editar compra": ver y corregir los productos de un recibo ya guardado.
+  $("pcItemsBtn").onclick = async () => {
+    const rec = editing; if (!rec) return;
+    closeSheet();
+    rcEditing = rec; rcPhoto = null;
+    const u = rec.photo ? await photoURL(rec.id) : null;
+    openReview({ store: rec.store, date: rec.date, items: rec.items || [], total: rec.cents, subtotal: null, tax: 0 }, false, u);
+  };
+
   /* ---------- abrir / cerrar ---------- */
   function openView() {
     const t = new Date(); viewY = t.getFullYear(); viewM = t.getMonth(); selected = todayISO();
@@ -325,6 +520,8 @@
   }
   function closeView() {
     closeSheet(); $("pcViewer").classList.add("hidden");
+    rcToken++; $("rcBusy").classList.add("hidden");
+    if (!$("rcSheet").classList.contains("hidden")) closeReview();
     $("comprasView").classList.add("hidden");
     document.body.style.overflow = "";
     updateLink();
