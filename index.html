@@ -160,6 +160,27 @@
 </div>
 
 
+
+<!-- Mi lista: página para agregar productos (productos comunes con más espacio) -->
+<section id="addView" class="add-view hidden" role="dialog" aria-modal="true" aria-labelledby="addTitle">
+  <div class="add-top">
+    <button class="fz-round add-back" id="addBack" type="button" aria-label="Volver a Mi lista">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <h2 id="addTitle">Agregar productos</h2>
+    <button class="add-done" id="addDone" type="button">Listo</button>
+  </div>
+  <div class="add-body">
+    <form class="manual add-form" id="addForm" autocomplete="off">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      <input id="addIn" type="text" placeholder="Agregar por nombre…" enterkeyhint="done" aria-label="Agregar producto por nombre">
+      <button type="submit">Agregar</button>
+    </form>
+    <p class="add-count" id="addCount" aria-live="polite"></p>
+    <div id="addSug" class="add-sug" role="listbox" aria-label="Productos sugeridos"></div>
+  </div>
+</section>
+
 <!-- Mi lista: cambiar categoría -->
 <div id="catSheet" class="sheet-wrap hidden" role="dialog" aria-modal="true" aria-labelledby="catSheetTitle">
   <div class="sheet">
@@ -417,7 +438,7 @@
     <div class="pc-head"><h2>Compras del mes</h2><span id="pcCount" class="fz-count"></span></div>
     <p class="pc-day-empty pc-month-empty" id="pcMonthEmpty">Toca un día del calendario para registrar tu primera compra.</p>
     <ul class="pc-records pc-month-list" id="pcMonthList"></ul>
-    <p class="pc-version">Versión 2.0.2</p>
+    <p class="pc-version">Versión 2.0.3</p>
   </div>
 </section>
 

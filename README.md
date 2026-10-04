@@ -55,7 +55,7 @@ Queda un ícono propio en tu pantalla de inicio y se abre a pantalla completa, c
 
 **Categorías automáticas.** Cada producto que agregas (escaneado o escrito) se acomoda solo en su sección del súper: Frutas y Vegetales, Carnes y Mariscos, Lácteos y Huevos, Panadería, Despensa, Bebidas, Congelados, Limpieza del Hogar, Cuidado Personal, Bebé, Mascotas u Otros (las mismas de *Productos comunes*). Funciona en español e inglés (leche o milk → Lácteos, pollo o chicken → Carnes). Si alguno queda en la categoría equivocada, toca su imagen y elige la correcta: la app se acuerda para la próxima vez.
 
-**Productos comunes.** Al tocar *Agregar por nombre* aparecen productos comunes agrupados como en el súper: Frutas y Vegetales, Carnes y Mariscos, Lácteos y Huevos, Panadería, Despensa, Bebidas, Congelados, Limpieza del Hogar, Cuidado Personal, Bebé, Mascotas y Otros (en inglés: Fruits & Vegetables, Meat & Seafood, Dairy & Eggs…). Con un toque se agregan a la lista; los que ya están en la lista se ven en verde con ✓. Las secciones y sus productos están en `js/categorias.js` (busca `SECTIONS`) por si quieres agregar o cambiar alguno. Al escribir, la app sugiere productos que coinciden, en español o inglés (por ejemplo "chick" → Chicken, Chicken breast…).
+**Productos comunes.** Al tocar *Agregar por nombre* (o su botón *Agregar*) se abre una página aparte, con todo el espacio de la pantalla, para agregar productos: arriba el campo para escribir y debajo los productos comunes agrupados como en el súper, cada sección con su color (verde para frutas y vegetales, rojo para carnes, azul para lácteos…). Los mismos colores aparecen como franja en cada categoría de Mi lista. Toca *Listo* para volver. Las secciones son: Frutas y Vegetales, Carnes y Mariscos, Lácteos y Huevos, Panadería, Despensa, Bebidas, Congelados, Limpieza del Hogar, Cuidado Personal, Bebé, Mascotas y Otros (en inglés: Fruits & Vegetables, Meat & Seafood, Dairy & Eggs…). Con un toque se agregan a la lista; los que ya están en la lista se ven en verde con ✓. Las secciones y sus productos están en `js/categorias.js` (busca `SECTIONS`) por si quieres agregar o cambiar alguno. Al escribir, la app sugiere productos que coinciden, en español o inglés (por ejemplo "chick" → Chicken, Chicken breast…).
 
 **Lista compartida en tiempo real.** Toca *Lista compartida* → *Compartir mi lista* y envía la invitación por WhatsApp. La otra persona abre el enlace (o, en *Lista compartida*, toca *Me invitaron: tengo un código* y lo escribe) y ve la misma lista. Si cualquiera agrega, quita o marca un producto, el cambio aparece en los demás teléfonos en unos segundos. Sin señal, los cambios se guardan y se envían al volver la conexión. Con *Salir de la lista compartida* cada quien se queda con su copia.
 
@@ -160,7 +160,7 @@ Hazlo primero en **modo de prueba** de Stripe (Test mode) y, cuando todo funcion
 
 ## ¿Cómo sé que tengo la versión nueva?
 
-Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 2.0.2*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
+Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 2.0.3*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
 
 ## Cambiar algo después
 
