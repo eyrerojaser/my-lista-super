@@ -55,7 +55,7 @@ Queda un ícono propio en tu pantalla de inicio y se abre a pantalla completa, c
 
 **Productos comunes.** Al tocar *Agregar por nombre* aparecen productos comunes para agregarlos con un toque. Al escribir, la app sugiere productos que coinciden, en español o inglés (por ejemplo "chick" → Chicken, Chicken breast…).
 
-**Lista compartida en tiempo real.** Toca *Lista compartida* → *Compartir mi lista* y envía la invitación por WhatsApp. La otra persona abre el enlace (o escribe el código de 12 letras en *Lista compartida*) y ve la misma lista. Si cualquiera agrega, quita o marca un producto, el cambio aparece en los demás teléfonos en unos segundos. Sin señal, los cambios se guardan y se envían al volver la conexión. Con *Salir de la lista compartida* cada quien se queda con su copia.
+**Lista compartida en tiempo real.** Toca *Lista compartida* → *Compartir mi lista* y envía la invitación por WhatsApp. La otra persona abre el enlace (o, en *Lista compartida*, toca *Me invitaron: tengo un código* y lo escribe) y ve la misma lista. Si cualquiera agrega, quita o marca un producto, el cambio aparece en los demás teléfonos en unos segundos. Sin señal, los cambios se guardan y se envían al volver la conexión. Con *Salir de la lista compartida* cada quien se queda con su copia.
 
 **Mis Compras.** En Mi lista, toca *Mis Compras* para abrir el calendario de tus visitas al súper:
 
@@ -106,9 +106,31 @@ Para una familia es más que suficiente. Si algún día muchas familias la usan 
 
 **En iPhone:** la app instalada en la pantalla de inicio y Safari guardan cosas por separado. Si alguien ya tiene la app instalada, es mejor que se una escribiendo el **código** dentro de la app, en vez de abrir el enlace en Safari.
 
+## Cuentas (registro obligatorio)
+
+Para usar la app hay que crear una cuenta con **nombre, correo y contraseña**. Las contraseñas se guardan cifradas en tu sitio de Netlify (nunca se pueden leer), y la sesión queda abierta en el teléfono, así que la app funciona sin señal una vez que entraste. Se activa o desactiva con `authRequired` en `js/plus-config.js`.
+
+**Lo que haces una vez en Netlify** (tu sitio → **Site configuration → Environment variables → Add a variable**):
+
+| Variable | Para qué | ¿Obligatoria? |
+|---|---|---|
+| `ADMIN_PASSWORD` | Contraseña de tu panel de cuentas (mínimo 10 caracteres, que no uses en otro lado) | Sí |
+| `FOUNDERS_LIMIT` | Cuántas de las primeras cuentas tienen la app gratis. Si no la pones, son 5 | No |
+| `RESEND_API_KEY` y `MAIL_FROM` | Para enviar por correo el código de "Olvidé mi contraseña" (con una cuenta gratis de resend.com). Sin esto, el código lo ves tú en el panel y se lo das | No |
+
+Después de agregarlas: **Deploys → Trigger deploy**.
+
+**Tu panel de cuentas:** abre `https://TU-APP.netlify.app/admin.html` y escribe tu `ADMIN_PASSWORD`. Ves cuántas cuentas hay, quiénes son fundadoras, quiénes pagan, puedes buscar y descargar la lista en Excel. Si alguien olvidó su contraseña y pidió un código, aparece ahí en rojo para que se lo des.
+
+**Las primeras 5 son gratis.** El servidor cuenta las cuentas en el orden en que se registran; las primeras 5 (o lo que diga `FOUNDERS_LIMIT`) tienen todo gratis para siempre. **Ojo:** tus propias cuentas de prueba también cuentan. Si tú te registras primero, pon `FOUNDERS_LIMIT` en 6 para que queden 5 lugares para tus clientas.
+
+**Privacidad:** como ahora guardas nombre y correo de tus usuarias, necesitas una política de privacidad que lo explique.
+
 ## Activar Mi Lista Plus (suscripción con Stripe)
 
-La app ya trae el sistema de suscripción, **apagado**. Mientras esté apagado todo es gratis y no se ve nada de Plus. Qué funciones son de Plus lo decides en `js/plus-config.js` (por defecto: Freezer Scan y Mis Compras).
+La app ya trae el sistema de suscripción, **apagado**. Mientras esté apagado, todas las personas con cuenta usan la app gratis. Está configurada como pediste: **toda la app** se paga (`features: ["todo"]`) a **$5.99 al mes**, y las primeras 5 cuentas no pagan. Si prefieres cobrar solo algunas funciones, cambia `features` en `js/plus-config.js` (por ejemplo `["freezer", "compras"]`).
+
+Con cuentas, el pago queda **unido a la cuenta** de la clienta: la app manda su número de cuenta y su correo a Stripe al pagar, y luego Plus se activa en cualquier teléfono donde entre con su correo. No necesita ningún código.
 
 Hazlo primero en **modo de prueba** de Stripe (Test mode) y, cuando todo funcione, repítelo en modo real.
 
@@ -124,17 +146,17 @@ Hazlo primero en **modo de prueba** de Stripe (Test mode) y, cuando todo funcion
    - Customer portal: **Write**
    Todo lo demás en *None*. Copia la clave (empieza con `rk_test_` o `rk_live_`).
 5. **Pégala en Netlify, no en GitHub.** En Netlify → tu sitio → **Site configuration → Environment variables → Add a variable**: nombre `STRIPE_SECRET_KEY`, valor tu clave. Luego **Deploys → Trigger deploy** para que la tome.
-6. **Configura la app.** En `js/plus-config.js` pega los dos enlaces de pago, escribe los precios como quieres que se vean (por ejemplo `"$2.99 al mes"`), los días de prueba, tu correo de soporte, y cambia `enabled: false` por `enabled: true`. Sube el cambio a GitHub.
+6. **Configura la app.** En `js/plus-config.js` pega tu enlace de pago mensual en `monthly.link` (el anual es opcional; si no lo usas, déjalo vacío), revisa el precio que se muestra (`"$5.99 al mes"`), los días de prueba, tu correo de soporte, y cambia `enabled: false` por `enabled: true`. Sube el cambio a GitHub.
 7. **Prueba.** Abre la app, toca **Mi Lista Plus**, elige un plan y paga con la tarjeta de prueba `4242 4242 4242 4242`, cualquier fecha futura y cualquier CVC. Al terminar, Stripe te regresa a la app con Plus activo y un **código de 12 letras**. Prueba también **Administrar suscripción** y cancelar.
 8. **Pasar a cobrar de verdad.** Repite los pasos 1 a 5 en modo real (enlaces y clave `rk_live_`), reemplaza la variable `STRIPE_SECRET_KEY` en Netlify y los enlaces en `js/plus-config.js`.
 
-**El código de Plus.** Cada clienta recibe un código al pagar. Con él desbloquea Plus en la app instalada o en otro teléfono (**Mi Lista Plus → ¿Ya pagaste? Escribe tu código**). Esto es importante en iPhone: el pago se abre en Safari, y la app instalada guarda sus datos aparte, así que ahí se desbloquea con el código. Si alguien lo pierde, lo encuentras en Stripe → **Customers** → la clienta → **Metadata**, como `codigo_mi_lista`.
+**El código de Plus** (solo si apagas las cuentas con `authRequired: false`). Cada clienta recibe un código al pagar. Con él desbloquea Plus en la app instalada o en otro teléfono (**Mi Lista Plus → ¿Ya pagaste? Escribe tu código**). Esto es importante en iPhone: el pago se abre en Safari, y la app instalada guarda sus datos aparte, así que ahí se desbloquea con el código. Si alguien lo pierde, lo encuentras en Stripe → **Customers** → la clienta → **Metadata**, como `codigo_mi_lista`.
 
 **Si cancelan:** Plus sigue activo hasta el final del periodo pagado y luego se bloquea. Sus datos no se borran; si vuelve a pagar, recupera todo.
 
 ## ¿Cómo sé que tengo la versión nueva?
 
-Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 1.8.1*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
+Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 1.9.0*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
 
 ## Cambiar algo después
 
@@ -155,7 +177,10 @@ js/categorias.js        Categorías automáticas y productos comunes (español e
 js/compartir.js         Lista compartida en tiempo real
 netlify/functions/list-*  Funciones que guardan la lista compartida
 js/plus.js              Mi Lista Plus: bloqueo de funciones y desbloqueo con Stripe
-js/plus-config.js       Aquí activas Plus y pegas tus enlaces de pago y precios
+js/plus-config.js       Aquí activas el registro y Plus, y pegas tus enlaces de pago y precios
+js/cuenta.js            Registro, inicio de sesión y "olvidé mi contraseña"
+admin.html              Tu panel de cuentas (protegido con ADMIN_PASSWORD)
+netlify/functions/auth-*  Funciones de las cuentas
 netlify/functions/plus-*  Funciones que confirman pagos con Stripe
 js/compras.js           Mis Compras: calendario, gastos y fotos de recibos
 js/recibo.js            Mis Compras: lectura de recibos (tienda, fecha, productos, total)

@@ -1,16 +1,20 @@
-/* Mi Lista Plus (suscripción con Stripe).
-   Mientras enabled sea false, todo sigue gratis y no se muestra nada de Plus.
-   Cuando tengas tus enlaces de pago de Stripe:
-     1. pega cada enlace en link (empiezan con https://buy.stripe.com/),
-     2. escribe el precio como quieres que se vea (price),
+/* Mi Lista: cuentas y suscripción.
+   authRequired: true  → para usar la app hay que crear una cuenta (correo y contraseña).
+   Plus (Stripe): mientras enabled sea false, todo es gratis para quien tenga cuenta.
+   Cuando tengas tu enlace de pago de Stripe:
+     1. pégalo en monthly.link (empieza con https://buy.stripe.com/),
+     2. revisa el precio que se muestra,
      3. cambia enabled a true.
-   Estos datos no son secretos. La clave secreta de Stripe va SOLO en Netlify (STRIPE_SECRET_KEY). */
+   Las primeras cuentas registradas (5, o lo que pongas en FOUNDERS_LIMIT en Netlify) tienen Plus gratis.
+   La clave secreta de Stripe va SOLO en Netlify (STRIPE_SECRET_KEY). */
 window.PLUS_CONFIG = {
+  authRequired: true,
   enabled: false,
-  // Qué funciones son de Plus: "freezer" (Freezer Scan), "compras" (Mis Compras), "compartida" (Lista compartida)
-  features: ["freezer", "compras"],
-  monthly: { link: "", price: "", label: "Plan mensual" },   // ej. price: "$2.99 al mes"
-  yearly:  { link: "", price: "", label: "Plan anual", note: "" }, // ej. price: "$19.99 al año", note: "Ahorra 44%"
-  trialDays: 7,          // 0 si no das prueba gratis (debe coincidir con tus enlaces de Stripe)
-  supportEmail: "",      // correo para que tus clientas te escriban
+  // Qué se paga: "todo" (toda la app) o funciones sueltas: "freezer", "compras", "compartida"
+  features: ["todo"],
+  monthly: { link: "", price: "$5.99 al mes", label: "Plan mensual" },
+  yearly:  { link: "", price: "", label: "Plan anual", note: "" },   // déjalo vacío si solo cobras mensual
+  trialDays: 0,          // días gratis de prueba (deben coincidir con tu enlace de Stripe)
+  foundersLimit: 5,      // solo para mostrar el texto; el número real lo decide el servidor (FOUNDERS_LIMIT)
+  supportEmail: "",
 };

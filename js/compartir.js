@@ -255,10 +255,16 @@
       return;
     }
     if (!info) {
-      $("shText").textContent = "Comparte tu lista con tu familia. Cuando alguien agregue, quite o marque un producto, el cambio aparecerá en los demás teléfonos en unos segundos.";
-      $("shJoinBox").classList.remove("hidden");
+      $("shText").textContent = "Toca Compartir mi lista y la app te dará un código para invitar a tu familia. Cuando alguien agregue, quite o marque un producto, el cambio aparecerá en los demás teléfonos en unos segundos.";
+      // Unirse con código es para quien RECIBE la invitación: queda escondido detrás de su propio botón.
+      const joinBtn = btn("Me invitaron: tengo un código", "sh-ghost", () => {
+        $("shJoinBox").classList.remove("hidden");
+        joinBtn.remove();
+        setTimeout(() => $("shJoinIn").focus(), 50);
+      });
       acts.replaceChildren(
         btn(status === "connecting" ? "Creando…" : "Compartir mi lista", "sh-primary", () => { if (status !== "connecting") createList(); }),
+        joinBtn,
         btn("Cerrar", "sh-ghost", closeSheet));
       return;
     }
