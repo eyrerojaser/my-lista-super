@@ -2,20 +2,23 @@
    Categorias.categorize(nombre) → id de categoría
    Categorias.suggest(texto)     → productos comunes que coinciden */
 (function (root) {
+  // Las mismas 12 secciones del súper que en "Productos comunes".
   const CATS = [
-    { id: "frutas", name: "Frutas y verduras", emoji: "🥦" },
-    { id: "carnes", name: "Carnes", emoji: "🥩" },
-    { id: "lacteos", name: "Lácteos", emoji: "🥛" },
+    { id: "frutas", name: "Frutas y Vegetales", emoji: "🥦" },
+    { id: "carnes", name: "Carnes y Mariscos", emoji: "🥩" },
+    { id: "lacteos", name: "Lácteos y Huevos", emoji: "🥛" },
     { id: "panaderia", name: "Panadería", emoji: "🍞" },
     { id: "despensa", name: "Despensa", emoji: "🥫" },
-    { id: "congelados", name: "Congelados", emoji: "🧊" },
     { id: "bebidas", name: "Bebidas", emoji: "🥤" },
-    { id: "botanas", name: "Botanas y dulces", emoji: "🍫" },
-    { id: "limpieza", name: "Limpieza y hogar", emoji: "🧽" },
-    { id: "personal", name: "Cuidado personal", emoji: "🧴" },
-    { id: "bebe", name: "Bebé y mascotas", emoji: "🍼" },
+    { id: "congelados", name: "Congelados", emoji: "🧊" },
+    { id: "limpieza", name: "Limpieza del Hogar", emoji: "🧽" },
+    { id: "personal", name: "Cuidado Personal", emoji: "🧴" },
+    { id: "bebe", name: "Bebé", emoji: "🍼" },
+    { id: "mascotas", name: "Mascotas", emoji: "🐾" },
     { id: "otros", name: "Otros", emoji: "🛒" },
   ];
+  // Categorías de versiones anteriores → las nuevas.
+  const OLD = { botanas: "despensa" };
   const BY_ID = Object.fromEntries(CATS.map(c => [c.id, c]));
 
   const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -27,12 +30,14 @@
     bebidas: "jugo|juice|refresco|soda|agua mineral|agua|water|cafe|coffee|te helado|iced tea|te|tea|cerveza|beer|vino|wine|tequila|vodka|ron|rum|whisky|bebida|drink|gatorade|powerade|electrolit|limonada|lemonade|smoothie|kombucha|energy drink|bebida energetica|red bull|monster|coca cola|coca|pepsi|sprite|fanta|dr pepper|topo chico|jarritos|squirt|7up|horchata|nectar|leche de chocolate|chocolate milk",
     despensa: "salsa|sauce|caldo|broth|consome|sopa|soup|ramen|maruchan|cereal|avena|oatmeal|oats|granola|pasta|spaghetti|espagueti|fideo|fideos|macarrones|macaroni|noodles|arroz|rice|frijoles|frijol|beans|lentejas|lentils|garbanzos|chickpeas|harina|flour|maseca|azucar|sugar|sal|salt|pimienta|pepper spice|aceite|oil|vinagre|vinegar|mayonesa|mayonnaise|mayo|mostaza|mustard|ketchup|catsup|miel|honey|jarabe|syrup|mermelada|jam|jelly|crema de cacahuate|peanut butter|nutella|enlatado|lata|canned|atun|tuna|sardinas|chiles en lata|chipotle|especias|spices|comino|cumin|oregano|canela|cinnamon|consomate|knorr|polvo para hornear|baking powder|bicarbonato|baking soda|levadura|yeast|gelatina|jello|pure de tomate|tomato paste|tomato sauce|pancake mix|harina para hot cakes|hot cakes|pancake|cafe molido|ground coffee",
     congelados: "congelado|congelada|congelados|frozen|helado|ice cream|paleta helada|nieve|pizza|nuggets|papas a la francesa|french fries|fries|hielo|ice|waffles congelados|burritos congelados|hot pockets|lasagna congelada",
-    botanas: "papitas|papas fritas|chips|tortilla chips|totopos|doritos|cheetos|takis|sabritas|ruffles|lays|pringles|fritos|galletas|galleta|cookies|cookie|crackers|chocolate|chocolates|dulce|dulces|candy|gomitas|gummies|chicle|gum|palomitas|popcorn|cacahuates|peanuts|nueces|nuts|almendras|almonds|pretzels|barras de granola|granola bar|botana|snack|snacks|pastelito|pastelitos|gansito|oreo|oreos|mazapan|pulparindo|paleta|lollipop",
-    limpieza: "papel higienico|toilet paper|papel de bano|toallas de papel|paper towels|servilletas|napkins|detergente|detergent|jabon para trastes|jabon de trastes|dish soap|lavatrastes|cloro|cloralex|clorox|bleach|limpiador|cleaner|desinfectante|disinfectant|fabuloso|pinol|suavizante|suavitel|downy|fabric softener|ariel|tide|gain|bolsas de basura|trash bags|bolsas|bags|aluminio|aluminum foil|papel aluminio|plastic wrap|esponja|sponge|escoba|mop|trapeador|foco|focos|light bulb|pilas|batteries|velas|candles|lysol|windex|ajax|comet|swiffer|lavavajillas|dishwasher|toallitas desinfectantes|wipes desinfectantes|platos desechables|paper plates|vasos desechables",
+    despensa_botanas: "papitas|papas fritas|chips|tortilla chips|totopos|doritos|cheetos|takis|sabritas|ruffles|lays|pringles|fritos|galletas|galleta|cookies|cookie|crackers|chocolate|chocolates|dulce|dulces|candy|gomitas|gummies|chicle|gum|palomitas|popcorn|cacahuates|peanuts|nueces|nuts|almendras|almonds|pretzels|barras de granola|granola bar|botana|snack|snacks|pastelito|pastelitos|gansito|oreo|oreos|mazapan|pulparindo|paleta|lollipop",
+    limpieza: "papel higienico|toilet paper|papel de bano|toallas de papel|paper towels|servilletas|napkins|detergente|detergent|jabon para trastes|jabon de trastes|dish soap|lavatrastes|cloro|cloralex|clorox|bleach|limpiador|cleaner|desinfectante|disinfectant|fabuloso|pinol|suavizante|suavitel|downy|fabric softener|ariel|tide|gain|bolsas de basura|trash bags|bolsas|bags|aluminio|aluminum foil|papel aluminio|plastic wrap|esponja|sponge|escoba|mop|trapeador|lysol|windex|ajax|comet|swiffer|lavavajillas|dishwasher|toallitas desinfectantes|wipes desinfectantes",
     personal: "shampoo|champu|acondicionador|conditioner|jabon de bano|body wash|jabon|soap|pasta de dientes|toothpaste|cepillo de dientes|toothbrush|hilo dental|floss|enjuague bucal|mouthwash|desodorante|deodorant|crema corporal|lotion|crema|rastrillo|razor|navajas|toallas femeninas|pads|tampones|tampons|papel facial|kleenex|tissues|pañuelos|curitas|band aids|vitaminas|vitamins|medicina|medicine|tylenol|advil|ibuprofeno|paracetamol|protector solar|sunscreen|maquillaje|makeup|gel para cabello|hair gel|colgate|crest|dove|gillette|always|kotex|algodon|cotton|hisopos|q tips",
-    bebe: "panales|pañales|diapers|toallitas|wipes|formula|formula de bebe|baby formula|papilla|baby food|bebe|baby|huggies|pampers|comida para perro|dog food|comida para gato|cat food|croquetas|arena para gato|cat litter|mascota|pet|perro|dog|gato|cat|premios para perro|dog treats",
+    bebe: "panales|pañales|diapers|toallitas|wipes|formula|formula de bebe|baby formula|papilla|baby food|bebe|baby|huggies|pampers",
+    mascotas: "arena para gato|gato|cat litter|comida para gato|dog treats|mascota|perro|croquetas|pet|cat food|cat|dog|premios para perro|dog food|comida para perro|mascotas|pets|pet food|comida para mascotas|premios para mascotas|pet treats|arena|litter",
   };
   const NORMAL = {
+    otros: "foco|focos|light bulb|light bulbs|pilas|batteries|velas|candles|platos desechables|paper plates|vasos desechables|paper cups|regalo|gift",
     frutas: "manzana|manzanas|apple|apples|platano|platanos|banana|bananas|guineo|naranja|naranjas|orange|oranges|limon|limones|lime|limes|lemon|lemons|uva|uvas|grapes|fresa|fresas|strawberries|strawberry|mora|moras|blueberries|arandanos|frambuesas|raspberries|pina|pineapple|mango|mangos|papaya|sandia|watermelon|melon|cantaloupe|pera|peras|pear|pears|durazno|duraznos|peach|peaches|kiwi|cereza|cerezas|cherries|aguacate|aguacates|avocado|avocados|tomate|tomates|jitomate|tomato|tomatoes|tomatillo|tomatillos|cebolla|cebollas|onion|onions|ajo|garlic|papa|papas|potato|potatoes|camote|sweet potato|zanahoria|zanahorias|carrot|carrots|lechuga|lettuce|espinaca|espinacas|spinach|brocoli|broccoli|coliflor|cauliflower|pepino|pepinos|cucumber|cucumbers|calabaza|calabacita|calabacitas|zucchini|squash|chile|chiles|jalapeno|jalapenos|serrano|poblano|pimiento|pimientos|bell pepper|peppers|cilantro|perejil|parsley|apio|celery|elote|elotes|corn|nopal|nopales|champinones|mushrooms|hongos|repollo|col|cabbage|ejotes|green beans|chayote|jicama|rabano|radish|betabel|beet|kale|fruta|frutas|fruit|verdura|verduras|vegetables|veggies|ensalada|salad|jengibre|ginger|coco|coconut",
     carnes: "pollo|chicken|pechuga|pechugas|breast|muslos|thighs|alitas|wings|carne|meat|res|beef|carne molida|ground beef|bistec|steak|arrachera|fajitas|costillas|ribs|puerco|cerdo|pork|chuleta|chuletas|pork chops|tocino|bacon|jamon|ham|salchicha|salchichas|sausage|hot dogs|hot dog|chorizo|pavo|turkey|pescado|fish|salmon|tilapia|camaron|camarones|shrimp|mariscos|seafood|atun fresco|carnitas|barbacoa|milanesa|lomo|carne para asar|carne asada|pierna|brisket|salami|pepperoni|mortadela|embutidos|deli|lunch meat|fiambre",
     lacteos: "leche|milk|queso|quesos|cheese|yogur|yogurt|yoghurt|yogures|mantequilla|butter|margarina|margarine|crema|sour cream|crema acida|media crema|half and half|nata|huevo|huevos|egg|eggs|requeson|cottage cheese|queso fresco|panela|oaxaca|cheddar|mozzarella|parmesano|parmesan|queso crema|cream cheese|leche evaporada|evaporated milk|leche condensada|condensed milk|lala|yoplait|danone|kefir|whipped cream|crema batida|leche de almendra|almond milk|leche de avena|oat milk|leche deslactosada|lactose free",
@@ -41,7 +46,8 @@
   function compile(map, strong) {
     const out = [];
     for (const [cat, list] of Object.entries(map)) {
-      for (const k of list.split("|")) { const nk = norm(k); if (nk) out.push({ k: nk, cat, w: (strong ? 100 : 0) + nk.length + nk.split(" ").length * 3 }); }
+      const c = cat.split("_")[0]; // "despensa_botanas" → despensa
+      for (const k of list.split("|")) { const nk = norm(k); if (nk) out.push({ k: nk, cat: c, w: (strong ? 100 : 0) + nk.length + nk.split(" ").length * 3 }); }
     }
     return out;
   }
@@ -62,7 +68,7 @@
     ["Jabón para trastes", "Dish soap", "🧽", "limpieza"], ["Cloro", "Bleach", "🧴", "limpieza"], ["Bolsas de basura", "Trash bags", "🗑️", "limpieza"],
     ["Pasta de dientes", "Toothpaste", "🪥", "personal"], ["Shampoo", "Shampoo", "🧴", "personal"], ["Desodorante", "Deodorant", "🧴", "personal"],
     ["Jabón de baño", "Body wash", "🧼", "personal"], ["Pañales", "Diapers", "🍼", "bebe"], ["Toallitas húmedas", "Baby wipes", "🍼", "bebe"],
-    ["Comida para perro", "Dog food", "🐕", "bebe"], ["Comida para gato", "Cat food", "🐈", "bebe"],
+    ["Comida para perro", "Dog food", "🐕", "mascotas"], ["Comida para gato", "Cat food", "🐈", "mascotas"],
     ["Zanahorias", "Carrots", "🥕", "frutas"], ["Lechuga", "Lettuce", "🥬", "frutas"], ["Espinacas", "Spinach", "🥬", "frutas"],
     ["Brócoli", "Broccoli", "🥦", "frutas"], ["Pepinos", "Cucumbers", "🥒", "frutas"], ["Chiles jalapeños", "Jalapeños", "🌶️", "frutas"],
     ["Cilantro", "Cilantro", "🌿", "frutas"], ["Ajo", "Garlic", "🧄", "frutas"], ["Fresas", "Strawberries", "🍓", "frutas"],
@@ -95,18 +101,73 @@
     ["Waffles", "Frozen waffles", "🧇", "congelados"], ["Fruta congelada", "Frozen fruit", "🍓", "congelados"],
     ["Cerveza", "Beer", "🍺", "bebidas"], ["Vino", "Wine", "🍷", "bebidas"], ["Agua mineral", "Sparkling water", "💧", "bebidas"],
     ["Té", "Tea", "🍵", "bebidas"], ["Bebida deportiva", "Sports drink", "🥤", "bebidas"], ["Leche de chocolate", "Chocolate milk", "🥛", "bebidas"],
-    ["Papitas", "Chips", "🥔", "botanas"], ["Totopos", "Tortilla chips", "🌽", "botanas"], ["Galletas", "Cookies", "🍪", "botanas"],
-    ["Galletas saladas", "Crackers", "🍘", "botanas"], ["Chocolate", "Chocolate", "🍫", "botanas"], ["Dulces", "Candy", "🍬", "botanas"],
-    ["Palomitas", "Popcorn", "🍿", "botanas"], ["Cacahuates", "Peanuts", "🥜", "botanas"], ["Almendras", "Almonds", "🌰", "botanas"],
-    ["Barras de granola", "Granola bars", "🥣", "botanas"], ["Gomitas", "Gummies", "🍬", "botanas"],
+    ["Papitas", "Chips", "🥔", "despensa"], ["Totopos", "Tortilla chips", "🌽", "despensa"], ["Galletas", "Cookies", "🍪", "despensa"],
+    ["Galletas saladas", "Crackers", "🍘", "despensa"], ["Chocolate", "Chocolate", "🍫", "despensa"], ["Dulces", "Candy", "🍬", "despensa"],
+    ["Palomitas", "Popcorn", "🍿", "despensa"], ["Cacahuates", "Peanuts", "🥜", "despensa"], ["Almendras", "Almonds", "🌰", "despensa"],
+    ["Barras de granola", "Granola bars", "🥣", "despensa"], ["Gomitas", "Gummies", "🍬", "despensa"],
     ["Suavizante", "Fabric softener", "🧺", "limpieza"], ["Limpiador multiusos", "All-purpose cleaner", "🧴", "limpieza"], ["Esponjas", "Sponges", "🧽", "limpieza"],
-    ["Servilletas", "Napkins", "🧻", "limpieza"], ["Papel aluminio", "Aluminum foil", "📦", "limpieza"], ["Platos desechables", "Paper plates", "🍽️", "limpieza"],
-    ["Pilas", "Batteries", "🔋", "limpieza"], ["Focos", "Light bulbs", "💡", "limpieza"],
+    ["Servilletas", "Napkins", "🧻", "limpieza"], ["Papel aluminio", "Aluminum foil", "📦", "limpieza"], ["Platos desechables", "Paper plates", "🍽️", "otros"],
+    ["Pilas", "Batteries", "🔋", "otros"], ["Focos", "Light bulbs", "💡", "otros"],
     ["Acondicionador", "Conditioner", "🧴", "personal"], ["Cepillo de dientes", "Toothbrush", "🪥", "personal"], ["Hilo dental", "Dental floss", "🦷", "personal"],
     ["Toallas femeninas", "Pads", "🩷", "personal"], ["Rastrillos", "Razors", "🪒", "personal"], ["Crema corporal", "Body lotion", "🧴", "personal"],
     ["Pañuelos desechables", "Tissues", "🤧", "personal"], ["Vitaminas", "Vitamins", "💊", "personal"], ["Curitas", "Band-aids", "🩹", "personal"],
-    ["Fórmula para bebé", "Baby formula", "🍼", "bebe"], ["Papillas", "Baby food", "🍼", "bebe"], ["Arena para gato", "Cat litter", "🐈", "bebe"],
+    ["Fórmula para bebé", "Baby formula", "🍼", "bebe"], ["Papillas", "Baby food", "🍼", "bebe"], ["Arena para gato", "Cat litter", "🐈", "mascotas"],
   ].map(([es, en, emoji, cat], i) => ({ es, en, emoji, cat, rank: i, nes: norm(es), nen: norm(en) }));
+  // Productos comunes agrupados como en el súper (sección "Productos comunes").
+  // [español, inglés, emoji, categoría de Mi lista]
+  const SECTIONS = [
+    { id: "frutas", es: "Frutas y Vegetales", en: "Fruits & Vegetables", emoji: "🥦", items: [
+      ["Plátanos", "Bananas", "🍌", "frutas"], ["Manzanas", "Apples", "🍎", "frutas"], ["Fresas", "Strawberries", "🍓", "frutas"],
+      ["Tomates", "Tomatoes", "🍅", "frutas"], ["Lechuga", "Lettuce", "🥬", "frutas"], ["Papas", "Potatoes", "🥔", "frutas"]] },
+    { id: "carnes", es: "Carnes y Mariscos", en: "Meat & Seafood", emoji: "🥩", items: [
+      ["Pollo", "Chicken", "🍗", "carnes"], ["Carne molida", "Ground Beef", "🥩", "carnes"], ["Bistec", "Steak", "🥩", "carnes"],
+      ["Puerco", "Pork", "🥓", "carnes"], ["Pescado", "Fish", "🐟", "carnes"], ["Camarones", "Shrimp", "🦐", "carnes"]] },
+    { id: "lacteos", es: "Lácteos y Huevos", en: "Dairy & Eggs", emoji: "🥛", items: [
+      ["Leche", "Milk", "🥛", "lacteos"], ["Huevos", "Eggs", "🥚", "lacteos"], ["Queso", "Cheese", "🧀", "lacteos"],
+      ["Yogur", "Yogurt", "🥣", "lacteos"], ["Mantequilla", "Butter", "🧈", "lacteos"]] },
+    { id: "panaderia", es: "Panadería", en: "Bakery", emoji: "🍞", items: [
+      ["Pan", "Bread", "🍞", "panaderia"], ["Tortillas", "Tortillas", "🫓", "panaderia"], ["Bagels", "Bagels", "🥯", "panaderia"],
+      ["Pan para hamburguesa", "Buns", "🍔", "panaderia"]] },
+    { id: "despensa", es: "Despensa", en: "Pantry", emoji: "🥫", items: [
+      ["Arroz", "Rice", "🍚", "despensa"], ["Pasta", "Pasta", "🍝", "despensa"], ["Cereal", "Cereal", "🥣", "despensa"],
+      ["Harina", "Flour", "🌾", "despensa"], ["Azúcar", "Sugar", "🍬", "despensa"], ["Frijoles", "Beans", "🫘", "despensa"],
+      ["Enlatados", "Canned Food", "🥫", "despensa"], ["Botanas", "Snacks", "🍿", "despensa"]] },
+    { id: "bebidas", es: "Bebidas", en: "Beverages", emoji: "🥤", items: [
+      ["Agua", "Water", "💧", "bebidas"], ["Jugo", "Juice", "🧃", "bebidas"], ["Refresco", "Soda", "🥤", "bebidas"],
+      ["Café", "Coffee", "☕", "bebidas"], ["Té", "Tea", "🍵", "bebidas"]] },
+    { id: "congelados", es: "Congelados", en: "Frozen", emoji: "🧊", items: [
+      ["Helado", "Ice Cream", "🍦", "congelados"], ["Pizza congelada", "Frozen Pizza", "🍕", "congelados"],
+      ["Verduras congeladas", "Frozen Vegetables", "🥦", "congelados"], ["Comidas congeladas", "Frozen Meals", "🍱", "congelados"]] },
+    { id: "limpieza", es: "Limpieza del Hogar", en: "Household Cleaning", emoji: "🧽", items: [
+      ["Detergente", "Laundry Detergent", "🧺", "limpieza"], ["Jabón para trastes", "Dish Soap", "🧽", "limpieza"],
+      ["Toallas de papel", "Paper Towels", "🧻", "limpieza"], ["Papel higiénico", "Toilet Paper", "🧻", "limpieza"],
+      ["Bolsas de basura", "Trash Bags", "🗑️", "limpieza"]] },
+    { id: "personal", es: "Cuidado Personal", en: "Personal Care", emoji: "🧴", items: [
+      ["Shampoo", "Shampoo", "🧴", "personal"], ["Jabón", "Soap", "🧼", "personal"], ["Pasta de dientes", "Toothpaste", "🪥", "personal"],
+      ["Desodorante", "Deodorant", "🧴", "personal"], ["Gel de baño", "Body Wash", "🧼", "personal"]] },
+    { id: "bebe", es: "Bebé", en: "Baby", emoji: "🍼", items: [
+      ["Pañales", "Diapers", "🍼", "bebe"], ["Toallitas húmedas", "Baby Wipes", "🧻", "bebe"],
+      ["Fórmula para bebé", "Baby Formula", "🍼", "bebe"], ["Papillas", "Baby Food", "🥣", "bebe"]] },
+    { id: "mascotas", es: "Mascotas", en: "Pets", emoji: "🐾", items: [
+      ["Comida para perro", "Dog Food", "🐕", "mascotas"], ["Comida para gato", "Cat Food", "🐈", "mascotas"],
+      ["Arena para gato", "Cat Litter", "🐈", "mascotas"], ["Premios para mascotas", "Pet Treats", "🦴", "mascotas"]] },
+    { id: "otros", es: "Otros", en: "Other", emoji: "🛒", items: [
+      ["Pilas", "Batteries", "🔋", "otros"], ["Focos", "Light Bulbs", "💡", "otros"], ["Velas", "Candles", "🕯️", "otros"],
+      ["Platos desechables", "Paper Plates", "🍽️", "otros"]] },
+  ];
+  // Los productos de las secciones también aparecen al buscar escribiendo.
+  SECTIONS.forEach(sec => sec.items.forEach(([es, en, emoji, cat]) => {
+    if (!COMMON.some(c => c.nes === norm(es) || c.nen === norm(en)))
+      COMMON.push({ es, en, emoji, cat, rank: COMMON.length, nes: norm(es), nen: norm(en) });
+  }));
+  function sections() {
+    const en = root.I18N && root.I18N.lang() === "en";
+    return SECTIONS.map(sec => ({
+      id: sec.id, name: en ? sec.en : sec.es, emoji: sec.emoji,
+      items: sec.items.map(([es, enName, emoji, cat]) => ({ name: en ? enName : es, emoji, cat })),
+    }));
+  }
+
   const COMMON_BY_NAME = new Map();
   COMMON.forEach(c => { COMMON_BY_NAME.set(c.nes, c); COMMON_BY_NAME.set(c.nen, c); });
 
@@ -131,11 +192,11 @@
     "en:breads": "panaderia", "en:tortillas": "panaderia", "en:flatbreads": "panaderia", "en:pastries": "panaderia",
     "en:sodas": "bebidas", "en:waters": "bebidas", "en:juices": "bebidas", "en:fruit-juices": "bebidas", "en:coffees": "bebidas", "en:teas": "bebidas",
     "en:beers": "bebidas", "en:wines": "bebidas", "en:alcoholic-beverages": "bebidas", "en:energy-drinks": "bebidas", "en:beverages": "bebidas",
-    "en:chips-and-fries": "botanas", "en:crisps": "botanas", "en:chocolates": "botanas", "en:candies": "botanas", "en:confectioneries": "botanas",
-    "en:biscuits": "botanas", "en:cookies": "botanas", "en:salty-snacks": "botanas", "en:sweet-snacks": "botanas", "en:snacks": "botanas",
+    "en:chips-and-fries": "despensa", "en:crisps": "despensa", "en:chocolates": "despensa", "en:candies": "despensa", "en:confectioneries": "despensa",
+    "en:biscuits": "despensa", "en:cookies": "despensa", "en:salty-snacks": "despensa", "en:sweet-snacks": "despensa", "en:snacks": "despensa",
     "en:breakfast-cereals": "despensa", "en:cereals-and-potatoes": "despensa", "en:pastas": "despensa", "en:rices": "despensa", "en:legumes": "despensa",
     "en:sauces": "despensa", "en:condiments": "despensa", "en:canned-foods": "despensa", "en:spices": "despensa", "en:vegetable-oils": "despensa", "en:sugars": "despensa", "en:flours": "despensa",
-    "en:baby-foods": "bebe", "en:baby-milks": "bebe", "en:pet-food": "bebe",
+    "en:baby-foods": "bebe", "en:baby-milks": "bebe", "en:pet-food": "mascotas",
   };
   function fromTags(tags) {
     if (!Array.isArray(tags)) return "";
@@ -148,7 +209,7 @@
   function categorize(name, tagCat) {
     const n = norm(name);
     if (!n) return "otros";
-    if (overrides[n]) return overrides[n];
+    if (overrides[n]) return OLD[overrides[n]] || overrides[n];
     if (tagCat && BY_ID[tagCat]) return tagCat;
     const common = COMMON_BY_NAME.get(n);
     if (common) return common.cat;
@@ -177,7 +238,8 @@
     for (const c of COMMON) {
       const sEs = score(c.nes, n), sEn = score(c.nen, n);
       const s = Math.max(sEs, sEn);
-      if (s > 0) out.push({ name: sEn > sEs ? c.en : c.es, emoji: c.emoji, cat: c.cat, s, rank: c.rank });
+      const en = root.I18N && root.I18N.lang() === "en";
+      if (s > 0) out.push({ name: (sEn > sEs || (en && sEn === sEs)) ? c.en : c.es, emoji: c.emoji, cat: c.cat, s, rank: c.rank });
     }
     out.sort((a, b) => b.s - a.s || a.rank - b.rank);
     const seen = new Set();
@@ -190,7 +252,17 @@
     if (q.length >= 3 && target.includes(q)) return 20;
     return 0;
   }
-  function popular(limit) { return COMMON.slice(0, limit || 16).map(c => ({ name: c.es, emoji: c.emoji, cat: c.cat })); }
+  function popular(limit) {
+    const en = root.I18N && root.I18N.lang() === "en";
+    return COMMON.slice(0, limit || 16).map(c => ({ name: en ? c.en : c.es, emoji: c.emoji, cat: c.cat }));
+  }
 
-  root.Categorias = { CATS, BY_ID, categorize, fromTags, suggest, popular, setOverride, emojiFor, norm };
+  // Para productos guardados con categorías de versiones anteriores.
+  function migrate(item) {
+    if (!item) return item;
+    if (OLD[item.cat]) item.cat = OLD[item.cat];
+    else if (item.cat === "bebe" && categorize(item.name) === "mascotas") item.cat = "mascotas";
+    return item;
+  }
+  root.Categorias = { CATS, BY_ID, migrate, categorize, fromTags, suggest, popular, sections, setOverride, emojiFor, norm };
 })(typeof window !== "undefined" ? window : globalThis);

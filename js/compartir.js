@@ -214,8 +214,11 @@
   }
   function inviteText() {
     const url = location.origin + location.pathname + "?unirse=" + info.code;
+    if (window.I18N && I18N.lang() === "en")
+      return "🛒 I'm sharing my grocery list with you. Whatever we add or check off shows on both phones.\n\n" +
+        "Open it here (in Safari or Chrome): " + url + "\n\nOr in the app: Shared list → I was invited → type the code " + pretty(info.code);
     return "🛒 Te comparto mi lista del súper. Lo que agreguemos o marquemos se verá en los dos teléfonos.\n\n" +
-      "Ábrela aquí (en Safari o Chrome): " + url + "\n\nO en la app: Lista compartida → escribe el código " + pretty(info.code);
+      "Ábrela aquí (en Safari o Chrome): " + url + "\n\nO en la app: Lista compartida → Me invitaron → escribe el código " + pretty(info.code);
   }
   async function invite() {
     const text = inviteText();

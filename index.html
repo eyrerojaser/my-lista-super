@@ -201,6 +201,15 @@
     <div class="auth-logo" aria-hidden="true">🛒</div>
     <small>Mi lista del súper</small>
   </div>
+  <div class="promo hidden" id="authPromo" aria-live="polite">
+    <div class="promo-top"><span class="promo-tag">🎉 Promoción de lanzamiento</span></div>
+    <b class="promo-title" id="promoTitle">¡Gratis para las primeras 10!</b>
+    <p class="promo-text" id="promoText">Regístrate ahora y usa la app gratis para siempre.</p>
+    <div class="promo-meter hidden" id="promoMeter">
+      <div class="promo-bar"><div id="promoFill"></div></div>
+      <span id="promoLeft"></span>
+    </div>
+  </div>
   <form class="auth-card" id="authFormWrap" novalidate>
     <h1 id="authTitle">Crea tu cuenta</h1>
     <p id="authSub"></p>
@@ -408,7 +417,7 @@
     <div class="pc-head"><h2>Compras del mes</h2><span id="pcCount" class="fz-count"></span></div>
     <p class="pc-day-empty pc-month-empty" id="pcMonthEmpty">Toca un día del calendario para registrar tu primera compra.</p>
     <ul class="pc-records pc-month-list" id="pcMonthList"></ul>
-    <p class="pc-version">Versión 1.9.0</p>
+    <p class="pc-version">Versión 2.0.2</p>
   </div>
 </section>
 
@@ -489,6 +498,7 @@
 
 <div id="pcToast" class="toast hidden" role="status" aria-live="polite"><span id="pcToastTxt"></span><button id="pcToastUndo" type="button" class="hidden">Deshacer</button></div>
 
+<script src="js/i18n.js"></script>
 <script src="js/categorias.js"></script>
 <script src="js/plus-config.js"></script>
 <script src="js/cuenta.js"></script>

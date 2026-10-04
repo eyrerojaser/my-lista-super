@@ -77,9 +77,9 @@
   const monthKey = (y, m) => y + "-" + pad(m + 1);
   const inMonth = (y, m) => records.filter(r => r.date.startsWith(monthKey(y, m)));
   const sum = list => list.reduce((n, r) => n + (r.cents || 0), 0);
-  function monthName(y, m) { return cap(new Date(y, m, 1).toLocaleDateString("es", { month: "long", year: "numeric" }).replace(" de ", " ")); }
-  function dayTitle(iso) { return cap(parseISO(iso).toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long" })); }
-  function shortDate(iso) { return cap(parseISO(iso).toLocaleDateString("es", { weekday: "short", day: "numeric", month: "short" }).replace(/\./g, "")); }
+  function monthName(y, m) { return cap(new Date(y, m, 1).toLocaleDateString(window.I18N ? I18N.loc() : "es", { month: "long", year: "numeric" }).replace(" de ", " ")); }
+  function dayTitle(iso) { return cap(parseISO(iso).toLocaleDateString(window.I18N ? I18N.loc() : "es", { weekday: "long", day: "numeric", month: "long" })); }
+  function shortDate(iso) { return cap(parseISO(iso).toLocaleDateString(window.I18N ? I18N.loc() : "es", { weekday: "short", day: "numeric", month: "short" }).replace(/\./g, "")); }
 
   /* ---------- pantalla ---------- */
   function updateLink() {
@@ -280,17 +280,18 @@
   $("pcDownload").onclick = async () => {
     const list = inMonth(viewY, viewM).sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.created - b.created));
     if (!list.length) { toast("No hay compras registradas en " + monthName(viewY, viewM) + "."); return; }
+    const T = x => (window.I18N ? I18N.t(x) : x);
     const rows = [
-      ["Mis Compras - " + monthName(viewY, viewM)],
+      [T("Mis Compras - " + monthName(viewY, viewM))],
       [],
-      ["Fecha", "Día", "Tienda", "Gasto (USD)", "Foto del recibo"],
-      ...list.map(r => [r.date, parseISO(r.date).toLocaleDateString("es", { weekday: "long" }), r.store || "", (r.cents / 100).toFixed(2), r.photo ? "Sí" : "No"]),
+      [T("Fecha"), T("Día"), T("Tienda"), T("Gasto (USD)"), T("Foto del recibo")],
+      ...list.map(r => [r.date, parseISO(r.date).toLocaleDateString(window.I18N ? I18N.loc() : "es", { weekday: "long" }), r.store || "", (r.cents / 100).toFixed(2), r.photo ? T("Sí") : T("No")]),
       [],
-      ["TOTAL DEL MES", "", "", (sum(list) / 100).toFixed(2), ""],
-      ["Número de compras", "", "", String(list.length), ""],
+      [T("TOTAL DEL MES"), "", "", (sum(list) / 100).toFixed(2), ""],
+      [T("Número de compras"), "", "", String(list.length), ""],
     ];
     const text = rows.map(r => r.map(csvCell).join(",")).join("\r\n") + "\r\n";
-    const name = "mis-compras-" + monthKey(viewY, viewM) + ".csv";
+    const name = (window.I18N && I18N.lang() === "en" ? "my-purchases-" : "mis-compras-") + monthKey(viewY, viewM) + ".csv";
     const blob = new Blob(["\ufeff" + text], { type: "text/csv;charset=utf-8" });
     // En iPhone se usa el menú de compartir, que tiene "Guardar en Archivos".
     const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);

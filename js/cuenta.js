@@ -26,15 +26,40 @@
     const i = document.createElement("input"); i.id = id; i.type = type; Object.assign(i, extra || {});
     w.append(s, i); return w;
   }
+  /* ---------- cartel de la promoción (lugares gratis que quedan) ---------- */
+  let promo = null;
+  async function loadPromo() {
+    if (!CFG.promo || !CFG.foundersLimit) return;
+    try {
+      const r = await fetch("/api/promo", { cache: "no-store" });
+      if (r.ok) promo = await r.json();
+    } catch {}
+    renderPromo();
+  }
+  function renderPromo() {
+    const box = $("authPromo");
+    const total = CFG.foundersLimit;
+    const show = CFG.promo && total && mode === "register" && !(promo && promo.left === 0);
+    box.classList.toggle("hidden", !show);
+    if (!show) return;
+    $("promoTitle").textContent = "¡Gratis para las primeras " + total + "!";
+    $("promoText").textContent = "Regístrate ahora y, si estás entre las primeras " + total + ", usas la app gratis para siempre.";
+    if (promo && typeof promo.left === "number") {
+      const left = Math.min(total, promo.left);
+      $("promoMeter").classList.remove("hidden");
+      $("promoFill").style.width = Math.round(((total - left) / total) * 100) + "%";
+      $("promoLeft").textContent = left === 1 ? "¡Queda 1 solo lugar!" : "Quedan " + left + " de " + total + " lugares";
+    }
+  }
+
   function render() {
+    renderPromo();
     const f = $("authForm"); f.replaceChildren();
     const t = $("authTitle"), sub = $("authSub");
     $("authError").classList.add("hidden");
     if (mode === "register") {
       t.textContent = "Crea tu cuenta";
-      sub.textContent = CFG.enabled && CFG.foundersLimit
-        ? "Las primeras " + CFG.foundersLimit + " personas que se registren usan la app gratis."
-        : "Regístrate para empezar a usar tu lista del súper.";
+      sub.textContent = "Regístrate para empezar a usar tu lista del súper.";
       f.append(field("auName", "Nombre", "text", { autocomplete: "name", required: true, maxLength: 60 }),
         field("auEmail", "Correo", "email", { autocomplete: "email", required: true, inputMode: "email" }),
         field("auPass", "Contraseña (mínimo 8 caracteres)", "password", { autocomplete: "new-password", required: true, minLength: 8 }));
@@ -115,7 +140,7 @@
   }
   function logout(expired) {
     acct = null; save();
-    mode = "login"; show();
+    mode = "login"; show(); loadPromo();
     if (expired) error("Tu sesión venció. Vuelve a entrar.");
   }
 
@@ -127,7 +152,7 @@
     logout: () => logout(false),
     onChange: f => listeners.push(f),
   };
-  if (CFG.authRequired && !acct) { mode = "register"; show(); }
+  if (CFG.authRequired && !acct) { mode = "register"; show(); loadPromo(); }
   else refresh();
   document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
 })();

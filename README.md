@@ -51,9 +51,11 @@ Queda un ícono propio en tu pantalla de inicio y se abre a pantalla completa, c
 
 **Enviar la lista.** Toca *Enviar lista* y elige WhatsApp (o cualquier app de mensajes). La otra persona recibe la lista escrita para leerla directo en el chat, y un enlace: si lo abre, la app le pregunta si quiere agregar esos productos a su lista para ir marcándolos en la tienda. En iPhone, conviene copiar ese enlace y abrirlo en Safari.
 
-**Categorías automáticas.** Cada producto que agregas (escaneado o escrito) se acomoda solo en su categoría: Frutas y verduras, Carnes, Lácteos, Panadería, Despensa, Congelados, Bebidas, Botanas y dulces, Limpieza y hogar, Cuidado personal, Bebé y mascotas u Otros. Funciona en español e inglés (leche o milk → Lácteos, pollo o chicken → Carnes). Si alguno queda en la categoría equivocada, toca su imagen y elige la correcta: la app se acuerda para la próxima vez.
+**Idiomas: español e inglés.** Toda la app está en los dos idiomas. Arriba a la derecha (y en la pantalla de registro) hay un botón **EN / ES** para cambiar. La primera vez, la app usa el idioma del teléfono. Lo que escribe cada persona (nombres de productos, tiendas) no se traduce. Las listas descargadas, los resúmenes de Mis Compras y los mensajes para compartir salen en el idioma elegido. Las traducciones están en `js/i18n.js`: si quieres cambiar alguna palabra en inglés, búscala ahí.
 
-**Productos comunes.** Al tocar *Agregar por nombre* aparecen productos comunes para agregarlos con un toque. Al escribir, la app sugiere productos que coinciden, en español o inglés (por ejemplo "chick" → Chicken, Chicken breast…).
+**Categorías automáticas.** Cada producto que agregas (escaneado o escrito) se acomoda solo en su sección del súper: Frutas y Vegetales, Carnes y Mariscos, Lácteos y Huevos, Panadería, Despensa, Bebidas, Congelados, Limpieza del Hogar, Cuidado Personal, Bebé, Mascotas u Otros (las mismas de *Productos comunes*). Funciona en español e inglés (leche o milk → Lácteos, pollo o chicken → Carnes). Si alguno queda en la categoría equivocada, toca su imagen y elige la correcta: la app se acuerda para la próxima vez.
+
+**Productos comunes.** Al tocar *Agregar por nombre* aparecen productos comunes agrupados como en el súper: Frutas y Vegetales, Carnes y Mariscos, Lácteos y Huevos, Panadería, Despensa, Bebidas, Congelados, Limpieza del Hogar, Cuidado Personal, Bebé, Mascotas y Otros (en inglés: Fruits & Vegetables, Meat & Seafood, Dairy & Eggs…). Con un toque se agregan a la lista; los que ya están en la lista se ven en verde con ✓. Las secciones y sus productos están en `js/categorias.js` (busca `SECTIONS`) por si quieres agregar o cambiar alguno. Al escribir, la app sugiere productos que coinciden, en español o inglés (por ejemplo "chick" → Chicken, Chicken breast…).
 
 **Lista compartida en tiempo real.** Toca *Lista compartida* → *Compartir mi lista* y envía la invitación por WhatsApp. La otra persona abre el enlace (o, en *Lista compartida*, toca *Me invitaron: tengo un código* y lo escribe) y ve la misma lista. Si cualquiera agrega, quita o marca un producto, el cambio aparece en los demás teléfonos en unos segundos. Sin señal, los cambios se guardan y se envían al volver la conexión. Con *Salir de la lista compartida* cada quien se queda con su copia.
 
@@ -124,6 +126,8 @@ Después de agregarlas: **Deploys → Trigger deploy**.
 
 **Las primeras 5 son gratis.** El servidor cuenta las cuentas en el orden en que se registran; las primeras 5 (o lo que diga `FOUNDERS_LIMIT`) tienen todo gratis para siempre. **Ojo:** tus propias cuentas de prueba también cuentan. Si tú te registras primero, pon `FOUNDERS_LIMIT` en 6 para que queden 5 lugares para tus clientas.
 
+**Cartel de promoción.** En la pantalla de registro aparece *"🎉 Promoción de lanzamiento: ¡Gratis para las primeras 10!"* con una barra y cuántos lugares quedan, que se actualiza sola con cada registro. Cuando se acaban los lugares, el cartel desaparece. El número que se muestra es `foundersLimit` en `js/plus-config.js`; para apagar el cartel pon `promo: false`. Los lugares que quedan los calcula el servidor con `FOUNDERS_LIMIT` (tu cuenta cuenta como una: con 10 lugares para clientas y tu cuenta, pon 11).
+
 **Privacidad:** como ahora guardas nombre y correo de tus usuarias, necesitas una política de privacidad que lo explique.
 
 ## Activar Mi Lista Plus (suscripción con Stripe)
@@ -156,7 +160,7 @@ Hazlo primero en **modo de prueba** de Stripe (Test mode) y, cuando todo funcion
 
 ## ¿Cómo sé que tengo la versión nueva?
 
-Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 1.9.0*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
+Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 2.0.2*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
 
 ## Cambiar algo después
 
@@ -173,6 +177,7 @@ css/styles.css          Diseño
 js/app.js               Lista, escáner y pantallas
 js/scanner.js           Lectura del código de barras con la cámara
 js/products.js          Identificación del producto por código
+js/i18n.js              Traducciones al inglés y botón de idioma
 js/categorias.js        Categorías automáticas y productos comunes (español e inglés)
 js/compartir.js         Lista compartida en tiempo real
 netlify/functions/list-*  Funciones que guardan la lista compartida

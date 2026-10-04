@@ -23,7 +23,7 @@
   function daysLeft(iso) { return Math.round(dayNum(iso) - dayNum(todayISO())); }
   function fmtDate(iso) {
     const [y, m, d] = iso.split("-").map(Number);
-    return new Date(y, m - 1, d).toLocaleDateString("es", { day: "numeric", month: "short", year: "numeric" }).replace(".", "");
+    return new Date(y, m - 1, d).toLocaleDateString(window.I18N ? I18N.loc() : "es", { day: "numeric", month: "short", year: "numeric" }).replace(".", "");
   }
   function daysText(n) {
     if (n > 1) return "Quedan " + n + " días";
@@ -519,8 +519,9 @@
     if (!due.length) return;
     try {
       const reg = await navigator.serviceWorker.ready;
-      await reg.showNotification("❄️ Freezer: úsalo pronto", {
-        body: due.map(i => i.name + " — " + daysText(daysLeft(dueOf(i))).toLowerCase()).join("\n"),
+      const T = x => (window.I18N ? I18N.t(x) : x);
+      await reg.showNotification(T("❄️ Freezer: úsalo pronto"), {
+        body: due.map(i => i.name + " — " + T(daysText(daysLeft(dueOf(i)))).toLowerCase()).join("\n"),
         icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: "freezer", data: { url: "./?freezer=1" },
       });
       due.forEach(i => { done[i.id + "|" + dueOf(i)] = 1; });

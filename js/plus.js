@@ -39,7 +39,7 @@
   }
   const locked = f => enabled() && (whole || feats.includes(f)) && !isPlus();
   const pretty = c => String(c || "").replace(/(.{4})(?=.)/g, "$1-");
-  const fmtDate = s => new Date(s * 1000).toLocaleDateString("es", { day: "numeric", month: "long", year: "numeric" });
+  const fmtDate = s => new Date(s * 1000).toLocaleDateString(window.I18N ? I18N.loc() : "es", { day: "numeric", month: "long", year: "numeric" });
 
   /* ---------- bloqueo ---------- */
   document.addEventListener("click", e => {

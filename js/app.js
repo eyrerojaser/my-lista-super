@@ -107,7 +107,7 @@
     const done = items.filter(i => i.done).sort((a, b) => b.t - a.t);
     // Pendientes agrupados por categoría, en el orden de la tienda.
     const groups = {};
-    todo.forEach(i => { const c = Categorias.BY_ID[i.cat] ? i.cat : (i.cat = Categorias.categorize(i.name)); (groups[c] = groups[c] || []).push(i); });
+    todo.forEach(i => { Categorias.migrate(i); const c = Categorias.BY_ID[i.cat] ? i.cat : (i.cat = Categorias.categorize(i.name)); (groups[c] = groups[c] || []).push(i); });
     $("todo").replaceChildren(...Categorias.CATS.filter(c => groups[c.id]).map(c => {
       const block = document.createElement("section"); block.className = "cat-block";
       const h = document.createElement("h3"); h.className = "cat-head";
@@ -188,10 +188,24 @@
     if (document.activeElement !== $("typeIn")) { sug.classList.add("hidden"); return; }
     const pending = new Set(items.filter(i => !i.done).map(i => norm(i.name)));
     if (!q) {
+      // Productos comunes agrupados por sección del súper.
       const h = document.createElement("p"); h.className = "sug-title"; h.textContent = "Productos comunes";
-      const wrap = document.createElement("div"); wrap.className = "sug-chips";
-      wrap.append(...Categorias.popular(24).filter(p => !pending.has(norm(p.name))).slice(0, 14).map(chip));
-      sug.replaceChildren(h, wrap);
+      const blocks = Categorias.sections().map(sec => {
+        const box = document.createElement("div"); box.className = "sug-sec";
+        const head = document.createElement("p"); head.className = "sug-sec-head";
+        const e = document.createElement("span"); e.textContent = sec.emoji; e.setAttribute("aria-hidden", "true");
+        const n = document.createElement("span"); n.textContent = sec.name;
+        head.append(e, n);
+        const wrap = document.createElement("div"); wrap.className = "sug-chips";
+        wrap.append(...sec.items.map(p => {
+          const b = chip(p);
+          if (pending.has(norm(p.name))) { b.classList.add("in-list"); b.setAttribute("aria-label", p.name + " ✓"); }
+          return b;
+        }));
+        box.append(head, wrap);
+        return box;
+      });
+      sug.replaceChildren(h, ...blocks);
     } else {
       const list = Categorias.suggest(q, 6);
       const rows = list.map(p => sugItem(p));
@@ -447,7 +461,10 @@
     const packed = todo.map(i => [i.name, i.qty || 1, i.emoji || "", i.code || "", i.detail || ""]);
     const link = location.origin + location.pathname + "?lista=" + toB64(JSON.stringify(packed));
     const lines = todo.map(i => "▫️ " + (i.emoji ? i.emoji + " " : "") + i.name + (i.qty > 1 ? " (×" + i.qty + ")" : ""));
-    const text = "🛒 Lista del súper (" + todo.length + (todo.length === 1 ? " producto" : " productos") + ")\n\n" +
+    const en = window.I18N && I18N.lang() === "en";
+    const text = en
+      ? "🛒 Grocery list (" + todo.length + (todo.length === 1 ? " item" : " items") + ")\n\n" + lines.join("\n") + "\n\nOpen it in the app to check things off: " + link
+      : "🛒 Lista del súper (" + todo.length + (todo.length === 1 ? " producto" : " productos") + ")\n\n" +
       lines.join("\n") + "\n\nÁbrela en la app para ir marcando: " + link;
     return { text, link };
   }
@@ -466,13 +483,14 @@
     const d = new Date();
     const pad = n => String(n).padStart(2, "0");
     const stamp = d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
-    const fecha = d.toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    const fecha = d.toLocaleDateString(window.I18N ? I18N.loc() : "es", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
     const line = (i, box) => box + " " + i.name + (i.qty > 1 ? " (×" + i.qty + ")" : "") + (i.detail ? " — " + i.detail : "");
     const todo = items.filter(i => !i.done);
     const done = items.filter(i => i.done);
-    let text = "MI LISTA DEL SÚPER\n" + fecha.charAt(0).toUpperCase() + fecha.slice(1) + "\n\n";
-    text += "POR COMPRAR (" + todo.length + ")\n" + (todo.length ? todo.map(i => line(i, "☐")).join("\n") : "Nada pendiente") + "\n";
-    if (done.length) text += "\nEN EL CARRITO (" + done.length + ")\n" + done.map(i => line(i, "☑")).join("\n") + "\n";
+    const T = x => (window.I18N ? I18N.t(x) : x);
+    let text = T("MI LISTA DEL SÚPER") + "\n" + fecha.charAt(0).toUpperCase() + fecha.slice(1) + "\n\n";
+    text += T("POR COMPRAR") + " (" + todo.length + ")\n" + (todo.length ? todo.map(i => line(i, "☐")).join("\n") : T("Nada pendiente")) + "\n";
+    if (done.length) text += "\n" + T("EN EL CARRITO") + " (" + done.length + ")\n" + done.map(i => line(i, "☑")).join("\n") + "\n";
     const name = "lista-super-" + stamp + ".txt";
     return { name, blob: new Blob(["\ufeff" + text], { type: "text/plain;charset=utf-8" }) };
   }

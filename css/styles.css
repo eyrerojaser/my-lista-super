@@ -570,3 +570,44 @@ ul{list-style:none;margin:0;padding:0}
 .acct-ava,.plus-card .pc-link-ico{font-weight:800}
 .acct-ava{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(145deg,var(--mango),var(--mango-2));color:var(--on-mango);font-size:1.2rem}
 .plus-sheet .sh-danger{width:100%;height:50px;border:0;border-radius:16px;font-weight:700;margin-top:8px}
+
+/* Cartel de promoción en el registro */
+.promo{max-width:440px;margin:-50px 16px 0;position:relative;z-index:1;border-radius:24px;padding:16px 16px 14px;color:var(--on-mango);
+  background:linear-gradient(145deg,var(--mango),var(--mango-2));box-shadow:0 18px 36px -18px rgba(255,138,61,.95);text-align:center}
+@media (min-width:480px){.promo{margin-left:auto;margin-right:auto}}
+.promo + .auth-card{margin-top:12px}
+.promo-tag{display:inline-block;padding:4px 10px;border-radius:999px;background:var(--plum);color:var(--on-plum);font-size:.78rem;font-weight:800}
+.promo-title{display:block;margin:8px 0 4px;font-size:1.6rem;font-weight:800;letter-spacing:-.035em;line-height:1.05}
+.promo-text{margin:0;font-size:.92rem;font-weight:600;opacity:.85}
+.promo-meter{margin-top:12px}
+.promo-bar{height:10px;border-radius:10px;background:rgba(42,22,54,.18);overflow:hidden}
+.promo-bar div{height:100%;width:0;border-radius:10px;background:var(--plum);transition:width .6s ease}
+.promo-meter span{display:block;margin-top:6px;font-weight:800;font-size:.95rem}
+@media (prefers-reduced-motion: reduce){.promo-bar div{transition:none}}
+
+/* Botón de idioma */
+.lang-btn{height:34px;min-width:44px;border-radius:999px;border:1.5px solid rgba(255,244,228,.35);background:rgba(255,244,228,.08);color:var(--on-plum);font-weight:800;font-size:.82rem;padding:0 10px}
+.lang-auth{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:16px}
+.auth-band{position:relative}
+.top > div:first-child{min-width:0}
+.top b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-right{gap:6px;flex:none}
+.fz-pill{white-space:nowrap;padding:0 10px}
+.lang-top{min-width:38px;padding:0 8px}
+@media (max-width:370px){.top b{font-size:1.2rem}.ring{width:40px;height:40px}.ring svg{width:40px;height:40px}}
+@media (max-width:400px){
+  .top b{font-size:1.22rem}
+  .top-right .ring{width:40px;height:40px}.top-right .ring svg{width:40px;height:40px}
+  .fz-pill{padding:0 8px;font-size:.8rem}
+  .lang-top{min-width:34px;padding:0 6px;font-size:.78rem}
+}
+
+/* Productos comunes por sección del súper */
+.suggest{max-height:min(60vh,460px)}
+.sug-sec{padding:2px 4px 8px}
+.sug-sec + .sug-sec{border-top:1px solid var(--line);padding-top:8px}
+.sug-sec-head{display:flex;align-items:center;gap:6px;margin:2px 4px 6px;font-size:.84rem;font-weight:800;color:var(--ink)}
+.sug-sec .sug-chips{padding:0}
+.sug-sec .sug-chip{height:32px;padding:0 11px;font-size:.86rem}
+.sug-chip.in-list{background:var(--ok-soft);color:var(--ok)}
+.sug-chip.in-list::after{content:" ✓";font-weight:800}

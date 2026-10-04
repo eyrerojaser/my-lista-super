@@ -15,6 +15,7 @@ window.PLUS_CONFIG = {
   monthly: { link: "", price: "$5.99 al mes", label: "Plan mensual" },
   yearly:  { link: "", price: "", label: "Plan anual", note: "" },   // déjalo vacío si solo cobras mensual
   trialDays: 0,          // días gratis de prueba (deben coincidir con tu enlace de Stripe)
-  foundersLimit: 5,      // solo para mostrar el texto; el número real lo decide el servidor (FOUNDERS_LIMIT)
+  foundersLimit: 10,     // solo para mostrar el texto; el número real lo decide el servidor (FOUNDERS_LIMIT)
+  promo: true,           // cartel "¡Gratis para las primeras!" con los lugares que quedan, en la pantalla de registro
   supportEmail: "",
 };
