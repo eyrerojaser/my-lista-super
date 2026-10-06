@@ -1,5 +1,6 @@
 import { store, normEmail, validEmail, emailKey, hashPassword, nextNumber, FOUNDERS, sessionFor, publicProfile, json, readBody } from "../lib/auth-core.mjs";
 import { randomBytes } from "node:crypto";
+import { notifyAdmins } from "../lib/admin-notify.mjs";
 
 export default async (req) => {
   if (req.method !== "POST") return json({ error: "Método no permitido" }, 405);
@@ -17,6 +18,8 @@ export default async (req) => {
   user.founder = user.n <= FOUNDERS();     // las primeras cuentas tienen Plus gratis
   await s.setJSON(key, user);
   await s.setJSON("ids/" + user.uid, { key });
+  // Aviso para la dueña de la app.
+  await notifyAdmins("🎉 Nueva cuenta #" + user.n, user.name + " · " + user.email + (user.founder ? " · Fundadora (gratis)" : ""), "admin-new-" + user.n);
   return json({ token: await sessionFor(user), user: publicProfile(user) });
 };
 export const config = { path: "/api/auth-register" };

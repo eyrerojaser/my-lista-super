@@ -6,6 +6,11 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Panel · Mi Lista</title>
 <link rel="icon" type="image/png" href="icons/favicon-32.png">
+<link rel="manifest" href="admin.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mi Lista Panel">
+<meta name="theme-color" content="#2A1636">
 <link rel="stylesheet" href="css/styles.css">
 <style>
   body{background:var(--bg)}
@@ -34,6 +39,13 @@
   .ad-tools{display:flex;gap:8px;margin-bottom:10px}
   .ad-tools input{flex:1;min-width:0;height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);padding:0 12px;color:var(--ink)}
   .ad-tools button{height:44px;border:0;border-radius:12px;background:var(--tile);font-weight:700;padding:0 14px}
+  .ad-notify{display:flex;align-items:center;gap:12px}
+  .ad-notify div{flex:1;min-width:0}
+  .ad-notify b{display:block}
+  .ad-notify small{display:block;color:var(--muted);font-size:.84rem}
+  .ad-notify button{flex:none;height:44px;border:0;border-radius:14px;background:linear-gradient(145deg,var(--mango),var(--mango-2));color:var(--on-mango);font-weight:800;padding:0 14px}
+  .ad-notify.on button{background:var(--tile);color:var(--ink)}
+  .ad-help{margin:10px 0 0;padding:10px 12px;border-radius:12px;background:var(--tile);font-size:.88rem}
 </style>
 </head>
 <body>
@@ -45,6 +57,11 @@
     <p class="pc-error hidden" id="err" role="alert"></p>
   </form>
   <section id="data" class="hidden">
+    <div class="ad-card ad-notify" id="notifyCard">
+      <div><b>🔔 Avisos en este teléfono</b><small id="notifyTxt">Te avisamos cuando alguien se registre o pida un código de contraseña (con el código incluido).</small></div>
+      <button type="button" id="notifyBtn">Activar</button>
+    </div>
+    <p class="ad-help hidden" id="notifyHelp"></p>
     <div class="ad-stats">
       <div><b id="sTotal">0</b><span>Cuentas</span></div>
       <div><b id="sFounders">0</b><span id="sFoundersLbl">Fundadoras</span></div>
@@ -92,6 +109,45 @@
     }));
   }
   $("login").onsubmit = e => { e.preventDefault(); pass = $("pw").value; load(); };
+
+  /* ---------- avisos para la administradora ---------- */
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  const help = msg => { $("notifyHelp").textContent = msg; $("notifyHelp").classList.toggle("hidden", !msg); };
+  function setOn(on) {
+    $("notifyCard").classList.toggle("on", on);
+    $("notifyBtn").textContent = on ? "Probar" : "Activar";
+    $("notifyTxt").textContent = on ? "Activados en este teléfono. Te llegará un aviso con cada registro y cada código de contraseña."
+      : "Te avisamos cuando alguien se registre o pida un código de contraseña (con el código incluido).";
+  }
+  try { setOn(localStorage.getItem("admin-notify-v1") === "1" && Notification.permission === "granted"); } catch {}
+  const b64 = s => { const p = "=".repeat((4 - s.length % 4) % 4); const r = atob((s + p).replace(/-/g, "+").replace(/_/g, "/")); return Uint8Array.from(r, c => c.charCodeAt(0)); };
+  $("notifyBtn").onclick = async () => {
+    help("");
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+      help(isIOS && !standalone
+        ? "En iPhone primero agrega este panel a tu pantalla de inicio: toca Compartir → Agregar a inicio. Ábrelo desde ese ícono nuevo (Mi Lista Panel), entra con tu contraseña y toca Activar."
+        : "Este navegador no permite avisos. Prueba con Chrome o Safari actualizados.");
+      return;
+    }
+    try {
+      const perm = await Notification.requestPermission();
+      if (perm !== "granted") { help("Sin permiso no se pueden enviar avisos. Actívalo en los ajustes del teléfono para este sitio."); return; }
+      const reg = await navigator.serviceWorker.register("/sw.js");
+      await navigator.serviceWorker.ready;
+      const { publicKey } = await (await fetch("/api/push-key", { cache: "no-store" })).json();
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64(publicKey) });
+      const r = await fetch("/api/admin-subscribe", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: pass, subscription: sub.toJSON(), test: true }) });
+      if (!r.ok) { const d = await r.json().catch(() => ({})); help(d.error || "No se pudieron activar los avisos."); return; }
+      try { localStorage.setItem("admin-notify-v1", "1"); } catch {}
+      setOn(true);
+      help("Listo. Te enviamos un aviso de prueba; debe llegarte en unos segundos.");
+    } catch (e) { help("No se pudieron activar los avisos. Revisa tu conexión e intenta otra vez."); }
+  };
+  // Se actualiza sola cada minuto mientras el panel está abierto.
+  setInterval(() => { if (pass && !document.hidden && !$("data").classList.contains("hidden")) load(); }, 60000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && pass && !$("data").classList.contains("hidden")) load(); });
   $("q").oninput = render;
   $("reload").onclick = load;
   $("csv").onclick = () => {

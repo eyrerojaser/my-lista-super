@@ -1,3 +1,4 @@
+import { notifyAdmins } from "../lib/admin-notify.mjs";
 import { store, normEmail, emailKey, hashPassword, resetCode, json, readBody, sessionFor, publicProfile } from "../lib/auth-core.mjs";
 
 // Olvidé mi contraseña.
@@ -15,6 +16,8 @@ export default async (req) => {
       const code = resetCode();
       user.reset = { code, exp: Date.now() + 30 * 60 * 1000, tries: 0, at: Date.now() };
       await s.setJSON(key, user);
+      // Aviso para la dueña con el código, para que se lo pueda dar enseguida.
+      await notifyAdmins("🔑 Código de contraseña", user.name + " (" + email + "): " + code + " · vence en 30 min", "admin-reset-" + user.uid);
       if (emailOn) {
         await fetch("https://api.resend.com/emails", {
           method: "POST",

@@ -51,7 +51,7 @@ Queda un ícono propio en tu pantalla de inicio y se abre a pantalla completa, c
 
 **Enviar la lista.** Toca *Enviar lista* y elige WhatsApp (o cualquier app de mensajes). La otra persona recibe la lista escrita para leerla directo en el chat, y un enlace: si lo abre, la app le pregunta si quiere agregar esos productos a su lista para ir marcándolos en la tienda. En iPhone, conviene copiar ese enlace y abrirlo en Safari.
 
-**Idiomas: español e inglés.** Toda la app está en los dos idiomas. Arriba a la derecha (y en la pantalla de registro) hay un botón **EN / ES** para cambiar. La primera vez, la app usa el idioma del teléfono. Lo que escribe cada persona (nombres de productos, tiendas) no se traduce. Las listas descargadas, los resúmenes de Mis Compras y los mensajes para compartir salen en el idioma elegido. Las traducciones están en `js/i18n.js`: si quieres cambiar alguna palabra en inglés, búscala ahí.
+**Idiomas: español e inglés.** Toda la app está en los dos idiomas. Arriba a la derecha (y en la pantalla de registro) está el selector **ES | EN**: el idioma activo se ve resaltado en naranja; toca el otro para cambiar. La primera vez, la app usa el idioma del teléfono. Lo que escribe cada persona (nombres de productos, tiendas) no se traduce. Las listas descargadas, los resúmenes de Mis Compras y los mensajes para compartir salen en el idioma elegido. Las traducciones están en `js/i18n.js`: si quieres cambiar alguna palabra en inglés, búscala ahí.
 
 **Categorías automáticas.** Cada producto que agregas (escaneado o escrito) se acomoda solo en su sección del súper: Frutas y Vegetales, Carnes y Mariscos, Lácteos y Huevos, Panadería, Despensa, Bebidas, Congelados, Limpieza del Hogar, Cuidado Personal, Bebé, Mascotas u Otros (las mismas de *Productos comunes*). Funciona en español e inglés (leche o milk → Lácteos, pollo o chicken → Carnes). Si alguno queda en la categoría equivocada, toca su imagen y elige la correcta: la app se acuerda para la próxima vez.
 
@@ -124,6 +124,10 @@ Después de agregarlas: **Deploys → Trigger deploy**.
 
 **Tu panel de cuentas:** abre `https://TU-APP.netlify.app/admin.html` y escribe tu `ADMIN_PASSWORD`. Ves cuántas cuentas hay, quiénes son fundadoras, quiénes pagan, puedes buscar y descargar la lista en Excel. Si alguien olvidó su contraseña y pidió un código, aparece ahí en rojo para que se lo des.
 
+**Avisos para ti.** En el panel toca **🔔 Activar** y te llegará una notificación al teléfono cada vez que alguien se registre (con su nombre, correo y número) y cada vez que alguien pida un código para cambiar su contraseña (con el código incluido, para que se lo des sin abrir el panel). Al tocar el aviso se abre el panel.
+- **iPhone:** primero agrega el panel a tu pantalla de inicio: abre `admin.html` en Safari → **Compartir → Agregar a inicio**. Te queda un ícono llamado *Mi Lista Panel*. Ábrelo desde ese ícono, entra con tu contraseña y toca **Activar**.
+- **Android:** ábrelo en Chrome, entra y toca **Activar**.
+
 **Las primeras 5 son gratis.** El servidor cuenta las cuentas en el orden en que se registran; las primeras 5 (o lo que diga `FOUNDERS_LIMIT`) tienen todo gratis para siempre. **Ojo:** tus propias cuentas de prueba también cuentan. Si tú te registras primero, pon `FOUNDERS_LIMIT` en 6 para que queden 5 lugares para tus clientas.
 
 **Cartel de promoción.** En la pantalla de registro aparece *"🎉 Promoción de lanzamiento: ¡Gratis para las primeras 10!"* con una barra y cuántos lugares quedan, que se actualiza sola con cada registro. Cuando se acaban los lugares, el cartel desaparece. El número que se muestra es `foundersLimit` en `js/plus-config.js`; para apagar el cartel pon `promo: false`. Los lugares que quedan los calcula el servidor con `FOUNDERS_LIMIT` (tu cuenta cuenta como una: con 10 lugares para clientas y tu cuenta, pon 11).
@@ -160,7 +164,7 @@ Hazlo primero en **modo de prueba** de Stripe (Test mode) y, cuando todo funcion
 
 ## ¿Cómo sé que tengo la versión nueva?
 
-Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 2.0.3*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
+Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 2.0.5*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
 
 ## Cambiar algo después
 
@@ -184,7 +188,8 @@ netlify/functions/list-*  Funciones que guardan la lista compartida
 js/plus.js              Mi Lista Plus: bloqueo de funciones y desbloqueo con Stripe
 js/plus-config.js       Aquí activas el registro y Plus, y pegas tus enlaces de pago y precios
 js/cuenta.js            Registro, inicio de sesión y "olvidé mi contraseña"
-admin.html              Tu panel de cuentas (protegido con ADMIN_PASSWORD)
+admin.html              Tu panel de cuentas (protegido con ADMIN_PASSWORD), con avisos a tu teléfono
+admin.webmanifest       Para instalar el panel en tu pantalla de inicio
 netlify/functions/auth-*  Funciones de las cuentas
 netlify/functions/plus-*  Funciones que confirman pagos con Stripe
 js/compras.js           Mis Compras: calendario, gastos y fotos de recibos

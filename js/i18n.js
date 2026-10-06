@@ -213,7 +213,7 @@
     [/^Versión (.+)$/, "Version $1"], [/^(\d+) de (\d+) lugares$/, "$1 of $2 spots"],
     [/^(.+) → (.+)$/, null], // se traducen las dos partes
   ];
-  const NO_TRANSLATE = ".name, .fz-info > b, .acct-who b, .sh-code b, #shCode, .sc-last b, #fzDateProduct span, .ad-who, .pc-rec-info > b";
+  const NO_TRANSLATE = ".lang-switch button, .name, .fz-info > b, .acct-who b, .sh-code b, #shCode, .sc-last b, #fzDateProduct span, .ad-who, .pc-rec-info > b";
 
   function tr(s) {
     if (lang !== "en" || !s) return s;
@@ -288,15 +288,21 @@
   }
 
   /* ---------- botón para cambiar de idioma ---------- */
+  // Selector con los dos idiomas a la vista: el que está activo se ve resaltado.
   function addButtons() {
     const mk = cls => {
-      const b = document.createElement("button");
-      b.type = "button"; b.className = "lang-btn " + cls;
-      b.textContent = lang === "en" ? "ES" : "EN";
-      b.setAttribute("aria-label", lang === "en" ? "Cambiar a español" : "Switch to English");
-      b.setAttribute("data-noi18n", "");
-      b.onclick = toggle;
-      return b;
+      const wrap = document.createElement("div");
+      wrap.className = "lang-switch " + cls; wrap.setAttribute("role", "group");
+      wrap.setAttribute("aria-label", lang === "en" ? "Language" : "Idioma");
+      [["es", "ES", "Español"], ["en", "EN", "English"]].forEach(([code, label, full]) => {
+        const b = document.createElement("button");
+        b.type = "button"; b.textContent = label; b.setAttribute("data-noi18n", "");
+        b.setAttribute("aria-label", full); b.setAttribute("aria-pressed", String(lang === code));
+        if (lang === code) b.className = "on";
+        b.onclick = () => { if (lang !== code) toggle(); };
+        wrap.append(b);
+      });
+      return wrap;
     };
     const top = document.querySelector(".top-right");
     if (top) top.insertBefore(mk("lang-top"), top.firstChild);
