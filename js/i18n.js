@@ -98,6 +98,13 @@
     "Listo: te avisaremos 3 días antes de cada fecha.": "Done: we'll remind you 3 days before each date.", "Avisos activados: se revisan cada vez que abres la app.": "Alerts on: they're checked every time you open the app.",
     "Los avisos están activos. Para apagarlos, usa los ajustes de notificaciones del teléfono.": "Alerts are on. To turn them off, use your phone's notification settings.",
     "❄️ Freezer: úsalo pronto": "❄️ Freezer: use it soon",
+    "📄 Leer etiqueta (carne, pollo, pescado)": "📄 Read label (meat, chicken, fish)", "Leyendo la etiqueta…": "Reading the label…", "Nombre y fecha": "Name and date",
+    "Leyendo la etiqueta…": "Reading the label…", "Buscando la fecha…": "Looking for the date…", "Revisa el nombre": "Check the name",
+    "Esto leí en la etiqueta. Corrígelo o escríbelo como prefieras (por ejemplo, Milanesa).": "This is what I read on the label. Fix it or type it however you like.",
+    "No pude leer el nombre en la etiqueta. Escríbelo.": "I couldn't read the name on the label. Type it.", "Ej. Milanesa de res": "E.g. Beef steak",
+    "¿Carne, pollo o pescado de la tienda? Ese código no se puede escanear: toca Leer etiqueta.": "Store meat, chicken or fish? That code can't be scanned: tap Read label.",
+    "Ese código es de la tienda (producto pesado). Toca Leer etiqueta para sacar el nombre y la fecha.": "That's a store code (weighed product). Tap Read label to get the name and date.",
+    "Puedes leer la etiqueta o escribir el nombre.": "You can read the label or type the name.",
     "Toma una foto o escribe la fecha.": "Take a photo or type the date.", "Puedes tomar una foto o escribir el nombre.": "You can take a photo or type the name.",
     "Escribe su nombre.": "Type its name.", "Abriendo cámara…": "Opening camera…",
     // ----- Mis Compras -----

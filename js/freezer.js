@@ -197,11 +197,23 @@
           await identify(code);
         });
         $("fzScanMsg").textContent = "Coloca el código de barras dentro del recuadro";
-      } catch (e) { $("fzScanMsg").textContent = camError(e) + " Puedes tomar una foto o escribir el nombre."; }
+        clearTimeout(hintTimer);
+        hintTimer = setTimeout(() => {
+          if (productOpen && !handled) $("fzScanMsg").textContent = "¿Carne, pollo o pescado de la tienda? Ese código no se puede escanear: toca Leer etiqueta.";
+        }, 7000);
+      } catch (e) { $("fzScanMsg").textContent = camError(e) + " Puedes leer la etiqueta o escribir el nombre."; }
     });
   }
-  let handled = false;
+  let handled = false, hintTimer = null;
+  // Códigos de peso variable (carne, pollo, pescado y queso pesados en la tienda): empiezan con 2
+  // y son internos de cada tienda, así que ninguna base de datos los conoce.
+  const isWeightCode = c => /^0?2\d{11}$/.test(String(c));
   async function identify(code) {
+          if (isWeightCode(code)) {
+            handled = false; $("fzScanFound").classList.add("hidden"); productScanner.pause(4000);
+            $("fzScanMsg").textContent = "Ese código es de la tienda (producto pesado). Toca Leer etiqueta para sacar el nombre y la fecha.";
+            return;
+          }
           const res = await Products.lookup(code);
           if (res.status === "found") return finishProduct(res.product);
           const name = await ask({
@@ -263,17 +275,48 @@
     $("fzScanMsg").textContent = "Buscando el código en la foto…";
     let code = null;
     try { code = await barcodeFromPhoto(file); } catch {}
-    if (code && !handled) {
+    if (code && !handled && !isWeightCode(code)) {
       handled = true; beep(); FreezerDateReader.warmup();
       showFound({ name: "Buscando producto…", emoji: "🔎" }, "Código " + code);
       $("fzScanMsg").textContent = "";
       await identify(code);
+    } else if (!handled) {
+      // Sin código legible: se lee el texto de la etiqueta (nombre y fecha).
+      await fromLabel(file);
     } else {
       $("fzScanMsg").textContent = "No encontré un código en la foto. Acércate más o escribe el nombre.";
       await restartIfEnded(productScanner, () => productScanner.start(c => { if (!handled) { handled = true; productScanner.pause(60000); beep(); FreezerDateReader.warmup(); showFound({ name: "Buscando producto…", emoji: "🔎" }, "Código " + c); identify(c); } }));
       productScanner.pause(300);
     }
   };
+  /* ---------- Leer etiqueta (carne, pollo, pescado de la tienda) ---------- */
+  async function fromLabel(file) {
+    if (handled) return;
+    handled = true; clearTimeout(hintTimer);
+    productScanner.pause(120000);
+    showFound({ name: "Leyendo la etiqueta…", emoji: "📄" }, "Nombre y fecha");
+    $("fzScanMsg").textContent = "";
+    let r = { name: "", info: null };
+    try { r = await FreezerDateReader.readLabel(file, m => { $("fzScanMsg").textContent = m; }); } catch {}
+    $("fzScanMsg").textContent = "";
+    if (!productOpen) return;
+    const name = await ask({
+      title: r.name ? "Revisa el nombre" : "Nombre del producto",
+      text: r.name ? "Esto leí en la etiqueta. Corrígelo o escríbelo como prefieras (por ejemplo, Milanesa)." : "No pude leer el nombre en la etiqueta. Escríbelo.",
+      value: r.name, placeholder: "Ej. Milanesa de res", ok: "Continuar",
+    });
+    if (!name) { handled = false; $("fzScanFound").classList.add("hidden"); productScanner.pause(500); return; }
+    if (navigator.vibrate) navigator.vibrate(30);
+    closeProductScanner({ name, emoji: Products.emojiFor([], name), preDate: r.info || null });
+  }
+  $("fzLabelIn").addEventListener("click", () => productScanner.pause(120000));
+  $("fzLabelIn").onchange = async e => {
+    const file = e.target.files && e.target.files[0]; e.target.value = "";
+    if (!file) { productScanner.pause(300); return; }
+    await fromLabel(file);
+    if (productOpen && !handled) await restartIfEnded(productScanner, () => productScanner.start(c => { if (!handled) { handled = true; productScanner.pause(60000); beep(); identify(c); } }));
+  };
+
   // Si al tomar la foto el teléfono apagó la cámara en vivo, se vuelve a encender.
   async function restartIfEnded(sc, startFn) {
     const tr = sc.stream && sc.stream.getVideoTracks()[0];
@@ -288,7 +331,7 @@
   }
   function closeProductScanner(result) {
     if (!productOpen) return;
-    productOpen = false; productScanner.stop();
+    productOpen = false; productScanner.stop(); clearTimeout(hintTimer);
     $("fzScanner").classList.add("hidden");
     const r = productResolve; productResolve = null; if (r) r(result || null);
   }
@@ -354,7 +397,9 @@
           if (t.length >= 3) $("fzDateMsg").textContent = "Leyendo: " + t;
         });
         if (dateReader.hasTorch()) $("fzTorch").classList.remove("hidden");
+        if (product.preDate && dateOpen) { dateReader.pause(true); clearTimeout(noDateTimer); beep(); showDateResult(product.preDate); }
       } catch (e) {
+        if (product.preDate) { clearTimeout(noDateTimer); showDateResult(product.preDate); return; }
         const msg = e && e.name && e.name !== "Error" ? camError(e) : "No se pudo preparar el lector de fechas.";
         $("fzDateMsg").textContent = msg + " Toma una foto o escribe la fecha.";
         armNoDate();
@@ -408,6 +453,7 @@
     if (!product) return;
     const info = await openDateScanner(product);
     if (!info) { toast("No se guardó " + product.name); return; }
+    delete product.preDate;
     addItem(product, info);
   }
   $("fzScanBtn").onclick = () => startFlow();
