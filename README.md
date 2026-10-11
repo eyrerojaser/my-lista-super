@@ -1,4 +1,4 @@
-# Mi lista del súper
+# My Super List (Mi lista del súper)
 
 Lista de compras para el teléfono: apuntas la cámara al código de barras, la app identifica el producto y lo agrega sola a tu lista. La lista se guarda en el teléfono y la app funciona aunque no tengas señal dentro de la tienda.
 
@@ -71,7 +71,7 @@ Debajo del total del mes aparecen, lado a lado, las dos formas de guardar un rec
 6. **Escanear recibo** (funciona mejor con recibos de hasta 20 productos): toca *Escanear recibo* y toma una foto del recibo completo (o elígela de tus fotos). La app lee la tienda, la fecha, cada producto con su precio y el total, y te lo muestra para que corrijas lo que haga falta: puedes cambiar nombres y precios, quitar o agregar productos y ajustar el total. Si la suma de productos no coincide con el total, te muestra la diferencia: si es parecida a los impuestos del recibo dice *Impuestos y otros*, y si es mayor te avisa que hay *productos no leídos*. El total del recibo siempre se guarda completo. Al tocar *Guardar compra* se registra en el día del recibo, se suma al total del mes y la foto queda guardada como respaldo. Después puedes volver a ver y corregir los productos desde el lápiz → *Ver y corregir productos*. Consejo: pon el recibo sobre una superficie oscura, estirado y con buena luz.
 7. *Descargar resumen mensual* guarda un archivo (.csv) con cada fecha de compra, lo que gastaste y el total del mes. Se abre en Excel, Google Sheets o Numbers.
 
-**Freezer Scan.** Toca el botón *❄️ Freezer* arriba a la derecha. Ahí llevas la cuenta de lo que tienes congelado, aparte de Mi lista:
+**Freezer Scan (fechas de vencimiento).** Toca el botón *❄️ Freezer* arriba a la derecha. Arriba eliges dónde guardas el producto: **❄️ Freezer, 🥛 Refri o 🥫 Despensa**. Cada lugar tiene su propia lista y el escáner guarda en el lugar elegido. Si no hay fecha impresa, se cuenta desde hoy: 3 meses en el freezer, 7 días en el refri y 6 meses en la despensa. Los avisos de 3 días antes funcionan para los tres. Ahí llevas la cuenta de lo que tienes congelado, aparte de Mi lista:
 
 1. Toca *Empezar* y escanea el código de barras del producto (o usa *Sin código de barras* para carne del carnicero o comida hecha en casa). Si la cámara en vivo no lo lee, toca *Tomar foto*: una foto sale más nítida y se lee mejor.
 2. Se abre un segundo escáner, solo para la fecha. Apunta a la fecha impresa dentro del recuadro. Abajo vas viendo lo que está leyendo ("Leyendo: …") para que sepas si estás bien apuntada. Reconoce si dice **Freeze By, Sell By, Use By o Best By**. Cuando la lee dos veces igual, te la muestra para que confirmes con *Usar* o toques *Reintentar*.
@@ -124,6 +124,8 @@ Después de agregarlas: **Deploys → Trigger deploy**.
 
 **Tu panel de cuentas:** abre `https://TU-APP.netlify.app/admin.html` y escribe tu `ADMIN_PASSWORD`. Ves cuántas cuentas hay, quiénes son fundadoras, quiénes pagan, puedes buscar y descargar la lista en Excel. Si alguien olvidó su contraseña y pidió un código, aparece ahí en rojo para que se lo des.
 
+**Foto de perfil.** En *Mi cuenta* cada persona toca su foto (o *Agregar foto*) para elegir una de la galería o tomarla. Se guarda en su cuenta, así que aparece en cualquier teléfono donde entre, y tú también la ves en tu panel.
+
 **Avisos para ti.** En el panel toca **🔔 Activar** y te llegará una notificación al teléfono cada vez que alguien se registre (con su nombre, correo y número) y cada vez que alguien pida un código para cambiar su contraseña (con el código incluido, para que se lo des sin abrir el panel). Al tocar el aviso se abre el panel.
 - **iPhone:** primero agrega el panel a tu pantalla de inicio: abre `admin.html` en Safari → **Compartir → Agregar a inicio**. Te queda un ícono llamado *Mi Lista Panel*. Ábrelo desde ese ícono, entra con tu contraseña y toca **Activar**.
 - **Android:** ábrelo en Chrome, entra y toca **Activar**.
@@ -158,13 +160,18 @@ Hazlo primero en **modo de prueba** de Stripe (Test mode) y, cuando todo funcion
 7. **Prueba.** Abre la app, toca **Mi Lista Plus**, elige un plan y paga con la tarjeta de prueba `4242 4242 4242 4242`, cualquier fecha futura y cualquier CVC. Al terminar, Stripe te regresa a la app con Plus activo y un **código de 12 letras**. Prueba también **Administrar suscripción** y cancelar.
 8. **Pasar a cobrar de verdad.** Repite los pasos 1 a 5 en modo real (enlaces y clave `rk_live_`), reemplaza la variable `STRIPE_SECRET_KEY` en Netlify y los enlaces en `js/plus-config.js`.
 
+**Plan familiar.** Hay dos planes: **Individual ($5.99 al mes)** y **Familiar** (el precio lo decides tú). Quien paga el plan familiar comparte su lista (*Lista compartida → Invitar a alguien*) y cada persona que se une crea su cuenta y **entra gratis**, hasta 5 personas más (cámbialo con la variable `FAMILY_MEMBERS` en Netlify). Las fundadoras también tienen el plan familiar gratis. En *Mi cuenta* quien paga ve su familia y puede quitar a alguien; quien es familiar ve "Plan familiar de …" y puede salir. Si se cancela el plan familiar, la familia pierde el acceso al terminar el periodo pagado. Para el plan familiar en Stripe:
+1. En el producto *Mi Lista Plus* (o uno nuevo), agrega un precio mensual con el monto que decidas.
+2. Abre ese precio → **Metadata** → agrega `plan` = `family`. Así la app sabe que es el plan familiar.
+3. Crea su enlace de pago (con la misma dirección de regreso que el individual) y pégalo en `family.link` en `js/plus-config.js`, con su precio en `family.price`.
+
 **El código de Plus** (solo si apagas las cuentas con `authRequired: false`). Cada clienta recibe un código al pagar. Con él desbloquea Plus en la app instalada o en otro teléfono (**Mi Lista Plus → ¿Ya pagaste? Escribe tu código**). Esto es importante en iPhone: el pago se abre en Safari, y la app instalada guarda sus datos aparte, así que ahí se desbloquea con el código. Si alguien lo pierde, lo encuentras en Stripe → **Customers** → la clienta → **Metadata**, como `codigo_mi_lista`.
 
 **Si cancelan:** Plus sigue activo hasta el final del periodo pagado y luego se bloquea. Sus datos no se borran; si vuelve a pagar, recupera todo.
 
 ## ¿Cómo sé que tengo la versión nueva?
 
-Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 2.0.6*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
+Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 2.1.1*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
 
 ## Cambiar algo después
 

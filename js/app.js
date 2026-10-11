@@ -186,6 +186,45 @@
     b.onclick = () => { addProduct({ name: p.name, emoji: p.emoji, cat: p.cat }); renderSuggest(); if (navigator.vibrate) navigator.vibrate(10); };
     return b;
   }
+  let openSec = null; // categoría abierta en la página de agregar
+  function prodRow(p, sec, inList) {
+    const row = document.createElement("div"); row.className = "prod-row" + (inList ? " in-list" : "");
+    const b = document.createElement("button"); b.type = "button"; b.className = "prod-add";
+    const e = document.createElement("span"); e.className = "prod-emoji"; e.textContent = p.emoji || Products.emojiFor([], p.name) || "🛒"; e.setAttribute("aria-hidden", "true");
+    const n = document.createElement("span"); n.className = "prod-name"; n.textContent = p.name;
+    const mark = document.createElement("span"); mark.className = "prod-mark"; mark.textContent = inList ? "✓" : "+"; mark.setAttribute("aria-hidden", "true");
+    b.append(e, n, mark);
+    b.setAttribute("aria-label", p.name + (inList ? " ✓" : ""));
+    b.onclick = () => { addProduct({ name: p.name, emoji: p.emoji, cat: p.cat }); renderSuggest(); if (navigator.vibrate) navigator.vibrate(10); };
+    row.append(b);
+    if (p.custom) {
+      const x = document.createElement("button"); x.type = "button"; x.className = "prod-del"; x.textContent = "✕";
+      x.setAttribute("aria-label", "Quitar de esta categoría"); x.title = "Quitar de esta categoría";
+      x.onclick = () => { Categorias.removeCustom(p.name, sec.id); renderSuggest(); };
+      row.append(x);
+    }
+    return row;
+  }
+  function catProducts(sec, pending) {
+    const wrap = document.createElement("div"); wrap.className = "cat-acc-body";
+    wrap.append(...sec.items.map(p => prodRow(p, sec, pending.has(norm(p.name)))));
+    // ¿No está el producto? Se agrega aquí y se queda guardado en esta categoría.
+    const f = document.createElement("form"); f.className = "cat-new"; f.autocomplete = "off";
+    const inp = document.createElement("input"); inp.type = "text"; inp.maxLength = 80; inp.enterKeyHint = "done";
+    inp.placeholder = "¿No está? Escríbelo aquí"; inp.setAttribute("aria-label", "¿No está? Escríbelo aquí");
+    const go = document.createElement("button"); go.type = "submit"; go.textContent = "Agregar";
+    f.append(inp, go);
+    f.onsubmit = ev => {
+      ev.preventDefault();
+      const v = inp.value.trim(); if (!v) { inp.focus(); return; }
+      const p = Categorias.addCustom(v, sec.id); if (!p) return;
+      addProduct({ name: p.name, emoji: p.emoji, cat: sec.id });
+      renderSuggest();
+      toast(p.name + " → " + sec.name);
+    };
+    wrap.append(f);
+    return wrap;
+  }
   function renderSuggest() {
     if ($("addView").classList.contains("hidden")) return;
     const q = addIn.value.trim();
@@ -193,22 +232,30 @@
     const pending = new Set(pendingItems.map(i => norm(i.name)));
     $("addCount").textContent = pendingItems.length === 0 ? "" : pendingItems.length === 1 ? "En tu lista: 1 producto" : "En tu lista: " + pendingItems.length + " productos";
     if (!q) {
-      // Productos comunes agrupados por sección del súper, cada una con su color.
+      // Solo las categorías (cerradas). Al tocar una, se abren sus productos uno debajo del otro.
       const h = document.createElement("p"); h.className = "sug-title"; h.textContent = "Productos comunes";
       const blocks = Categorias.sections().map(sec => {
-        const box = document.createElement("div"); box.className = "sug-sec";
-        box.style.setProperty("--cat", sec.color);
-        const head = document.createElement("p"); head.className = "sug-sec-head";
-        const e = document.createElement("span"); e.textContent = sec.emoji; e.setAttribute("aria-hidden", "true");
-        const n = document.createElement("span"); n.textContent = sec.name;
-        head.append(e, n);
-        const wrap = document.createElement("div"); wrap.className = "sug-chips";
-        wrap.append(...sec.items.map(p => {
-          const b = chip(p);
-          if (pending.has(norm(p.name))) { b.classList.add("in-list"); b.setAttribute("aria-label", p.name + " ✓"); }
-          return b;
-        }));
-        box.append(head, wrap);
+        const open = openSec === sec.id;
+        const inList = sec.items.filter(p => pending.has(norm(p.name))).length;
+        const box = document.createElement("div"); box.className = "cat-acc" + (open ? " open" : "");
+        box.style.setProperty("--cat", sec.color); box.dataset.sec = sec.id;
+        const head = document.createElement("button"); head.type = "button"; head.className = "cat-acc-head";
+        head.setAttribute("aria-expanded", open ? "true" : "false");
+        const e = document.createElement("span"); e.className = "cat-acc-emoji"; e.textContent = sec.emoji; e.setAttribute("aria-hidden", "true");
+        const t = document.createElement("span"); t.className = "cat-acc-txt";
+        const n = document.createElement("b"); n.textContent = sec.name;
+        const c = document.createElement("small"); c.textContent = sec.items.length + " productos";
+        t.append(n, c);
+        head.append(e, t);
+        if (inList) { const k = document.createElement("span"); k.className = "cat-acc-in"; k.textContent = inList + " ✓"; head.append(k); }
+        const chev = document.createElement("span"); chev.className = "cat-acc-chev"; chev.setAttribute("aria-hidden", "true");
+        head.append(chev);
+        head.onclick = () => {
+          openSec = open ? null : sec.id; renderSuggest();
+          if (openSec) { const el = sug.querySelector('.cat-acc[data-sec="' + sec.id + '"]'); if (el && el.scrollIntoView) el.scrollIntoView({ block: "nearest", behavior: "smooth" }); }
+        };
+        box.append(head);
+        if (open) box.append(catProducts(sec, pending));
         return box;
       });
       sug.replaceChildren(h, ...blocks);
@@ -226,6 +273,7 @@
     $("addView").classList.remove("hidden");
     document.body.style.overflow = "hidden";
     $("addView").scrollTop = 0;
+    openSec = null;
     renderSuggest();
     if (focusInput) addIn.focus();
   }

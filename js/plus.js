@@ -54,6 +54,11 @@
   function enforceWhole() {
     if (!enabled() || !whole) return;
     if (ACC() && !ACC().user()) return; // primero tiene que entrar a su cuenta
+    if (locked("todo") && pendingInvite() && !inviteTried) {
+      inviteTried = true;
+      familyJoin(pendingInvite(), true).then(() => enforceWhole());
+      return;
+    }
     if (locked("todo")) openSheet("paywall", null, null, null, true);
     else if ($("plusSheet").dataset.blocking === "1") closeSheet(true);
   }
@@ -131,8 +136,38 @@
     const A = ACC(), u = A && A.user();
     if (!enabled()) return "";
     if (u && u.founder) return "Plus gratis (de las primeras)";
-    if (isPlus()) return (ast && ast.status === "trialing") || (st && st.status === "trialing") ? "Prueba gratis activa" : "Plus activo";
+    if (isPlus()) {
+      if (ast && ast.plan === "member") return "Plan familiar de " + (ast.ownerName || "tu familia");
+      if ((ast && ast.status === "trialing") || (st && st.status === "trialing")) return "Prueba gratis activa";
+      if (ast && ast.plan === "family") return "Plan familiar";
+      if (ast && ast.plan === "individual") return "Plan individual";
+      return "Plus activo";
+    }
     return whole ? "Sin suscripción" : "Desbloquea Plus";
+  }
+  const coversFamily = () => { const u = ACC() && ACC().user(); return !!((u && u.founder) || (isPlus() && ast && ast.plan === "family")); };
+
+  /* ---------- plan familiar ---------- */
+  let inviteTried = false;
+  const pendingInvite = () => { try { return sessionStorage.getItem("invite-code"); } catch { return null; } };
+  async function familyJoin(code, silent) {
+    const A = ACC(); if (!A || !A.token() || !enabled() || isPlus()) return null;
+    try {
+      const { ok, data } = await api("/api/family", { auth: A.token(), action: "join", code });
+      try { sessionStorage.removeItem("invite-code"); } catch {}
+      if (ok && data.active) {
+        await refreshAccount(true);
+        if (window.MiLista) window.MiLista.toast("¡Entraste al plan familiar de " + (data.ownerName || "tu familia") + "!");
+        return data;
+      }
+      if (!silent) {
+        const msg = data.reason === "full" ? "La familia de " + data.ownerName + " ya está completa (" + data.max + " personas)."
+          : data.reason === "noplan" ? data.ownerName + " no tiene el plan familiar. Pídele que lo active, o suscríbete."
+          : data.error || "Ese código no es de un plan familiar.";
+        showError(msg);
+      }
+      return data;
+    } catch { if (!silent) showError("Sin conexión. Intenta de nuevo con internet."); return null; }
   }
   function updateCard() {
     const card = $("plusCard"), A = ACC(), u = A && A.user();
@@ -140,14 +175,14 @@
       if (!u) { card.classList.add("hidden"); return; }
       card.classList.remove("hidden");
       $("plusCardTitle").textContent = "Mi cuenta";
-      $("plusCardIco").textContent = (u.name || "?").trim().charAt(0).toUpperCase() || "👤";
+      setAvatar($("plusCardIco"), u);
       $("plusSub").textContent = u.name + (enabled() ? " · " + planText() : " · " + u.email);
       card.classList.toggle("on", isPlus());
       return;
     }
     if (!enabled()) { card.classList.add("hidden"); return; }
     card.classList.remove("hidden");
-    $("plusCardTitle").textContent = "Mi Lista Plus"; $("plusCardIco").textContent = "⭐";
+    $("plusCardTitle").textContent = "Mi Lista Plus"; $("plusCardIco").classList.remove("has-photo"); $("plusCardIco").textContent = "⭐";
     $("plusSub").textContent = isPlus() ? planText() : "Desbloquea " + feats.map(f => FEATURES[f].name).join(", ").replace(/, ([^,]*)$/, " y $1");
     card.classList.toggle("on", isPlus());
   }
@@ -159,7 +194,7 @@
     sheet.dataset.blocking = blocking ? "1" : "";
     const A = ACC(), u = A && A.user();
     if (mode === "working") {
-      title.textContent = "Mi Lista Plus";
+      title.textContent = ACC() ? "Mi cuenta" : "Mi Lista Plus";
       box.append(el("p", "plus-working", workingText || "Un momento…"));
     } else if (mode === "welcome") {
       title.textContent = "¡Ya tienes Plus! ⭐";
@@ -171,8 +206,24 @@
       title.textContent = "Mi cuenta";
       if (u) {
         const who = el("div", "acct-who");
-        who.append(el("span", "acct-ava", (u.name || "?").charAt(0).toUpperCase()));
-        const t = el("div"); t.append(el("b", "", u.name), el("small", "", u.email)); who.append(t);
+        // Foto de perfil: se toca la foto (o el botón) para elegir una de la galería o tomarla con la cámara.
+        const inp = el("input"); inp.type = "file"; inp.accept = "image/*"; inp.id = "acctPhotoIn"; inp.className = "fz-file"; inp.tabIndex = -1; inp.setAttribute("aria-hidden", "true");
+        const ava = el("label", "acct-ava acct-ava-btn"); ava.htmlFor = "acctPhotoIn"; ava.setAttribute("aria-label", u.photo ? "Cambiar foto" : "Agregar foto");
+        setAvatar(ava, u);
+        const cam = el("span", "acct-cam", "📷"); cam.setAttribute("aria-hidden", "true"); ava.append(cam);
+        const t = el("div"); t.append(el("b", "", u.name), el("small", "", u.email));
+        const row = el("div", "acct-photo-row");
+        const change = el("label", "acct-photo-btn", u.photo ? "Cambiar foto" : "Agregar foto"); change.htmlFor = "acctPhotoIn";
+        row.append(change);
+        if (u.photo) row.append(btn("Quitar foto", "acct-photo-btn del", () => savePhoto(null)));
+        t.append(row);
+        who.append(ava, t, inp);
+        inp.onchange = async e => {
+          const file = e.target.files && e.target.files[0]; e.target.value = "";
+          if (!file) return;
+          try { await savePhoto(await squarePhoto(file)); }
+          catch { openSheet("account", null, null, "No se pudo abrir esa foto. Prueba con otra."); }
+        };
         box.append(who);
       }
       if (errorText) box.append(el("p", "pc-error", errorText));
@@ -184,7 +235,8 @@
         else if (!A && isPlus() && st) txt += " · se renueva o vence el " + fmtDate(st.until - 3 * 86400);
         s.append(d, el("span", "", txt)); box.append(s);
         if (!A && st && st.code) box.append(codeBox());
-        if (isPlus() && !(u && u.founder)) box.append(btn("Administrar suscripción", "sh-primary", manage));
+        if (A && u && (coversFamily() || (ast && ast.plan === "member"))) { const fam = el("div", "fam-box"); box.append(fam); loadFamily(fam); }
+        if (isPlus() && !(u && u.founder) && !(ast && ast.plan === "member")) box.append(btn("Administrar suscripción", "sh-primary", manage));
         if (!isPlus()) box.append(btn("Ver planes de Plus", "sh-primary", () => openSheet("paywall")));
       }
       if (CFG.supportEmail) box.append(el("p", "plus-note", "¿Dudas? Escríbenos a " + CFG.supportEmail));
@@ -199,10 +251,10 @@
       (whole ? ALL_DESC : feats.map(f => [FEATURES[f].name, FEATURES[f].desc])).forEach(([n, d]) => { const li = el("li"); li.append(el("b", "", n), el("span", "", d)); ul.append(li); });
       box.append(ul);
       const plans = el("div", "plus-plans");
-      [["yearly", CFG.yearly], ["monthly", CFG.monthly]].forEach(([k, p]) => {
+      [["family", CFG.family], ["yearly", CFG.yearly], ["monthly", CFG.monthly]].forEach(([k, p]) => {
         if (!p || !p.link) return;
-        const b = btn("", "plus-plan" + (k === "yearly" ? " best" : ""), () => { location.href = planLink(p); });
-        b.append(el("b", "", p.label || (k === "yearly" ? "Plan anual" : "Plan mensual")));
+        const b = btn("", "plus-plan" + (k === "family" ? " best" : ""), () => { location.href = planLink(p); });
+        b.append(el("b", "", p.label || (k === "yearly" ? "Plan anual" : k === "family" ? "Plan familiar" : "Plan mensual")));
         if (p.price) b.append(el("span", "", p.price));
         if (p.note) b.append(el("em", "", p.note));
         plans.append(b);
@@ -220,7 +272,22 @@
         inp.addEventListener("keydown", e => { if (e.key === "Enter") restore(inp.value); });
         row.append(inp, btn("Usar código", "", () => restore(inp.value)));
         join.append(lbl, row); box.append(join);
-      } else box.append(el("p", "plus-note", "¿Ya pagaste? Cierra y vuelve a abrir la app con internet; tu suscripción se revisa con tu cuenta."));
+      } else {
+        // Quien fue invitado a un plan familiar escribe el código de la lista que le compartieron.
+        const join = el("div", "sh-join");
+        const lbl = el("label", "", "¿Te invitaron a un plan familiar? Escribe el código de la lista"); lbl.htmlFor = "famCodeIn";
+        const row = el("div", "sh-join-row");
+        const inp = el("input"); inp.id = "famCodeIn"; inp.type = "text"; inp.placeholder = "Código de 12 letras"; inp.maxLength = 16; inp.autocomplete = "off";
+        const go = async () => {
+          showError("");
+          const r = await familyJoin(inp.value, false);
+          if (r && r.active) { closeSheet(true); if (window.ListShare && window.ListShare.join) window.ListShare.join(inp.value); }
+        };
+        inp.addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+        row.append(inp, btn("Unirme", "", go));
+        join.append(lbl, row); box.append(join);
+        box.append(el("p", "plus-note", "¿Ya pagaste? Cierra y vuelve a abrir la app con internet; tu suscripción se revisa con tu cuenta."));
+      }
       if (blocking) {
         if (A) box.append(btn("Ya pagué: revisar otra vez", "sh-ghost", () => refreshAccount(true)));
         if (A) box.append(btn("Cerrar sesión", "sh-ghost", () => { closeSheet(true); A.logout(); }));
@@ -244,8 +311,73 @@
   $("plusSheet").addEventListener("click", e => { if (e.target === $("plusSheet")) closeSheet(); });
   $("plusCard").onclick = () => openSheet(ACC() ? "account" : (isPlus() ? "account" : "paywall"));
 
+  /* ---------- Mi familia (en Mi cuenta) ---------- */
+  async function loadFamily(box) {
+    box.append(el("p", "plus-note", "Cargando tu familia…"));
+    let d = null;
+    try { const r = await api("/api/family", { auth: ACC().token(), action: "info" }); if (r.ok) d = r.data; } catch {}
+    box.replaceChildren();
+    if (!d) { box.append(el("p", "plus-note", "No se pudo cargar tu familia. Revisa tu conexión.")); return; }
+    if (d.members) {
+      box.append(el("b", "fam-title", "👨‍👩‍👧 Tu familia (" + d.members.length + " de " + d.max + ")"));
+      if (!d.members.length) box.append(el("p", "plus-note", "Todavía nadie. Comparte tu lista (Lista compartida → Invitar a alguien): cada persona que se una entra gratis con tu plan."));
+      d.members.forEach(m => {
+        const row = el("div", "fam-row");
+        const av = el("span", "fam-ava"); setAvatar(av, m);
+        const t = el("div", "fam-who"); t.append(el("b", "", m.name), el("small", "", m.email));
+        const rm = btn("Quitar", "acct-photo-btn del", async () => {
+          rm.disabled = true;
+          try { await api("/api/family", { auth: ACC().token(), action: "remove", uid: m.uid }); } catch {}
+          box.replaceChildren(); loadFamily(box);
+        });
+        row.append(av, t, rm); box.append(row);
+      });
+      if (d.members.length) box.append(el("p", "plus-note", "Para agregar a alguien más, compártele tu lista. Al unirse, entra gratis."));
+    } else if (d.familyOf) {
+      box.append(el("b", "fam-title", "👨‍👩‍👧 Estás en el plan familiar de " + d.familyOf.name));
+      box.append(btn("Salir de la familia", "acct-photo-btn del", async () => {
+        try { await api("/api/family", { auth: ACC().token(), action: "leave" }); } catch {}
+        await refreshAccount(true); closeSheet(true);
+      }));
+    }
+  }
+
+  /* ---------- foto de perfil ---------- */
+  function setAvatar(node, u) {
+    node.replaceChildren();
+    if (u && u.photo) {
+      const img = el("img"); img.src = u.photo; img.alt = ""; node.append(img); node.classList.add("has-photo");
+    } else {
+      node.textContent = ((u && u.name) || "?").trim().charAt(0).toUpperCase() || "👤"; node.classList.remove("has-photo");
+    }
+  }
+  // Recorta al centro en cuadrado y la reduce (así pesa poco y carga rápido).
+  async function squarePhoto(file) {
+    let img;
+    try { img = await createImageBitmap(file); }
+    catch {
+      img = await new Promise((res, rej) => { const url = URL.createObjectURL(file), i = new Image();
+        i.onload = () => { URL.revokeObjectURL(url); res(i); }; i.onerror = () => { URL.revokeObjectURL(url); rej(new Error("img")); }; i.src = url; });
+    }
+    const side = Math.min(img.width, img.height), S = 240;
+    const c = document.createElement("canvas"); c.width = S; c.height = S;
+    const ctx = c.getContext("2d"); ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, S, S);
+    return c.toDataURL("image/jpeg", 0.82);
+  }
+  async function savePhoto(photo) {
+    const A = ACC(); if (!A || !A.token()) return;
+    if (!navigator.onLine) { openSheet("account", null, null, "Necesitas internet para guardar la foto."); return; }
+    openSheet("working", null, photo ? "Guardando foto…" : "Quitando foto…");
+    try {
+      const { ok, data } = await api("/api/auth-photo", { token: A.token(), photo });
+      if (ok && data.user) { A.setUser(data.user); updateCard(); openSheet("account"); if (window.MiLista) window.MiLista.toast(photo ? "Foto guardada" : "Foto quitada"); }
+      else openSheet("account", null, null, data.error || "No se pudo guardar la foto. Revisa tu conexión.");
+    } catch { openSheet("account", null, null, "No se pudo guardar la foto. Revisa tu conexión."); }
+  }
+
   /* ---------- inicio ---------- */
-  window.MiListaPlus = { isPlus, locked, open: () => openSheet(ACC() ? "account" : "paywall") };
+  window.MiListaPlus = { isPlus, locked, familyJoin, open: () => openSheet(ACC() ? "account" : "paywall") };
   if (ACC()) ACC().onChange(a => {
     if (!a) { ast = null; saveAst(); }
     updateCard();

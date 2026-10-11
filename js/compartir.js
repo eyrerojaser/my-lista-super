@@ -55,7 +55,7 @@
         try { const d = await call("/api/list-get?code=" + encodeURIComponent(code)); return { items: d.items || {}, v: d.v }; }
         catch (e) { if (e.code === "not-found") return null; throw e; }
       },
-      async create(code, itemsMap) { await call("/api/list-create", { code, items: itemsMap }); },
+      async create(code, itemsMap) { await call("/api/list-create", { code, items: itemsMap, auth: (window.MiCuenta && MiCuenta.token()) || undefined }); },
       async update(code, set, del) {
         const change = { set, del };
         inflight.push(change);
@@ -201,6 +201,8 @@
       $("shJoinIn").value = "";
       closeSheet();
       window.MiLista.toast("Te uniste a la lista compartida" + (mine.length === 1 ? ". Se agregó tu producto." : mine.length ? ". Se agregaron tus " + mine.length + " productos." : "."));
+      // Plan familiar: si quien creó la lista tiene plan familiar, esta cuenta entra gratis.
+      if (window.MiListaPlus && window.MiListaPlus.familyJoin) window.MiListaPlus.familyJoin(code, true);
     } catch (e) {
       setStatus(info ? "error" : "off"); renderSheet();
       window.MiLista.toast("No se pudo abrir la lista compartida. Revisa tu conexión.");
@@ -310,11 +312,14 @@
     catch { setStatus("offline"); }
   }
   window.addEventListener("online", () => { if (info && !unsub) resume(); });
-  window.ListShare = { onLocalChange, status: () => status, info: () => info };
+  window.ListShare = { onLocalChange, status: () => status, info: () => info, join: c => join(c) };
 
   const params = new URLSearchParams(location.search);
   const inviteCode = params.get("unirse");
-  if (inviteCode) { history.replaceState(null, "", location.pathname); }
+  if (inviteCode) {
+    history.replaceState(null, "", location.pathname);
+    try { sessionStorage.setItem("invite-code", inviteCode); } catch {} // para el plan familiar (después de registrarse)
+  }
   setStatus(info ? "connecting" : "off");
   resume().then(() => { if (inviteCode && configured()) join(inviteCode); });
 })();

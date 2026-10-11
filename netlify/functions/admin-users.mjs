@@ -16,7 +16,15 @@ export default async (req) => {
     const u = await s.get(key, { type: "json" });
     if (!u) continue;
     users.push({ n: u.n, name: u.name, email: u.email, created: u.created, founder: !!u.founder, paying: !!u.stripeCustomer,
-      plusStatus: u.plusStatus || "", reset: u.reset && u.reset.exp > Date.now() ? u.reset.code : "" });
+      plusStatus: u.plusStatus || "", photo: u.photo || "", reset: u.reset && u.reset.exp > Date.now() ? u.reset.code : "" });
+  }
+  // Familia: de quién es familiar cada cuenta.
+  const byUid = {};
+  for (const { key } of blobs) { const u = await s.get(key, { type: "json" }); if (u) byUid[u.uid] = u; }
+  for (const { key } of blobs) {
+    const u = await s.get(key, { type: "json" }); if (!u || !u.familyOf) continue;
+    const row = users.find(x => x.email === u.email), o = byUid[u.familyOf];
+    if (row && o) row.familyOf = o.name + " (#" + o.n + ")";
   }
   users.sort((a, b) => (a.n || 0) - (b.n || 0));
   return json({ users, founders: FOUNDERS() });

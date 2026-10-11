@@ -32,12 +32,23 @@
     if (n === -1) return "Venció ayer";
     return "Venció hace " + -n + " días";
   }
-  const ENTRY_DAYS = 90; // sin fecha impresa: usar dentro de 3 meses desde que entró al freezer
+  // Dónde se guarda: freezer, refrigerador o despensa. Sin fecha impresa, se cuenta desde que entró.
+  const LOCS = {
+    freezer: { emoji: "❄️", hero: "Escanear para el freezer", head: "En el freezer", empty: "Aún no hay nada en el freezer", saved: "Guardado en el freezer: ", entryDays: 90, icon: "🧊" },
+    refri: { emoji: "🥛", hero: "Escanear para el refrigerador", head: "En el refrigerador", empty: "Aún no hay nada en el refrigerador", saved: "Guardado en el refrigerador: ", entryDays: 7, icon: "🥛" },
+    despensa: { emoji: "🥫", hero: "Escanear para la despensa", head: "En la despensa", empty: "Aún no hay nada en la despensa", saved: "Guardado en la despensa: ", entryDays: 180, icon: "🥫" },
+  };
+  const LOC_KEY = "freezer-loc-v1";
+  let loc = "freezer";
+  try { const l = localStorage.getItem(LOC_KEY); if (LOCS[l]) loc = l; } catch {}
+  const locOf = it => (LOCS[it.loc] ? it.loc : "freezer");
+  const ENTRY_DAYS = 90;
+  const entryDays = l => (LOCS[l] || LOCS.freezer).entryDays;
   function addDays(iso, n) {
     const [y, m, d] = iso.split("-").map(Number); const t = new Date(y, m - 1, d + n);
     return t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0") + "-" + String(t.getDate()).padStart(2, "0");
   }
-  const dueOf = it => it.due || (it.type === "entry" ? addDays(it.date, ENTRY_DAYS) : it.date);
+  const dueOf = it => it.due || (it.type === "entry" ? addDays(it.date, entryDays(locOf(it))) : it.date);
   function dateLine(it) {
     if (it.type === "entry") return "Entró: " + fmtDate(it.date) + " · usar antes del " + fmtDate(dueOf(it));
     const label = (window.FreezerDate && FreezerDate.TYPE_LABEL[it.type]) || "Fecha";
@@ -90,10 +101,21 @@
   }
   function render() {
     items.sort((a, b) => (dueOf(a) < dueOf(b) ? -1 : dueOf(a) > dueOf(b) ? 1 : 0));
+    const L = LOCS[loc];
+    const shown = items.filter(i => locOf(i) === loc);
+    // Pestañas: cuántos hay en cada lugar (y si alguno vence pronto).
+    document.querySelectorAll(".fz-locs [data-loc]").forEach(b => {
+      const l = b.dataset.loc, mine = items.filter(i => locOf(i) === l);
+      b.setAttribute("aria-selected", String(l === loc));
+      const n = b.querySelector(".fz-loc-n"); n.textContent = mine.length ? mine.length : "";
+      n.classList.toggle("warn", mine.some(i => daysLeft(dueOf(i)) <= WARN_DAYS));
+    });
+    $("fzHeroTitle").textContent = L.hero; $("fzHeroEmoji").textContent = L.emoji;
+    $("fzHeadTitle").textContent = L.head; $("fzEmptyTitle").textContent = L.empty; $("fzEmptyIco").textContent = L.icon;
     // "Usar primero": el que vence antes y cualquiera que venza en 3 días o menos.
-    $("fzList").replaceChildren(...items.map((it, i) => row(it, items.length > 1 && (i === 0 || daysLeft(dueOf(it)) <= WARN_DAYS))));
-    $("fzEmpty").classList.toggle("hidden", items.length > 0);
-    $("fzCount").textContent = items.length ? (items.length === 1 ? "1 producto" : items.length + " productos") : "";
+    $("fzList").replaceChildren(...shown.map((it, i) => row(it, shown.length > 1 && (i === 0 || daysLeft(dueOf(it)) <= WARN_DAYS))));
+    $("fzEmpty").classList.toggle("hidden", shown.length > 0);
+    $("fzCount").textContent = shown.length ? (shown.length === 1 ? "1 producto" : shown.length + " productos") : "";
     const soon = items.filter(i => daysLeft(dueOf(i)) <= WARN_DAYS);
     const badge = $("fzBadge");
     badge.textContent = soon.length; badge.classList.toggle("hidden", !soon.length);
@@ -112,12 +134,12 @@
 
   function addItem(p, info) {
     if (typeof info === "string") info = { date: info, type: "date" };
-    const it = { id: uid(), name: p.name, emoji: p.emoji || "🧊", img: p.img || "", code: p.code || "",
-      date: info.date, type: info.type || "date", added: todayISO() };
+    const it = { id: uid(), name: p.name, emoji: p.emoji || LOCS[loc].icon, img: p.img || "", code: p.code || "",
+      date: info.date, type: info.type || "date", added: todayISO(), loc };
     it.due = dueOf(it);
     items.push(it); lastNewId = it.id;
     render(); save();
-    toast("Guardado en el freezer: " + it.name);
+    toast(LOCS[loc].saved + it.name);
     localCheck();
   }
   function removeItem(id) {
@@ -354,7 +376,7 @@
     if (info.type === "entry") {
       lbl.textContent = "No se encontró fecha impresa";
       $("fzDateValue").textContent = "Entrada: hoy";
-      $("fzDateDays").textContent = "Usar antes del " + fmtDate(addDays(info.date, ENTRY_DAYS));
+      $("fzDateDays").textContent = "Usar antes del " + fmtDate(addDays(info.date, entryDays(loc)));
     } else {
       lbl.textContent = (FreezerDate.TYPE_LABEL[info.type] || "Fecha") + " · fecha leída";
       $("fzDateValue").textContent = fmtDate(info.date);
@@ -473,6 +495,9 @@
     $("freezerView").classList.add("hidden");
     document.body.style.overflow = "";
   }
+  document.querySelectorAll(".fz-locs [data-loc]").forEach(b => {
+    b.onclick = () => { loc = b.dataset.loc; try { localStorage.setItem(LOC_KEY, loc); } catch {} render(); };
+  });
   $("freezerBtn").onclick = openView;
   $("fzBack").onclick = closeView;
   document.addEventListener("visibilitychange", () => {
@@ -566,7 +591,7 @@
     try {
       const reg = await navigator.serviceWorker.ready;
       const T = x => (window.I18N ? I18N.t(x) : x);
-      await reg.showNotification(T("❄️ Freezer: úsalo pronto"), {
+      await reg.showNotification(T("⏰ Úsalo pronto"), {
         body: due.map(i => i.name + " — " + T(daysText(daysLeft(dueOf(i)))).toLowerCase()).join("\n"),
         icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: "freezer", data: { url: "./?freezer=1" },
       });

@@ -160,11 +160,36 @@
     if (!COMMON.some(c => c.nes === norm(es) || c.nen === norm(en)))
       COMMON.push({ es, en, emoji, cat, rank: COMMON.length, nes: norm(es), nen: norm(en) });
   }));
+  /* ---------- productos que la persona agrega a una categoría (se quedan guardados) ---------- */
+  const CU_KEY = "custom-products-v1";
+  let custom = [];
+  try { custom = (JSON.parse(localStorage.getItem(CU_KEY)) || []).filter(c => c && c.name && c.cat); } catch {}
+  function saveCustom() { try { localStorage.setItem(CU_KEY, JSON.stringify(custom)); } catch {} }
+  function sectionHas(secId, name) {
+    const n = norm(name), sec = SECTIONS.find(s => s.id === secId);
+    return (sec && sec.items.some(([es, en]) => norm(es) === n || norm(en) === n)) || custom.some(c => c.cat === secId && norm(c.name) === n);
+  }
+  function addCustom(name, secId) {
+    name = String(name || "").trim().slice(0, 80);
+    if (!name || !BY_ID[secId]) return null;
+    const p = { name, emoji: emojiFor(name) || null, cat: secId };
+    if (!sectionHas(secId, name)) {
+      custom = custom.filter(c => norm(c.name) !== norm(name)); // si estaba en otra categoría, se mueve
+      custom.push(p); saveCustom();
+    }
+    setOverride(name, secId); // la lista también lo pone en esta categoría
+    return p;
+  }
+  function removeCustom(name, secId) {
+    const n = norm(name);
+    custom = custom.filter(c => !(c.cat === secId && norm(c.name) === n)); saveCustom();
+  }
   function sections() {
     const en = root.I18N && root.I18N.lang() === "en";
     return SECTIONS.map(sec => ({
       id: sec.id, name: en ? sec.en : sec.es, emoji: sec.emoji, color: (BY_ID[sec.id] || BY_ID.otros).color,
-      items: sec.items.map(([es, enName, emoji, cat]) => ({ name: en ? enName : es, emoji, cat })),
+      items: sec.items.map(([es, enName, emoji, cat]) => ({ name: en ? enName : es, emoji, cat }))
+        .concat(custom.filter(c => c.cat === sec.id).map(c => ({ name: c.name, emoji: c.emoji, cat: c.cat, custom: true }))),
     }));
   }
 
@@ -243,6 +268,7 @@
       const useEn = en ? sEn > 0 : (sEs === 0 && sEn > 0);
       if (s > 0) out.push({ name: useEn ? c.en : c.es, emoji: c.emoji, cat: c.cat, s, rank: c.rank });
     }
+    custom.forEach((c, i) => { const s = score(norm(c.name), n); if (s > 0) out.push({ name: c.name, emoji: c.emoji, cat: c.cat, s, rank: -1 - i }); });
     out.sort((a, b) => b.s - a.s || a.rank - b.rank);
     const seen = new Set();
     return out.filter(x => { const k = norm(x.name); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, limit || 6);
@@ -266,5 +292,5 @@
     else if (item.cat === "bebe" && categorize(item.name) === "mascotas") item.cat = "mascotas";
     return item;
   }
-  root.Categorias = { CATS, BY_ID, migrate, categorize, fromTags, suggest, popular, sections, setOverride, emojiFor, norm };
+  root.Categorias = { CATS, BY_ID, migrate, categorize, fromTags, suggest, popular, sections, addCustom, removeCustom, setOverride, emojiFor, norm };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -56,7 +56,7 @@ function daysText(n) {
 
 export function buildMessage(due) {
   due = due.slice().sort((a, b) => a.left - b.left);
-  const title = due.length === 1 ? `❄️ Usa pronto: ${due[0].name}` : `❄️ ${due.length} productos del freezer por usar`;
+  const title = due.length === 1 ? `⏰ Usa pronto: ${due[0].name}` : `⏰ ${due.length} productos por usar pronto`;
   const lines = due.slice(0, 5).map(i => `${i.name} — vence ${daysText(i.left)}`);
   if (due.length > 5) lines.push(`y ${due.length - 5} más`);
   return { title, body: lines.join("\n"), tag: "freezer", url: "./?freezer=1" };

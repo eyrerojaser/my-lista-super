@@ -644,3 +644,81 @@ ul{list-style:none;margin:0;padding:0}
 .lang-auth{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:16px}
 @media (max-width:400px){.lang-switch button{min-width:26px;padding:0 5px}}
 .fz-label-btn{flex:1;font-size:.98rem}
+
+/* =================== LOGO =================== */
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-logo{flex:none;width:44px;height:44px;border-radius:13px;box-shadow:0 6px 16px -8px rgba(0,0,0,.6)}
+.brand-txt{min-width:0}
+.top .brand-txt b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.auth-logo-img{display:block;width:132px;height:132px;margin:0 auto 6px;filter:drop-shadow(0 18px 26px rgba(0,0,0,.45))}
+.auth-band small{display:none}
+/* En teléfonos angostos solo se ve el logo, para que quepan Idioma, Freezer y el avance */
+@media (max-width:430px){ .top .brand-txt b{display:none} .top .brand-txt small{font-size:.9rem;font-weight:700;color:var(--on-plum)} }
+@media (max-width:389px){ .top .brand-txt{display:none} }
+.top .brand-txt small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* =================== FOTO DE PERFIL =================== */
+.plus-card.on .pc-link-ico{color:var(--on-plum)}
+.plus-card .pc-link-ico{overflow:hidden}
+.pc-link-ico.has-photo{background:var(--tile)!important;padding:0}
+.pc-link-ico img,.acct-ava img{width:100%;height:100%;object-fit:cover;display:block}
+.acct-who{align-items:flex-start}
+.acct-ava-btn{position:relative;flex:none;width:72px;height:72px;border-radius:22px;font-size:1.8rem;cursor:pointer;overflow:visible}
+.acct-ava-btn img{border-radius:22px}
+.acct-ava.has-photo{background:var(--tile)}
+.acct-cam{position:absolute;right:-6px;bottom:-6px;width:28px;height:28px;border-radius:50%;background:var(--surface);box-shadow:var(--shadow);display:grid;place-items:center;font-size:.85rem}
+.acct-photo-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.acct-photo-btn{display:inline-flex;align-items:center;height:32px;border:0;border-radius:10px;background:var(--tile);color:var(--ink);font-weight:700;font-size:.82rem;padding:0 10px;cursor:pointer}
+.acct-photo-btn.del{color:var(--warn)}
+
+/* Freezer Scan: Freezer / Refri / Despensa */
+.fz-locs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;margin-bottom:12px;border-radius:16px;background:rgba(234,248,253,.1)}
+.fz-locs button{position:relative;height:42px;border:0;border-radius:12px;background:transparent;color:rgba(234,248,253,.75);font-weight:800;font-size:.9rem;white-space:nowrap}
+.fz-locs button[aria-selected="true"]{background:#EAF8FD;color:var(--on-frost)}
+.fz-loc-n{display:inline-block;margin-left:5px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:rgba(234,248,253,.22);font-size:.7rem;line-height:18px}
+.fz-loc-n:empty{display:none}
+.fz-locs button[aria-selected="true"] .fz-loc-n{background:var(--ice-a);color:#EAF8FD}
+.fz-loc-n.warn{background:var(--urgent)!important;color:#fff!important}
+
+/* Plan familiar en Mi cuenta */
+.fam-box{margin:4px 0 10px;padding:12px;border-radius:16px;background:var(--tile)}
+.fam-title{display:block;margin-bottom:8px;font-size:.95rem}
+.fam-row{display:flex;align-items:center;gap:10px;padding:6px 0}
+.fam-row + .fam-row{border-top:1px solid var(--line)}
+.fam-ava{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-weight:800;overflow:hidden;
+  background:linear-gradient(145deg,var(--mango),var(--mango-2));color:var(--on-mango)}
+.fam-ava.has-photo{background:var(--surface)}
+.fam-ava img{width:100%;height:100%;object-fit:cover}
+.fam-who{flex:1;min-width:0}
+.fam-who b{display:block;font-size:.92rem}
+.fam-who small{display:block;color:var(--muted);font-size:.78rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- Agregar productos: categorías que se abren (v2.1.1) ---------- */
+.cat-acc{border-left:5px solid var(--cat,#8C8C8C);border-radius:6px;margin:0 2px}
+.cat-acc + .cat-acc{margin-top:8px}
+.cat-acc-head{width:100%;display:flex;align-items:center;gap:12px;border:0;background:var(--tile);border-radius:0 14px 14px 0;padding:10px 12px;text-align:left;color:var(--ink)}
+.cat-acc-head:active{background:var(--line)}
+.cat-acc-emoji{flex:none;width:38px;height:38px;border-radius:12px;background:var(--surface);display:grid;place-items:center;font-size:1.3rem}
+.cat-acc-txt{flex:1;min-width:0}
+.cat-acc-txt b{display:block;font-weight:800;font-size:.98rem}
+.cat-acc-txt small{display:block;color:var(--muted);font-size:.78rem}
+.cat-acc-in{flex:none;background:var(--ok-soft);color:var(--ok);font-weight:800;font-size:.8rem;border-radius:999px;padding:3px 9px}
+.cat-acc-chev{flex:none;width:9px;height:9px;margin:0 4px 0 2px;border-right:2.5px solid var(--muted);border-bottom:2.5px solid var(--muted);transform:rotate(-45deg);transition:transform .2s}
+.cat-acc.open .cat-acc-chev{transform:rotate(45deg) translate(-2px,-2px)}
+.cat-acc.open .cat-acc-head{border-radius:0 14px 0 0}
+.cat-acc-body{padding:4px 0 8px 6px}
+.prod-row{display:flex;align-items:center;gap:4px}
+.prod-row + .prod-row{border-top:1px solid var(--line)}
+.prod-add{flex:1;min-width:0;display:flex;align-items:center;gap:12px;border:0;background:transparent;padding:9px 6px;text-align:left;color:var(--ink);border-radius:12px}
+.prod-add:active{background:var(--tile)}
+.prod-emoji{flex:none;width:34px;height:34px;border-radius:11px;background:var(--tile);display:grid;place-items:center;font-size:1.15rem}
+.prod-name{flex:1;min-width:0;font-weight:600;font-size:.95rem;overflow-wrap:anywhere}
+.prod-mark{flex:none;width:30px;height:30px;border-radius:50%;background:var(--plum);color:var(--on-plum);display:grid;place-items:center;font-weight:700;font-size:1.25rem;line-height:1;font-family:system-ui,-apple-system,sans-serif}
+.prod-row.in-list .prod-mark{background:var(--ok-soft);color:var(--ok)}
+.prod-row.in-list .prod-name{color:var(--ok)}
+.prod-del{flex:none;width:30px;height:30px;border:0;border-radius:50%;background:transparent;color:var(--muted);font-size:.85rem}
+.prod-del:active{background:var(--tile)}
+.cat-new{display:flex;gap:8px;margin:8px 0 2px;padding-right:2px}
+.cat-new input{flex:1;min-width:0;height:42px;border:1.5px dashed var(--line);border-radius:13px;background:var(--surface);color:var(--ink);padding:0 12px;font-size:16px}
+.cat-new input:focus{outline:none;border-color:var(--cat,var(--plum));border-style:solid}
+.cat-new button{flex:none;height:42px;border:0;border-radius:13px;padding:0 14px;font-weight:800;background:var(--cat,var(--plum));color:#fff}

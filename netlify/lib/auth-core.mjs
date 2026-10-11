@@ -70,7 +70,7 @@ export async function nextNumber() {
 }
 
 export function publicProfile(u) {
-  return { uid: u.uid, email: u.email, name: u.name, n: u.n, founder: !!u.founder, created: u.created };
+  return { uid: u.uid, email: u.email, name: u.name, n: u.n, founder: !!u.founder, created: u.created, photo: u.photo || "" };
 }
 export async function saveUser(u) { await store().setJSON(u.key, u); }
 

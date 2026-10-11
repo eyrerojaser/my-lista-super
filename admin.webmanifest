@@ -1,6 +1,6 @@
 {
-  "name": "Mi Lista · Panel",
-  "short_name": "Mi Lista Panel",
+  "name": "My Super List · Panel",
+  "short_name": "Super List Panel",
   "id": "/admin.html",
   "start_url": "/admin.html",
   "scope": "/admin.html",

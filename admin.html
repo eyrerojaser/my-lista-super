@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>Panel · Mi Lista</title>
+<title>Panel · My Super List</title>
 <link rel="icon" type="image/png" href="icons/favicon-32.png">
 <link rel="manifest" href="admin.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Mi Lista Panel">
+<meta name="apple-mobile-web-app-title" content="Super List Panel">
 <meta name="theme-color" content="#2A1636">
 <link rel="stylesheet" href="css/styles.css">
 <style>
@@ -29,7 +29,8 @@
   .ad-list{list-style:none;margin:0;padding:0}
   .ad-list li{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
   .ad-list li:first-child{border-top:0}
-  .ad-n{flex:none;width:38px;height:38px;border-radius:12px;background:var(--tile);display:grid;place-items:center;font-weight:800;font-size:.9rem}
+  .ad-n{flex:none;width:38px;height:38px;border-radius:12px;background:var(--tile);display:grid;place-items:center;font-weight:800;font-size:.9rem;overflow:hidden}
+  .ad-n img{width:100%;height:100%;object-fit:cover}
   .ad-who{flex:1;min-width:0}
   .ad-who b{display:block;overflow-wrap:anywhere}
   .ad-who small{display:block;color:var(--muted);font-size:.82rem;overflow-wrap:anywhere}
@@ -49,7 +50,7 @@
 </style>
 </head>
 <body>
-<header class="ad-band"><small>Mi lista del súper</small><h1>Panel de cuentas</h1></header>
+<header class="ad-band"><img src="icons/logo-mark.png" alt="" width="44" height="44" style="float:right;border-radius:13px"><small>My Super List</small><h1>Panel de cuentas</h1></header>
 <main class="ad-main">
   <form class="ad-card" id="login">
     <p style="margin:0 0 10px;color:var(--muted)">Escribe la contraseña de administración (la variable <b>ADMIN_PASSWORD</b> que pusiste en Netlify).</p>
@@ -97,14 +98,16 @@
     $("list").replaceChildren(...list.map(u => {
       const li = document.createElement("li");
       const n = document.createElement("span"); n.className = "ad-n"; n.textContent = u.n;
+      if (u.photo) { const im = document.createElement("img"); im.src = u.photo; im.alt = ""; n.replaceChildren(im); n.classList.add("has-photo"); n.title = "#" + u.n; }
       const who = document.createElement("div"); who.className = "ad-who";
       const b = document.createElement("b"); b.textContent = u.name;
       const s = document.createElement("small"); s.textContent = u.email + " · " + fmt(u.created);
       who.append(b, s);
+      if (u.familyOf) { const fm = document.createElement("small"); fm.textContent = "👨‍👩‍👧 Familia de " + u.familyOf; who.append(fm); }
       if (u.reset) { const c = document.createElement("span"); c.className = "ad-code"; c.textContent = "Código para su contraseña: " + u.reset; who.append(c); }
       const tag = document.createElement("span");
-      tag.className = "ad-tag" + (u.founder ? " f" : u.paying ? " p" : "");
-      tag.textContent = u.founder ? "Fundadora" : u.paying ? (u.plusStatus === "trialing" ? "Prueba" : ["active", "past_due"].includes(u.plusStatus) ? "Paga" : "Canceló") : "Gratis";
+      tag.className = "ad-tag" + (u.founder ? " f" : (u.familyOf || u.paying) ? " p" : "");
+      tag.textContent = u.founder ? "Fundadora" : u.familyOf ? "Familia" : u.paying ? (u.plusStatus === "trialing" ? "Prueba" : ["active", "past_due"].includes(u.plusStatus) ? "Paga" : "Canceló") : "Gratis";
       li.append(n, who, tag); return li;
     }));
   }

@@ -149,6 +149,8 @@
     get: () => acct,
     token: () => acct && acct.token,
     user: () => acct && acct.user,
+    // Actualiza los datos de la cuenta (por ejemplo, la foto) en este teléfono.
+    setUser: u => { if (acct && u) { acct.user = u; acct.checked = Date.now(); save(); } },
     logout: () => logout(false),
     onChange: f => listeners.push(f),
   };

@@ -28,7 +28,7 @@
     "Apunta la cámara al código de barras": "Point the camera at the barcode", "Se agrega solo": "It's added automatically",
     "Lo identifica y lo pone en tu lista": "It identifies it and adds it to your list", "Márcalo": "Check it off",
     "Tócalo en la tienda al echarlo al carrito": "Tap it in the store when it goes in the cart",
-    "Escanear": "Scan", "Productos sugeridos": "Suggested products", "Agregar productos": "Add products", "En tu lista: 1 producto": "On your list: 1 item", "Productos comunes": "Common products",
+    "Escanear": "Scan", "Productos sugeridos": "Suggested products", "Agregar productos": "Add products", "En tu lista: 1 producto": "On your list: 1 item", "Productos comunes": "Common products", "¿No está? Escríbelo aquí": "Not here? Type it here", "Quitar de esta categoría": "Remove from this category",
     "Uno menos": "One less", "Uno más": "One more", "Quitar": "Remove", "¡Todo listo! 🎉": "All done! 🎉", "Falta 1": "1 left",
     "1 en el carrito": "1 in the cart", "Se identificará con internet": "Will be identified when online",
     "Cambiar categoría": "Change category", "Cancelar": "Cancel", "Cerrar": "Close", "Deshacer": "Undo", "Guardar": "Save",
@@ -74,7 +74,11 @@
     "No se pudo abrir la lista compartida. Revisa tu conexión.": "Couldn't open the shared list. Check your connection.",
     "Saliste de la lista compartida. Tu copia se queda en este teléfono.": "You left the shared list. Your copy stays on this phone.",
     // ----- Freezer Scan -----
-    "Freezer Scan": "Freezer Scan", "Volver a Mi lista": "Back to My list", "Avisos": "Alerts", "Activar avisos": "Turn on alerts", "Avisos activos": "Alerts on",
+    "Freezer Scan": "Freezer Scan", "Fechas de vencimiento": "Expiration dates", "Dónde lo guardas": "Where you keep it",
+    "🥛 Refri": "🥛 Fridge", "🥫 Despensa": "🥫 Pantry", "❄️ Freezer": "❄️ Freezer",
+    "Escanear para el refrigerador": "Scan for the fridge", "Escanear para la despensa": "Scan for the pantry",
+    "En el refrigerador": "In the fridge", "En la despensa": "In the pantry",
+    "Aún no hay nada en el refrigerador": "Nothing in the fridge yet", "Aún no hay nada en la despensa": "Nothing in the pantry yet", "Volver a Mi lista": "Back to My list", "Avisos": "Alerts", "Activar avisos": "Turn on alerts", "Avisos activos": "Alerts on",
     "Escanear para el freezer": "Scan for the freezer", "Escanea el producto y su fecha. Te avisamos 3 días antes.": "Scan the product and its date. We'll remind you 3 days before.",
     "Empezar": "Start", "Sin código de barras: escribir nombre": "No barcode: type the name", "En el freezer": "In the freezer",
     "Aún no hay nada en el freezer": "Nothing in the freezer yet", "Escanea un producto y su fecha para llevar la cuenta de los días.": "Scan a product and its date to keep track of the days.",
@@ -97,7 +101,7 @@
     "Sin permiso no se pueden enviar avisos. Actívalo en los ajustes del teléfono.": "Without permission we can't send alerts. Turn it on in your phone settings.",
     "Listo: te avisaremos 3 días antes de cada fecha.": "Done: we'll remind you 3 days before each date.", "Avisos activados: se revisan cada vez que abres la app.": "Alerts on: they're checked every time you open the app.",
     "Los avisos están activos. Para apagarlos, usa los ajustes de notificaciones del teléfono.": "Alerts are on. To turn them off, use your phone's notification settings.",
-    "❄️ Freezer: úsalo pronto": "❄️ Freezer: use it soon",
+    "❄️ Freezer: úsalo pronto": "❄️ Freezer: use it soon", "⏰ Úsalo pronto": "⏰ Use it soon",
     "📄 Leer etiqueta (carne, pollo, pescado)": "📄 Read label (meat, chicken, fish)", "Leyendo la etiqueta…": "Reading the label…", "Nombre y fecha": "Name and date",
     "Leyendo la etiqueta…": "Reading the label…", "Buscando la fecha…": "Looking for the date…", "Revisa el nombre": "Check the name",
     "Esto leí en la etiqueta. Corrígelo o escríbelo como prefieras (por ejemplo, Milanesa).": "This is what I read on the label. Fix it or type it however you like.",
@@ -158,7 +162,14 @@
     "La suscripción de ese código ya no está activa": "The subscription for that code is no longer active",
     "No se pudo abrir el portal. Revisa que esté activado en Stripe.": "Couldn't open the portal.",
     // ----- Mi cuenta y Plus -----
-    "Mi cuenta": "My account", "Mi Lista Plus": "My List Plus", "Mi Lista Plus ⭐": "My List Plus ⭐", "Cerrar sesión": "Log out",
+    "Mi cuenta": "My account", "Plan individual": "Individual plan", "Plan familiar": "Family plan", "Para toda la casa": "For the whole household",
+    "¿Te invitaron a un plan familiar? Escribe el código de la lista": "Invited to a family plan? Type the list code", "Cargando tu familia…": "Loading your family…",
+    "No se pudo cargar tu familia. Revisa tu conexión.": "Couldn't load your family. Check your connection.",
+    "Todavía nadie. Comparte tu lista (Lista compartida → Invitar a alguien): cada persona que se una entra gratis con tu plan.": "No one yet. Share your list (Shared list → Invite someone): everyone who joins gets in free with your plan.",
+    "Para agregar a alguien más, compártele tu lista. Al unirse, entra gratis.": "To add someone else, share your list with them. When they join, they get in free.",
+    "Salir de la familia": "Leave the family", "Ese código no es de un plan familiar.": "That code isn't from a family plan.", "Agregar foto": "Add photo", "Guardando foto…": "Saving photo…", "Quitando foto…": "Removing photo…",
+    "Foto guardada": "Photo saved", "Foto quitada": "Photo removed", "Necesitas internet para guardar la foto.": "You need internet to save the photo.",
+    "No se pudo guardar la foto. Revisa tu conexión.": "Couldn't save the photo. Check your connection.", "La foto es demasiado grande": "The photo is too large", "Foto inválida": "Invalid photo", "Mi Lista Plus": "My List Plus", "Mi Lista Plus ⭐": "My List Plus ⭐", "Cerrar sesión": "Log out",
     "Plus gratis (de las primeras)": "Free Plus (early member)", "Prueba gratis activa": "Free trial active", "Plus activo": "Plus active", "Sin suscripción": "No subscription",
     "Desbloquea Plus": "Unlock Plus", "Un momento…": "One moment…", "¡Ya tienes Plus! ⭐": "You've got Plus! ⭐",
     "Gracias por tu suscripción. Ya puedes usar todas las funciones.": "Thanks for subscribing. You can now use every feature.",
@@ -193,7 +204,7 @@
     [/^Se agregaron (\d+) productos$/, "$1 items added"], [/^(\d+) productos para agregar a tu lista:$/, "$1 items to add to your list:"],
     [/^Quedan (\d+) días$/, "$1 days left"], [/^Venció hace (\d+) días$/, "Expired $1 days ago"], [/^(\d+) productos$/, "$1 items"],
     [/^Entró: (.+)$/, "Added: $1"], [/^usar antes del (.+)$/, "use before $1"], [/^Usar antes del (.+)$/, "Use before $1"],
-    [/^Fecha: (.+)$/, "Date: $1"], [/^Expira: (.+)$/, "Expires: $1"], [/^Guardado en el freezer: (.+)$/, "Saved to the freezer: $1"], [/^No se guardó (.+)$/, "$1 was not saved"],
+    [/^Fecha: (.+)$/, "Date: $1"], [/^Expira: (.+)$/, "Expires: $1"], [/^Guardado en el freezer: (.+)$/, "Saved to the freezer: $1"], [/^Guardado en el refrigerador: (.+)$/, "Saved to the fridge: $1"], [/^Guardado en la despensa: (.+)$/, "Saved to the pantry: $1"], [/^No se guardó (.+)$/, "$1 was not saved"],
     [/^Marcar como usado y quitar: (.+)$/, "Mark as used and remove: $1"], [/^Leyendo: (.+)$/, "Reading: $1"],
     [/^vence en 3 días o menos:$/, "expires in 3 days or less:"], [/^vencen en 3 días o menos:$/, "expire in 3 days or less:"],
     [/^(.+) — vence (.+)$/, "$1 — expires $2"],
@@ -220,7 +231,7 @@
     [/^Versión (.+)$/, "Version $1"], [/^(\d+) de (\d+) lugares$/, "$1 of $2 spots"],
     [/^(.+) → (.+)$/, null], // se traducen las dos partes
   ];
-  const NO_TRANSLATE = ".lang-switch button, .name, .fz-info > b, .acct-who b, .sh-code b, #shCode, .sc-last b, #fzDateProduct span, .ad-who, .pc-rec-info > b";
+  const NO_TRANSLATE = ".lang-switch button, .name, .fz-info > b, .acct-who b, .sh-code b, #shCode, .sc-last b, #fzDateProduct span, .ad-who, .pc-rec-info > b, .prod-name";
 
   function tr(s) {
     if (lang !== "en" || !s) return s;

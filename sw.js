@@ -1,6 +1,6 @@
 /* Service worker: permite abrir la app sin internet.
    Cambia VERSION cada vez que subas cambios para que los teléfonos se actualicen. */
-const VERSION = "v2.0.6";
+const VERSION = "v2.1.1";
 const SHELL = "shell-" + VERSION;
 const IMAGES = "product-images";
 const FILES = [
@@ -27,6 +27,8 @@ const FILES = [
   "icons/icon-512.png",
   "icons/apple-touch-icon.png",
   "icons/favicon-32.png",
+  "icons/logo.png",
+  "icons/logo-mark.png",
 ];
 
 self.addEventListener("install", event => {

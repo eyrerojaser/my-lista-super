@@ -12,7 +12,11 @@ window.PLUS_CONFIG = {
   enabled: false,
   // Qué se paga: "todo" (toda la app) o funciones sueltas: "freezer", "compras", "compartida"
   features: ["todo"],
-  monthly: { link: "", price: "$5.99 al mes", label: "Plan mensual" },
+  monthly: { link: "", price: "$5.99 al mes", label: "Plan individual" },
+  // Plan familiar: quien lo paga comparte su lista y cada persona que se une entra gratis
+  // (hasta 5 personas más, o lo que pongas en FAMILY_MEMBERS en Netlify).
+  // En Stripe, al precio familiar ponle metadata: plan = family.
+  family:  { link: "", price: "", label: "Plan familiar", note: "Para toda la casa" },
   yearly:  { link: "", price: "", label: "Plan anual", note: "" },   // déjalo vacío si solo cobras mensual
   trialDays: 0,          // días gratis de prueba (deben coincidir con tu enlace de Stripe)
   foundersLimit: 10,     // solo para mostrar el texto; el número real lo decide el servidor (FOUNDERS_LIMIT)
