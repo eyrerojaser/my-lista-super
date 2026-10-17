@@ -130,6 +130,29 @@
 
   /* ---------- pantalla ---------- */
   function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
+  // Copia en la cuenta (js/respaldo.js): muestra cuándo se guardó y deja guardar ahora.
+  function cloudBox() {
+    const box = el("div", "cloud-box");
+    const ico = el("span", "cloud-ico", "☁️"); ico.setAttribute("aria-hidden", "true");
+    const t = el("div", "cloud-txt");
+    const title = el("b", "", "Tus datos se guardan en tu cuenta");
+    const sub = el("small", "");
+    t.append(title, sub);
+    const go = btn("Guardar ahora", "cloud-btn", async () => { go.disabled = true; sub.textContent = "Guardando…"; await Respaldo.now(); paint(); go.disabled = false; });
+    function paint() {
+      const last = Respaldo.last();
+      if (Respaldo.error() && !navigator.onLine) sub.textContent = "Sin conexión: se guardará cuando vuelva la señal";
+      else if (!last) sub.textContent = "Lista, Mis Compras, Freezer y fotos de recibos";
+      else {
+        const d = new Date(last), today = new Date().toDateString() === d.toDateString();
+        const loc = window.I18N ? I18N.loc() : "es";
+        sub.textContent = "Última copia: " + (today ? d.toLocaleTimeString(loc, { hour: "numeric", minute: "2-digit" }) : d.toLocaleDateString(loc, { day: "numeric", month: "short" }));
+      }
+    }
+    paint(); Respaldo.onChange(paint);
+    box.append(ico, t, go);
+    return box;
+  }
   function btn(label, cls, fn) { const b = el("button", cls, label); b.type = "button"; b.onclick = fn; return b; }
   function showError(msg) { const e = $("plusError"); if (e) { e.textContent = msg; e.classList.toggle("hidden", !msg); } }
   function planText() {
@@ -239,6 +262,7 @@
         if (isPlus() && !(u && u.founder) && !(ast && ast.plan === "member")) box.append(btn("Administrar suscripción", "sh-primary", manage));
         if (!isPlus()) box.append(btn("Ver planes de Plus", "sh-primary", () => openSheet("paywall")));
       }
+      if (A && window.Respaldo && Respaldo.active()) box.append(cloudBox());
       if (CFG.supportEmail) box.append(el("p", "plus-note", "¿Dudas? Escríbenos a " + CFG.supportEmail));
       if (A) box.append(btn("Cerrar sesión", "sh-danger", () => { closeSheet(true); A.logout(); }));
       box.append(btn("Cerrar", "sh-ghost", () => closeSheet()));

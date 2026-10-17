@@ -59,6 +59,8 @@ Queda un ícono propio en tu pantalla de inicio y se abre a pantalla completa, c
 
 **Lista compartida en tiempo real.** Toca *Lista compartida* → *Compartir mi lista* y envía la invitación por WhatsApp. La otra persona abre el enlace (o, en *Lista compartida*, toca *Me invitaron: tengo un código* y lo escribe) y ve la misma lista. Si cualquiera agrega, quita o marca un producto, el cambio aparece en los demás teléfonos en unos segundos. Sin señal, los cambios se guardan y se envían al volver la conexión. Con *Salir de la lista compartida* cada quien se queda con su copia.
 
+**Copia en la cuenta.** Todo lo importante se guarda solo en la cuenta de cada persona: Mi lista, Mis Compras (con las fotos de los recibos), Freezer/Refri/Despensa y los productos que agregó a las categorías. Cada cambio se sube a los pocos segundos y, al abrir la app, se trae lo más nuevo. Si alguien cambia de teléfono, borra la app o la instala en otro, entra con su correo y contraseña y aparece todo. En *Mi cuenta* se ve la hora de la última copia y el botón *Guardar ahora*. Si en un teléfono entra otra cuenta, los datos de la anterior se quitan de ese teléfono (siguen guardados en su cuenta). Se guarda en Netlify Blobs (almacén `respaldos`); no hay que configurar nada.
+
 **Mis Compras.** En Mi lista, toca *Mis Compras* para abrir el calendario de tus visitas al súper:
 
 1. Toca el día en que fuiste y luego *Registrar compra*. Escribe cuánto gastaste, la tienda si quieres, y sube la foto del recibo (puedes tomarla en ese momento o elegirla de tus fotos).
@@ -171,7 +173,7 @@ Hazlo primero en **modo de prueba** de Stripe (Test mode) y, cuando todo funcion
 
 ## ¿Cómo sé que tengo la versión nueva?
 
-Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 2.2.0*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
+Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 2.3.0*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
 
 ## Cambiar algo después
 

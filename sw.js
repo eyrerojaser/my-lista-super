@@ -1,6 +1,6 @@
 /* Service worker: permite abrir la app sin internet.
    Cambia VERSION cada vez que subas cambios para que los teléfonos se actualicen. */
-const VERSION = "v2.2.0";
+const VERSION = "v2.3.0";
 const SHELL = "shell-" + VERSION;
 const IMAGES = "product-images";
 const FILES = [
@@ -18,6 +18,7 @@ const FILES = [
   "js/compras.js",
   "js/plus.js",
   "js/cuenta.js",
+  "js/respaldo.js",
   "js/plus-config.js",
   "js/recibo.js",
   "vendor/zxing.min.js",

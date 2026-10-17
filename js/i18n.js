@@ -13,7 +13,7 @@
 
   const D = {
     // ----- Encabezado y Mi lista -----
-    "Mi lista del súper": "My grocery list", "Tu lista del súper, sin papel": "Your grocery list, no paper", "Tu súper de hoy": "Today's list", "Hola": "Hi",
+    "Mi lista del súper": "My grocery list", "Tu lista del súper, sin papel": "Your grocery list, no paper", "Tus datos se guardan en tu cuenta": "Your data is saved to your account", "Guardar ahora": "Save now", "Guardando…": "Saving…", "Sin conexión: se guardará cuando vuelva la señal": "Offline: it will save when you are back online", "Lista, Mis Compras, Freezer y fotos de recibos": "List, My Purchases, Freezer and receipt photos", "☁️ Tus datos se cargaron desde tu cuenta": "☁️ Your data was loaded from your account", "Tu súper de hoy": "Today's list", "Hola": "Hi",
     "Buenos días": "Good morning", "Buenas tardes": "Good afternoon", "Buenas noches": "Good evening",
     "❄️ Freezer": "❄️ Freezer", "Abrir Freezer Scan": "Open Freezer Scan", "Instalar": "Install",
     "Escanear producto": "Scan product", "Escanear producto con la cámara": "Scan a product with the camera",
@@ -197,7 +197,7 @@
     [/^Faltan (\d+)$/, "$1 left"], [/^(\d+) en el carrito$/, "$1 in the cart"], [/^(\d+) unidades$/, "$1 units"],
     [/^Quitaste (\d+) productos$/, "You removed $1 items"], [/^Quitaste (.+)$/, "You removed $1"],
     [/^Cambiar categoría de (.+)$/, "Change category of $1"], [/^Marcar como pendiente: (.+)$/, "Mark as not bought: $1"], [/^Marcar como comprado: (.+)$/, "Mark as bought: $1"],
-    [/^Agregar “(.+)”$/, "Add “$1”"], [/^En tu lista: (\d+) productos$/, "On your list: $1 items"], [/^(\d+) productos agregados$/, "$1 items added"], [/^Código (\d+)$/, "Code $1"],
+    [/^Agregar “(.+)”$/, "Add “$1”"], [/^Última copia: (.+)$/, "Last backup: $1"], [/^En tu lista: (\d+) productos$/, "On your list: $1 items"], [/^(\d+) productos agregados$/, "$1 items added"], [/^Código (\d+)$/, "Code $1"],
     [/^No encontré el código (\S+)\. Escribe su nombre y la próxima vez se reconocerá solo\.$/, "I couldn't find code $1. Type its name and next time it will be recognized automatically."],
     [/^No encontré el código (\S+)\. Escribe su nombre\.$/, "I couldn't find code $1. Type its name."],
     [/^No se pudo buscar el código (\S+)\. Escribe su nombre\.$/, "Couldn't look up code $1. Type its name."],
