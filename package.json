@@ -1,5 +1,5 @@
 {
-  "name": "mi-lista-super",
+  "name": "nopencil",
   "private": true,
   "description": "Mi lista del súper con Freezer Scan. Las dependencias son solo para los avisos del servidor (Netlify Functions).",
   "type": "module",

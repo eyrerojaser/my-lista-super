@@ -182,7 +182,7 @@
     }
     if (!enabled()) { card.classList.add("hidden"); return; }
     card.classList.remove("hidden");
-    $("plusCardTitle").textContent = "Mi Lista Plus"; $("plusCardIco").classList.remove("has-photo"); $("plusCardIco").textContent = "⭐";
+    $("plusCardTitle").textContent = "NoPencil Plus"; $("plusCardIco").classList.remove("has-photo"); $("plusCardIco").textContent = "⭐";
     $("plusSub").textContent = isPlus() ? planText() : "Desbloquea " + feats.map(f => FEATURES[f].name).join(", ").replace(/, ([^,]*)$/, " y $1");
     card.classList.toggle("on", isPlus());
   }
@@ -194,13 +194,13 @@
     sheet.dataset.blocking = blocking ? "1" : "";
     const A = ACC(), u = A && A.user();
     if (mode === "working") {
-      title.textContent = ACC() ? "Mi cuenta" : "Mi Lista Plus";
+      title.textContent = ACC() ? "Mi cuenta" : "NoPencil Plus";
       box.append(el("p", "plus-working", workingText || "Un momento…"));
     } else if (mode === "welcome") {
       title.textContent = "¡Ya tienes Plus! ⭐";
       box.append(el("p", "plus-lead", "Gracias por tu suscripción. Ya puedes usar todas las funciones."));
       if (A) box.append(el("p", "plus-note", "Tu suscripción quedó unida a tu cuenta (" + (u ? u.email : "") + "). Entra con tu correo en cualquier teléfono y la tendrás activa."));
-      else { box.append(codeBox()); box.append(el("p", "plus-note", "Guarda este código. Si tienes la app instalada o cambias de teléfono, toca Mi Lista Plus → escribe tu código.")); }
+      else { box.append(codeBox()); box.append(el("p", "plus-note", "Guarda este código. Si tienes la app instalada o cambias de teléfono, toca NoPencil Plus → escribe tu código.")); }
       box.append(btn("Empezar", "sh-primary", () => closeSheet(true)));
     } else if (mode === "account") {
       title.textContent = "Mi cuenta";
@@ -243,7 +243,7 @@
       if (A) box.append(btn("Cerrar sesión", "sh-danger", () => { closeSheet(true); A.logout(); }));
       box.append(btn("Cerrar", "sh-ghost", () => closeSheet()));
     } else { // paywall
-      title.textContent = "Mi Lista Plus ⭐";
+      title.textContent = "NoPencil Plus ⭐";
       box.append(el("p", "plus-lead", whole
         ? "Para seguir usando la app, suscríbete a Plus."
         : feature ? FEATURES[feature].name + " es parte de Plus." : "Desbloquea todo lo que hace más fácil tu súper."));

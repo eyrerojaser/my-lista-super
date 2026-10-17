@@ -1,4 +1,4 @@
-# My Super List (Mi lista del súper)
+# NoPencil (tu lista del súper, sin papel)
 
 Lista de compras para el teléfono: apuntas la cámara al código de barras, la app identifica el producto y lo agrega sola a tu lista. La lista se guarda en el teléfono y la app funciona aunque no tengas señal dentro de la tienda.
 
@@ -10,17 +10,17 @@ La cámara solo funciona en sitios seguros (https), por eso hay que subirla a un
 
 ### Opción rápida: Netlify Drop (sin GitHub)
 
-1. Descomprime el archivo `mi-lista-super.zip` en tu computadora.
+1. Descomprime el archivo `nopencil.zip` en tu computadora.
 2. Entra a https://app.netlify.com/drop e inicia sesión o crea una cuenta.
-3. Arrastra la carpeta `mi-lista-super` completa a la página.
+3. Arrastra la carpeta `nopencil` completa a la página.
 4. En unos segundos te da una dirección como `https://nombre-raro-123.netlify.app`. Esa es tu app.
-5. Opcional: en **Site configuration → Change site name** puedes cambiarla a algo como `mi-lista-super.netlify.app`.
+5. Opcional: en **Site configuration → Change site name** puedes cambiarla a algo como `nopencil.netlify.app`.
 
 Para actualizarla más adelante, en tu sitio de Netlify ve a **Deploys** y arrastra la carpeta nueva.
 
 ### Opción con GitHub (se actualiza sola)
 
-1. Crea una cuenta en https://github.com y un repositorio nuevo, por ejemplo `mi-lista-super`.
+1. Crea una cuenta en https://github.com y un repositorio nuevo, por ejemplo `nopencil`.
 2. En el repositorio toca **Add file → Upload files** y arrastra *el contenido* de la carpeta (index.html, sw.js, las carpetas css, js, icons, etc.), no la carpeta de afuera. Toca **Commit changes**.
 3. Entra a https://app.netlify.com, toca **Add new site → Import an existing project → GitHub** y elige el repositorio.
 4. No cambies nada en la configuración (el archivo `netlify.toml` ya lo dice todo) y toca **Deploy**.
@@ -127,7 +127,7 @@ Después de agregarlas: **Deploys → Trigger deploy**.
 **Foto de perfil.** En *Mi cuenta* cada persona toca su foto (o *Agregar foto*) para elegir una de la galería o tomarla. Se guarda en su cuenta, así que aparece en cualquier teléfono donde entre, y tú también la ves en tu panel.
 
 **Avisos para ti.** En el panel toca **🔔 Activar** y te llegará una notificación al teléfono cada vez que alguien se registre (con su nombre, correo y número) y cada vez que alguien pida un código para cambiar su contraseña (con el código incluido, para que se lo des sin abrir el panel). Al tocar el aviso se abre el panel.
-- **iPhone:** primero agrega el panel a tu pantalla de inicio: abre `admin.html` en Safari → **Compartir → Agregar a inicio**. Te queda un ícono llamado *Mi Lista Panel*. Ábrelo desde ese ícono, entra con tu contraseña y toca **Activar**.
+- **iPhone:** primero agrega el panel a tu pantalla de inicio: abre `admin.html` en Safari → **Compartir → Agregar a inicio**. Te queda un ícono llamado *NoPencil Panel*. Ábrelo desde ese ícono, entra con tu contraseña y toca **Activar**.
 - **Android:** ábrelo en Chrome, entra y toca **Activar**.
 
 **Las primeras 5 son gratis.** El servidor cuenta las cuentas en el orden en que se registran; las primeras 5 (o lo que diga `FOUNDERS_LIMIT`) tienen todo gratis para siempre. **Ojo:** tus propias cuentas de prueba también cuentan. Si tú te registras primero, pon `FOUNDERS_LIMIT` en 6 para que queden 5 lugares para tus clientas.
@@ -136,7 +136,7 @@ Después de agregarlas: **Deploys → Trigger deploy**.
 
 **Privacidad:** como ahora guardas nombre y correo de tus usuarias, necesitas una política de privacidad que lo explique.
 
-## Activar Mi Lista Plus (suscripción con Stripe)
+## Activar NoPencil Plus (suscripción con Stripe)
 
 La app ya trae el sistema de suscripción, **apagado**. Mientras esté apagado, todas las personas con cuenta usan la app gratis. Está configurada como pediste: **toda la app** se paga (`features: ["todo"]`) a **$5.99 al mes**, y las primeras 5 cuentas no pagan. Si prefieres cobrar solo algunas funciones, cambia `features` en `js/plus-config.js` (por ejemplo `["freezer", "compras"]`).
 
@@ -144,12 +144,12 @@ Con cuentas, el pago queda **unido a la cuenta** de la clienta: la app manda su 
 
 Hazlo primero en **modo de prueba** de Stripe (Test mode) y, cuando todo funcione, repítelo en modo real.
 
-1. **Producto y precios.** En Stripe → **Product catalog → Add product**: nombre *Mi Lista Plus*. Agrega un precio **recurrente mensual** y otro **recurrente anual** con los montos que decidiste.
+1. **Producto y precios.** En Stripe → **Product catalog → Add product**: nombre *NoPencil Plus*. Agrega un precio **recurrente mensual** y otro **recurrente anual** con los montos que decidiste.
 2. **Enlaces de pago.** **Payment Links → New**, uno por cada precio. Si das prueba gratis, actívala ahí (mismos días para los dos). En **After payment** elige **Don't show confirmation page / redirigir a tu sitio** y pega esta dirección, cambiando el principio por la de tu app:
    `https://TU-APP.netlify.app/?plus_session={CHECKOUT_SESSION_ID}`
    (Escribe `{CHECKOUT_SESSION_ID}` tal cual, con las llaves: Stripe lo cambia solo por el número del pago.)
 3. **Portal de clientes.** **Settings → Billing → Customer portal**: actívalo y permite cancelar la suscripción y cambiar la tarjeta (y cambiar de plan, si quieres).
-4. **Clave restringida.** **Developers → API keys → Create restricted key**. Ponle nombre *Mi Lista Netlify* y da solo estos permisos:
+4. **Clave restringida.** **Developers → API keys → Create restricted key**. Ponle nombre *NoPencil Netlify* y da solo estos permisos:
    - Checkout Sessions: **Read**
    - Subscriptions: **Read**
    - Customers: **Write**
@@ -157,21 +157,21 @@ Hazlo primero en **modo de prueba** de Stripe (Test mode) y, cuando todo funcion
    Todo lo demás en *None*. Copia la clave (empieza con `rk_test_` o `rk_live_`).
 5. **Pégala en Netlify, no en GitHub.** En Netlify → tu sitio → **Site configuration → Environment variables → Add a variable**: nombre `STRIPE_SECRET_KEY`, valor tu clave. Luego **Deploys → Trigger deploy** para que la tome.
 6. **Configura la app.** En `js/plus-config.js` pega tu enlace de pago mensual en `monthly.link` (el anual es opcional; si no lo usas, déjalo vacío), revisa el precio que se muestra (`"$5.99 al mes"`), los días de prueba, tu correo de soporte, y cambia `enabled: false` por `enabled: true`. Sube el cambio a GitHub.
-7. **Prueba.** Abre la app, toca **Mi Lista Plus**, elige un plan y paga con la tarjeta de prueba `4242 4242 4242 4242`, cualquier fecha futura y cualquier CVC. Al terminar, Stripe te regresa a la app con Plus activo y un **código de 12 letras**. Prueba también **Administrar suscripción** y cancelar.
+7. **Prueba.** Abre la app, toca **NoPencil Plus**, elige un plan y paga con la tarjeta de prueba `4242 4242 4242 4242`, cualquier fecha futura y cualquier CVC. Al terminar, Stripe te regresa a la app con Plus activo y un **código de 12 letras**. Prueba también **Administrar suscripción** y cancelar.
 8. **Pasar a cobrar de verdad.** Repite los pasos 1 a 5 en modo real (enlaces y clave `rk_live_`), reemplaza la variable `STRIPE_SECRET_KEY` en Netlify y los enlaces en `js/plus-config.js`.
 
 **Plan familiar.** Hay dos planes: **Individual ($5.99 al mes)** y **Familiar** (el precio lo decides tú). Quien paga el plan familiar comparte su lista (*Lista compartida → Invitar a alguien*) y cada persona que se une crea su cuenta y **entra gratis**, hasta 5 personas más (cámbialo con la variable `FAMILY_MEMBERS` en Netlify). Las fundadoras también tienen el plan familiar gratis. En *Mi cuenta* quien paga ve su familia y puede quitar a alguien; quien es familiar ve "Plan familiar de …" y puede salir. Si se cancela el plan familiar, la familia pierde el acceso al terminar el periodo pagado. Para el plan familiar en Stripe:
-1. En el producto *Mi Lista Plus* (o uno nuevo), agrega un precio mensual con el monto que decidas.
+1. En el producto *NoPencil Plus* (o uno nuevo), agrega un precio mensual con el monto que decidas.
 2. Abre ese precio → **Metadata** → agrega `plan` = `family`. Así la app sabe que es el plan familiar.
 3. Crea su enlace de pago (con la misma dirección de regreso que el individual) y pégalo en `family.link` en `js/plus-config.js`, con su precio en `family.price`.
 
-**El código de Plus** (solo si apagas las cuentas con `authRequired: false`). Cada clienta recibe un código al pagar. Con él desbloquea Plus en la app instalada o en otro teléfono (**Mi Lista Plus → ¿Ya pagaste? Escribe tu código**). Esto es importante en iPhone: el pago se abre en Safari, y la app instalada guarda sus datos aparte, así que ahí se desbloquea con el código. Si alguien lo pierde, lo encuentras en Stripe → **Customers** → la clienta → **Metadata**, como `codigo_mi_lista`.
+**El código de Plus** (solo si apagas las cuentas con `authRequired: false`). Cada clienta recibe un código al pagar. Con él desbloquea Plus en la app instalada o en otro teléfono (**NoPencil Plus → ¿Ya pagaste? Escribe tu código**). Esto es importante en iPhone: el pago se abre en Safari, y la app instalada guarda sus datos aparte, así que ahí se desbloquea con el código. Si alguien lo pierde, lo encuentras en Stripe → **Customers** → la clienta → **Metadata**, como `codigo_mi_lista`.
 
 **Si cancelan:** Plus sigue activo hasta el final del periodo pagado y luego se bloquea. Sus datos no se borran; si vuelve a pagar, recupera todo.
 
 ## ¿Cómo sé que tengo la versión nueva?
 
-Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 2.1.1*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
+Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 2.2.0*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
 
 ## Cambiar algo después
 
@@ -192,7 +192,7 @@ js/i18n.js              Traducciones al inglés y botón de idioma
 js/categorias.js        Categorías automáticas y productos comunes (español e inglés)
 js/compartir.js         Lista compartida en tiempo real
 netlify/functions/list-*  Funciones que guardan la lista compartida
-js/plus.js              Mi Lista Plus: bloqueo de funciones y desbloqueo con Stripe
+js/plus.js              NoPencil Plus: bloqueo de funciones y desbloqueo con Stripe
 js/plus-config.js       Aquí activas el registro y Plus, y pegas tus enlaces de pago y precios
 js/cuenta.js            Registro, inicio de sesión y "olvidé mi contraseña"
 admin.html              Tu panel de cuentas (protegido con ADMIN_PASSWORD), con avisos a tu teléfono

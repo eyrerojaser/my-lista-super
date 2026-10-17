@@ -13,7 +13,7 @@
 
   const D = {
     // ----- Encabezado y Mi lista -----
-    "Mi lista del súper": "My grocery list", "Tu súper de hoy": "Today's list", "Hola": "Hi",
+    "Mi lista del súper": "My grocery list", "Tu lista del súper, sin papel": "Your grocery list, no paper", "Tu súper de hoy": "Today's list", "Hola": "Hi",
     "Buenos días": "Good morning", "Buenas tardes": "Good afternoon", "Buenas noches": "Good evening",
     "❄️ Freezer": "❄️ Freezer", "Abrir Freezer Scan": "Open Freezer Scan", "Instalar": "Install",
     "Escanear producto": "Scan product", "Escanear producto con la cámara": "Scan a product with the camera",
@@ -169,11 +169,11 @@
     "Para agregar a alguien más, compártele tu lista. Al unirse, entra gratis.": "To add someone else, share your list with them. When they join, they get in free.",
     "Salir de la familia": "Leave the family", "Ese código no es de un plan familiar.": "That code isn't from a family plan.", "Agregar foto": "Add photo", "Guardando foto…": "Saving photo…", "Quitando foto…": "Removing photo…",
     "Foto guardada": "Photo saved", "Foto quitada": "Photo removed", "Necesitas internet para guardar la foto.": "You need internet to save the photo.",
-    "No se pudo guardar la foto. Revisa tu conexión.": "Couldn't save the photo. Check your connection.", "La foto es demasiado grande": "The photo is too large", "Foto inválida": "Invalid photo", "Mi Lista Plus": "My List Plus", "Mi Lista Plus ⭐": "My List Plus ⭐", "Cerrar sesión": "Log out",
+    "No se pudo guardar la foto. Revisa tu conexión.": "Couldn't save the photo. Check your connection.", "La foto es demasiado grande": "The photo is too large", "Foto inválida": "Invalid photo", "NoPencil Plus": "NoPencil Plus", "NoPencil Plus ⭐": "NoPencil Plus ⭐", "Cerrar sesión": "Log out",
     "Plus gratis (de las primeras)": "Free Plus (early member)", "Prueba gratis activa": "Free trial active", "Plus activo": "Plus active", "Sin suscripción": "No subscription",
     "Desbloquea Plus": "Unlock Plus", "Un momento…": "One moment…", "¡Ya tienes Plus! ⭐": "You've got Plus! ⭐",
     "Gracias por tu suscripción. Ya puedes usar todas las funciones.": "Thanks for subscribing. You can now use every feature.",
-    "Guarda este código. Si tienes la app instalada o cambias de teléfono, toca Mi Lista Plus → escribe tu código.": "Save this code. If you have the app installed or change phones, tap My List Plus → type your code.",
+    "Guarda este código. Si tienes la app instalada o cambias de teléfono, toca NoPencil Plus → escribe tu código.": "Save this code. If you have the app installed or change phones, tap NoPencil Plus → type your code.",
     "Administrar suscripción": "Manage subscription", "Ver planes de Plus": "See Plus plans", "Para seguir usando la app, suscríbete a Plus.": "To keep using the app, subscribe to Plus.",
     "Desbloquea todo lo que hace más fácil tu súper.": "Unlock everything that makes grocery shopping easier.", "Plan anual": "Yearly plan", "Plan mensual": "Monthly plan",
     "Los planes todavía no están disponibles.": "Plans aren't available yet.", "Se renueva automáticamente y puedes cancelar cuando quieras.": "Renews automatically and you can cancel anytime.",

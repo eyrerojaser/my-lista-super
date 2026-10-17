@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>Panel · My Super List</title>
+<title>Panel · NoPencil</title>
 <link rel="icon" type="image/png" href="icons/favicon-32.png">
 <link rel="manifest" href="admin.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Super List Panel">
+<meta name="apple-mobile-web-app-title" content="NoPencil Panel">
 <meta name="theme-color" content="#2A1636">
 <link rel="stylesheet" href="css/styles.css">
 <style>
@@ -50,7 +50,7 @@
 </style>
 </head>
 <body>
-<header class="ad-band"><img src="icons/logo-mark.png" alt="" width="44" height="44" style="float:right;border-radius:13px"><small>My Super List</small><h1>Panel de cuentas</h1></header>
+<header class="ad-band"><img src="icons/logo-mark.png" alt="" width="44" height="44" style="float:right;border-radius:13px"><small>NoPencil</small><h1>Panel de cuentas</h1></header>
 <main class="ad-main">
   <form class="ad-card" id="login">
     <p style="margin:0 0 10px;color:var(--muted)">Escribe la contraseña de administración (la variable <b>ADMIN_PASSWORD</b> que pusiste en Netlify).</p>
@@ -129,7 +129,7 @@
     help("");
     if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
       help(isIOS && !standalone
-        ? "En iPhone primero agrega este panel a tu pantalla de inicio: toca Compartir → Agregar a inicio. Ábrelo desde ese ícono nuevo (Mi Lista Panel), entra con tu contraseña y toca Activar."
+        ? "En iPhone primero agrega este panel a tu pantalla de inicio: toca Compartir → Agregar a inicio. Ábrelo desde ese ícono nuevo (NoPencil Panel), entra con tu contraseña y toca Activar."
         : "Este navegador no permite avisos. Prueba con Chrome o Safari actualizados.");
       return;
     }

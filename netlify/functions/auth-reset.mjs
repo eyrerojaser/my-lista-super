@@ -23,7 +23,7 @@ export default async (req) => {
           method: "POST",
           headers: { Authorization: "Bearer " + process.env.RESEND_API_KEY, "Content-Type": "application/json" },
           body: JSON.stringify({ from: process.env.MAIL_FROM, to: email, subject: "Tu código para cambiar la contraseña",
-            text: "Hola " + user.name + ",\n\nTu código para cambiar la contraseña de Mi Lista es: " + code + "\n\nVence en 30 minutos. Si no lo pediste, ignora este correo." }),
+            text: "Hola " + user.name + ",\n\nTu código para cambiar la contraseña de NoPencil es: " + code + "\n\nVence en 30 minutos. Si no lo pediste, ignora este correo." }),
         }).catch(() => {});
       }
     }
