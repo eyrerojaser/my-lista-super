@@ -13,6 +13,8 @@
   ];
 
   const EMOJI_RULES = [
+    [/chicken|pollo|poultry|pechuga|muslo/, "🍗"], [/\bmeat|carne|beef|steak|pork|sausage|\bham\b|jamon|salchicha|chuck|sirloin|ribeye|brisket|fajita|milanesa|bistec|chorizo|bacon|tocino/, "🥩"],
+    [/fish|seafood|tuna|atun|pescado|salmon|tilapia|shrimp|camaron/, "🐟"],
     [/baby|bebe|infant/, "🍼"], [/pet-food|dog|cat-food|perro|gato/, "🐾"],
     [/ice-cream|helado/, "🍦"], [/yogurt|yoghurt/, "🥣"], [/chees|queso/, "🧀"],
     [/milk|leche|dairies|lacteo/, "🥛"], [/egg|huevo/, "🥚"], [/butter|mantequilla/, "🧈"],
@@ -20,13 +22,12 @@
     [/chocolate/, "🍫"], [/candies|candy|confectioner|dulce|gum/, "🍬"],
     [/chips|crisps|snack|botana/, "🥨"], [/breakfast-cereal|cereal|oat|avena/, "🥣"],
     [/pasta|noodle|spaghetti|sopa/, "🍝"], [/rice|arroz/, "🍚"], [/bean|frijol|legume/, "🫘"],
-    [/coffee|cafe/, "☕"], [/tea|te-/, "🍵"], [/beer|cerveza/, "🍺"], [/wine|vino/, "🍷"],
+    [/coffee|cafe/, "☕"], [/\btea\b|te-/, "🍵"], [/beer|cerveza/, "🍺"], [/wine|vino/, "🍷"],
     [/spirit|tequila|liquor|whisk/, "🥃"], [/juice|jugo|nectar/, "🧃"],
     [/water|agua/, "💧"], [/soda|soft-drink|carbonated|cola|beverage|drink|bebida/, "🥤"],
     [/sauce|salsa|ketchup|mayonnaise|condiment|dressing/, "🥫"], [/canned|conserva|lata/, "🥫"],
     [/oil|aceite/, "🫒"], [/sugar|azucar|honey|miel|syrup/, "🍯"], [/flour|harina/, "🌾"],
-    [/chicken|pollo|poultry/, "🍗"], [/meat|carne|beef|pork|sausage|ham|jamon|salchicha/, "🥩"],
-    [/fish|seafood|tuna|atun|pescado/, "🐟"], [/frozen|congelad/, "🧊"],
+[/frozen|congelad/, "🧊"],
     [/fruit|fruta|apple|banana/, "🍎"], [/vegetable|verdura|legumbre/, "🥦"],
     [/shampoo|soap|jabon|toothpaste|deodorant|cosmetic|beauty|hygiene/, "🧴"],
     [/detergent|cleaning|limpieza|cloro|bleach/, "🧽"], [/toilet-paper|papel|tissue|napkin/, "🧻"],

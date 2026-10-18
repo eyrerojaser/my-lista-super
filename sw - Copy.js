@@ -1,6 +1,6 @@
 /* Service worker: permite abrir la app sin internet.
    Cambia VERSION cada vez que subas cambios para que los teléfonos se actualicen. */
-const VERSION = "v1.8.1";
+const VERSION = "v2.3.2";
 const SHELL = "shell-" + VERSION;
 const IMAGES = "product-images";
 const FILES = [
@@ -10,12 +10,15 @@ const FILES = [
   "js/app.js",
   "js/products.js",
   "js/scanner.js",
+  "js/i18n.js",
   "js/categorias.js",
   "js/compartir.js",
   "js/freezer.js",
   "js/freezer-date.js",
   "js/compras.js",
   "js/plus.js",
+  "js/cuenta.js",
+  "js/respaldo.js",
   "js/plus-config.js",
   "js/recibo.js",
   "vendor/zxing.min.js",
@@ -25,6 +28,8 @@ const FILES = [
   "icons/icon-512.png",
   "icons/apple-touch-icon.png",
   "icons/favicon-32.png",
+  "icons/logo.png",
+  "icons/logo-mark.png",
 ];
 
 self.addEventListener("install", event => {
@@ -130,8 +135,10 @@ self.addEventListener("notificationclick", event => {
   const target = new URL((event.notification.data && event.notification.data.url) || "./?freezer=1", self.location.href).href;
   event.waitUntil((async () => {
     const all = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    const path = new URL(target).pathname;
+    // Se usa una ventana que ya esté en esa página (app o panel); si no hay, se abre una nueva.
     for (const c of all) {
-      if ("focus" in c) { await c.navigate(target).catch(() => {}); return c.focus(); }
+      if (new URL(c.url).pathname === path && "focus" in c) { await c.navigate(target).catch(() => {}); return c.focus(); }
     }
     return self.clients.openWindow(target);
   })());

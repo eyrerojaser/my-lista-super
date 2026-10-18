@@ -221,12 +221,14 @@
         $("fzScanMsg").textContent = "Coloca el código de barras dentro del recuadro";
         clearTimeout(hintTimer);
         hintTimer = setTimeout(() => {
-          if (productOpen && !handled) $("fzScanMsg").textContent = "¿Carne, pollo o pescado de la tienda? Ese código no se puede escanear: toca Leer etiqueta.";
-        }, 7000);
+          if (productOpen && !handled) { $("fzScanMsg").textContent = "¿Carne, pollo o pescado de la tienda? Ese código no se puede escanear: toca Leer etiqueta."; labelAttn(true); }
+        }, 5000);
       } catch (e) { $("fzScanMsg").textContent = camError(e) + " Puedes leer la etiqueta o escribir el nombre."; }
     });
   }
   let handled = false, hintTimer = null;
+  // Hace brillar el botón "Leer etiqueta" cuando el código no se puede usar.
+  const labelAttn = on => { const b = document.querySelector(".fz-label-btn"); if (b) b.classList.toggle("attn", !!on); };
   // Códigos de peso variable (carne, pollo, pescado y queso pesados en la tienda): empiezan con 2
   // y son internos de cada tienda, así que ninguna base de datos los conoce.
   const isWeightCode = c => /^0?2\d{11}$/.test(String(c));
@@ -234,6 +236,7 @@
           if (isWeightCode(code)) {
             handled = false; $("fzScanFound").classList.add("hidden"); productScanner.pause(4000);
             $("fzScanMsg").textContent = "Ese código es de la tienda (producto pesado). Toca Leer etiqueta para sacar el nombre y la fecha.";
+            labelAttn(true);
             return;
           }
           const res = await Products.lookup(code);
@@ -314,7 +317,7 @@
   /* ---------- Leer etiqueta (carne, pollo, pescado de la tienda) ---------- */
   async function fromLabel(file) {
     if (handled) return;
-    handled = true; clearTimeout(hintTimer);
+    handled = true; clearTimeout(hintTimer); labelAttn(false);
     productScanner.pause(120000);
     showFound({ name: "Leyendo la etiqueta…", emoji: "📄" }, "Nombre y fecha");
     $("fzScanMsg").textContent = "";
@@ -353,7 +356,7 @@
   }
   function closeProductScanner(result) {
     if (!productOpen) return;
-    productOpen = false; productScanner.stop(); clearTimeout(hintTimer);
+    productOpen = false; productScanner.stop(); clearTimeout(hintTimer); labelAttn(false);
     $("fzScanner").classList.add("hidden");
     const r = productResolve; productResolve = null; if (r) r(result || null);
   }
@@ -385,6 +388,7 @@
     $("fzDateFound").classList.remove("hidden");
     $("fzDateMsg").textContent = "";
   }
+  let readTicks = 0;
   function armNoDate() {
     clearTimeout(noDateTimer);
     noDateTimer = setTimeout(() => {
@@ -413,10 +417,13 @@
           if (status === "loading") $("fzDateMsg").textContent = "Preparando el lector de fechas…";
           else { $("fzDateMsg").textContent = "Apunta a la fecha impresa (Freeze By, Sell By, Use By, Best By)"; armNoDate(); }
         }, text => {
-          // Muestra lo que está viendo para ayudar a apuntar.
+          // Mensajes sencillos para ayudar a apuntar (sin mostrar el texto que va leyendo, que confunde).
           if (foundDate) return;
-          const t = text.replace(/\s+/g, " ").trim().slice(0, 42);
-          if (t.length >= 3) $("fzDateMsg").textContent = "Leyendo: " + t;
+          const t = String(text || "").toUpperCase();
+          const near = /\d{1,2}\s*[\/\-.]\s*\d{1,2}|\b(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC|ENE|ABR|AGO|DIC)\b|BEST|USE BY|SELL|EXP|FREEZE/.test(t);
+          readTicks++;
+          $("fzDateMsg").textContent = near ? "Casi… acércate un poco más a la fecha"
+            : readTicks % 6 < 3 ? "Buscando la fecha…" : "La fecha suele estar en la tapa, abajo o junto al código";
         });
         if (dateReader.hasTorch()) $("fzTorch").classList.remove("hidden");
         if (product.preDate && dateOpen) { dateReader.pause(true); clearTimeout(noDateTimer); beep(); showDateResult(product.preDate); }

@@ -414,5 +414,137 @@
   window.FreezerDateReader = DateReader;
   window.FreezerDateReader.warmup = () => { getWorker().catch(() => {}); };
   window.FreezerDateReader.readPhoto = readPhoto;
+
+  /* ---------- Leer etiqueta: nombre y fecha desde la foto de una etiqueta impresa ----------
+     Para carne, pollo y pescado de la tienda (H-E-B, Walmart, etc.): su código de barras es interno
+     de la tienda (formato de dos pisos que los teléfonos no leen), pero el nombre y la fecha vienen en texto. */
+  const NOISE = /SAFE|HANDLING|INSTRUCTION|TOTAL|PRICE|SELL|USE BY|BEST|NET|WT|UNIT|STORE|TIME|KEEP|COOK|PRODUCT|POULTRY|BACTERIA|REFRIGERAT|FROZEN OR|THAW|WASH|SAN ANTONIO|LB\b|OZ\b|^\W*\$|PACKED|PKG|DATE|EXP\b|LOT\b|INGREDIENT|SERVING|NUTRITION|CALORIES|DISTRIBUTED|PROCESSED|PER LB|\bTX\b|\bUSA\b/;
+  function nameFrom(text) {
+    const lines = String(text || "").split(/\n+/).map(l => l.replace(/[|\\_~“”"'`*{}<>=]+/g, " ").replace(/\s+/g, " ").trim());
+    for (const l of lines) {
+      const letters = (l.match(/[A-Z]/g) || []).length;
+      if (letters < 6 || letters / l.replace(/\s/g, "").length < 0.7) continue;
+      if (NOISE.test(l)) continue;
+      const words = l.split(" ").filter(w => /[A-Z]{3,}/.test(w));
+      if (words.length < 2) continue;
+      return l.replace(/\s*[|]+\s*$/, "").trim().slice(0, 60)
+        .toLowerCase().replace(/(^|[\s/\-])([a-zñ])/g, (m, a, b) => a + b.toUpperCase());
+    }
+    return "";
+  }
+  // Palabras comunes en etiquetas de carne, pollo y pescado: corrigen letras mal leídas por el brillo
+  // (por ejemplo "Blef Chuck S:lulder" → "Beef Chuck Shoulder").
+  const VOCAB = ("BEEF CHUCK SHOULDER STEAK STEAKS ROUND TIP TOP BOTTOM EYE SIRLOIN RIBEYE RIB RIBS ROAST GROUND LEAN FAT BRISKET FLANK SKIRT " +
+    "FAJITA FAJITAS INSIDE OUTSIDE TENDERLOIN STRIP STRIPS NEW YORK TBONE PORTERHOUSE CUBE CUBED STEW MEAT SHANK OXTAIL TONGUE TRIPE " +
+    "PORK LOIN CHOP CHOPS BUTT SPARERIBS BABY BACK COUNTRY STYLE BACON HAM SAUSAGE CHORIZO PICNIC BELLY CHICHARRON " +
+    "CHICKEN BREAST BREASTS THIGH THIGHS DRUMSTICK DRUMSTICKS WING WINGS LEG LEGS QUARTER QUARTERS WHOLE SPLIT TENDERS GIZZARDS LIVERS " +
+    "TURKEY FISH SALMON TILAPIA SHRIMP CATFISH COD FILLET FILLETS FILET LAMB GOAT VEAL " +
+    "BONELESS SKINLESS BONE SKIN THIN SLICED THICK CUT FAMILY PACK VALUE CHOICE SELECT PRIME USDA GRADE NATURAL FRESH ANGUS MARINATED SEASONED " +
+    "MILANESA ARRACHERA DIEZMILLO PALOMILLA CARNE ASADA RES PUERCO POLLO PECHUGA MUSLO PIERNA COSTILLA BISTEC MOLIDA CHULETA").split(" ");
+  function lev(a, b) {
+    const m = a.length, n = b.length; if (Math.abs(m - n) > 2) return 9;
+    let prev = Array.from({ length: n + 1 }, (_, j) => j);
+    for (let i = 1; i <= m; i++) { const cur = [i]; for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; }
+    return prev[n];
+  }
+  function fixName(name) {
+    if (!name) return name;
+    const fixWord = w => {
+      const up = w.toUpperCase().replace(/[^A-ZÑ]/g, "");
+      if (up.length < 3 || VOCAB.includes(up)) return up ? w.replace(/[^A-Za-zÑñ]/g, "") : w;
+      let best = null, bd = 9;
+      for (const v of VOCAB) { const d = lev(up, v); if (d < bd) { bd = d; best = v; } }
+      const lim = up.length >= 7 ? 2 : up.length >= 4 ? 1 : 0;
+      return best && bd <= lim ? best.charAt(0) + best.slice(1).toLowerCase() : w.replace(/[^A-Za-zÑñ]/g, "");
+    };
+    let toks = name.split(" ").map(t => t.split(/([/-])/).map(p => /[/-]/.test(p) ? p : fixWord(p)).join("")).filter(Boolean);
+    while (toks.length > 1 && toks[toks.length - 1].length < 2) toks.pop();
+    while (toks.length > 1 && toks[0].length < 2) toks.shift();
+    return toks.join(" ");
+  }
+  function words(data) {
+    if (data.words && data.words.length) return data.words;
+    const out = [];
+    (data.blocks || []).forEach(b => (b.paragraphs || []).forEach(p => (p.lines || []).forEach(l => (l.words || []).forEach(w => out.push(w)))));
+    return out;
+  }
+  async function readLabel(file, onProgress) {
+    const prog = onProgress || (() => {});
+    prog("Preparando el lector…");
+    const worker = await getWorker();
+    const img = await loadImage(file);
+    const canvas = document.createElement("canvas"), ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const k = Math.min(1, 2000 / Math.max(img.width, img.height));
+    canvas.width = Math.round(img.width * k); canvas.height = Math.round(img.height * k);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    prog("Leyendo la etiqueta…");
+    await worker.setParameters({ tessedit_pageseg_mode: "11" });
+    const r1 = await worker.recognize(canvas, {}, { text: true, blocks: true });
+    let text = (r1.data && r1.data.text) || "";
+    let name = nameFrom(text);
+    let info = FreezerDate.pickDateInfo(text);
+    if (!info) {
+      // La fecha suele ser pequeña: se recorta la zona de la etiqueta y se lee ampliada.
+      const ws = words(r1.data || {}).filter(w => w.confidence > 40 && /[A-Z0-9]{3,}/.test(w.text || ""));
+      if (ws.length) {
+        let x0 = Infinity, y0 = Infinity, x1 = 0, y1 = 0;
+        ws.forEach(w => { x0 = Math.min(x0, w.bbox.x0); y0 = Math.min(y0, w.bbox.y0); x1 = Math.max(x1, w.bbox.x1); y1 = Math.max(y1, w.bbox.y1); });
+        const padX = (x1 - x0) * 0.08, padY = (y1 - y0) * 0.08;
+        x0 = Math.max(0, x0 - padX); y0 = Math.max(0, y0 - padY); x1 = Math.min(canvas.width, x1 + padX); y1 = Math.min(canvas.height, y1 + padY);
+        const sw = x1 - x0, sh = y1 - y0;
+        // Se lee por franjas ampliadas (de abajo hacia arriba, donde suele ir la fecha) hasta encontrarla.
+        const bandH = sh * 0.28, step = sh * 0.14;
+        const bands = [];
+        for (let y = y0; y < y1 - bandH * 0.5; y += step) bands.push(y);
+        bands.reverse();
+        for (let i = 0; i < bands.length && !info; i++) {
+          const by = bands[i], bh = Math.min(bandH, y1 - by);
+          const z = Math.max(1.5, Math.min(4, 1600 / Math.max(sw, 1)));
+          const big = document.createElement("canvas"); big.width = Math.round(sw * z); big.height = Math.round(bh * z);
+          const bctx = big.getContext("2d", { willReadFrequently: true }); bctx.imageSmoothingQuality = "high";
+          bctx.drawImage(canvas, x0, by, sw, bh, 0, 0, big.width, big.height);
+          prog("Buscando la fecha…");
+          const r2 = await worker.recognize(big);
+          const t2 = (r2.data && r2.data.text) || "";
+          info = FreezerDate.pickDateInfo(t2);
+          if (!name) name = nameFrom(t2);
+          text += "\n" + t2;
+        }
+      }
+    }
+    // El nombre va arriba de "SAFE HANDLING" y a veces tiene brillo del plástico: se lee esa zona ampliada.
+    try {
+      const all = words(r1.data || {});
+      const anchor = all.filter(w => /SAFE|HANDL|INSTRUC/i.test(w.text || ""));
+      let nx0, nx1, ny0, ny1;
+      if (anchor.length) {
+        const top = Math.min(...anchor.map(w => w.bbox.y0)), hw = Math.max(8, Math.min(...anchor.map(w => w.bbox.y1 - w.bbox.y0)));
+        // Ancho de la etiqueta: la línea de las instrucciones (de lado a lado), con un poco de margen.
+        const line = all.filter(w => w.bbox.y0 > top - hw * 1.5 && w.bbox.y0 < top + hw * 8);
+        nx0 = Math.min(...line.map(w => w.bbox.x0)); nx1 = Math.max(...line.map(w => w.bbox.x1));
+        const padX = (nx1 - nx0) * 0.08; nx0 = Math.max(0, nx0 - padX); nx1 = Math.min(canvas.width, nx1 + padX);
+        ny1 = Math.max(0, top - hw * 0.4); ny0 = Math.max(0, top - (nx1 - nx0) * 0.55);
+      }
+      if (anchor.length && nx1 - nx0 > 40 && ny1 - ny0 > 20) {
+        const sw = nx1 - nx0, sh = ny1 - ny0, z = Math.max(1, Math.min(3, 1800 / sw));
+        const big = document.createElement("canvas"); big.width = Math.round(sw * z); big.height = Math.round(sh * z);
+        const bctx = big.getContext("2d", { willReadFrequently: true }); bctx.imageSmoothingQuality = "high";
+        bctx.drawImage(canvas, nx0, ny0, sw, sh, 0, 0, big.width, big.height);
+        prepare(bctx, big.width, big.height, 0);
+        prog("Leyendo el nombre…");
+        await worker.setParameters({ tessedit_pageseg_mode: "6" });
+        const r3 = await worker.recognize(big);
+        const n3 = nameFrom((r3.data && r3.data.text) || "");
+        const score = n => (n.match(/[A-Za-z]{3,}/g) || []).join("").length;
+        if (score(n3) > score(name)) name = n3;
+      }
+    } catch {}
+    await worker.setParameters({ tessedit_pageseg_mode: "6" });
+    name = fixName(name);
+    // H-E-B y otras tiendas imprimen "SELL BY" en la carne aunque a veces se lea borroso.
+    if (info && info.type === "date" && /SEL{1,2}|5ELL/.test(text.toUpperCase())) info = Object.assign({}, info, { type: "sell", label: FreezerDate.TYPE_LABEL.sell });
+    return { name, info, text };
+  }
+  window.FreezerDateReader.readLabel = readLabel;
   window.FreezerDateReader.loadImage = loadImage;
 })();

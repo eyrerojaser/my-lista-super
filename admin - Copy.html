@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Panel · NoPencil</title>
+<link rel="icon" type="image/png" href="icons/favicon-32.png">
+<link rel="manifest" href="admin.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="NoPencil Panel">
+<meta name="theme-color" content="#2A1636">
+<link rel="stylesheet" href="css/styles.css">
+<style>
+  body{background:var(--bg)}
+  .ad-band{background:radial-gradient(110% 80% at 90% 0%,var(--plum-2),var(--plum) 65%);color:var(--on-plum);padding:calc(20px + env(safe-area-inset-top,0px)) 18px 56px;border-radius:0 0 30px 30px}
+  .ad-band small{color:var(--on-plum-soft);font-weight:600}
+  .ad-band h1{margin:2px 0 0;font-size:1.7rem;font-weight:800;letter-spacing:-.03em}
+  .ad-main{max-width:760px;margin:-34px auto 0;padding:0 16px 40px;position:relative}
+  .ad-card{background:var(--surface);border-radius:22px;box-shadow:var(--shadow);padding:16px;margin-bottom:12px}
+  .ad-row{display:flex;gap:8px}
+  .ad-row input{flex:1;min-width:0;height:50px;border-radius:14px;border:1.5px solid var(--line);background:var(--bg);padding:0 14px;font-size:1rem;color:var(--ink)}
+  .ad-row button,.ad-btn{height:50px;border:0;border-radius:14px;background:var(--plum);color:var(--on-plum);font-weight:800;padding:0 18px}
+  .ad-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+  .ad-stats div{background:var(--surface);border-radius:18px;box-shadow:var(--shadow);padding:12px}
+  .ad-stats b{display:block;font-size:1.6rem;font-weight:800}
+  .ad-stats span{color:var(--muted);font-size:.8rem;font-weight:700}
+  .ad-list{list-style:none;margin:0;padding:0}
+  .ad-list li{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+  .ad-list li:first-child{border-top:0}
+  .ad-n{flex:none;width:38px;height:38px;border-radius:12px;background:var(--tile);display:grid;place-items:center;font-weight:800;font-size:.9rem;overflow:hidden}
+  .ad-n img{width:100%;height:100%;object-fit:cover}
+  .ad-who{flex:1;min-width:0}
+  .ad-who b{display:block;overflow-wrap:anywhere}
+  .ad-who small{display:block;color:var(--muted);font-size:.82rem;overflow-wrap:anywhere}
+  .ad-tag{flex:none;font-size:.74rem;font-weight:800;padding:3px 9px;border-radius:999px;background:var(--tile);color:var(--muted)}
+  .ad-tag.f{background:var(--mango);color:var(--on-mango)} .ad-tag.p{background:var(--ok-soft);color:var(--ok)}
+  .ad-code{display:block;margin-top:3px;font-weight:800;color:var(--warn);font-size:.84rem}
+  .ad-tools{display:flex;gap:8px;margin-bottom:10px}
+  .ad-tools input{flex:1;min-width:0;height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);padding:0 12px;color:var(--ink)}
+  .ad-tools button{height:44px;border:0;border-radius:12px;background:var(--tile);font-weight:700;padding:0 14px}
+  .ad-notify{display:flex;align-items:center;gap:12px}
+  .ad-notify div{flex:1;min-width:0}
+  .ad-notify b{display:block}
+  .ad-notify small{display:block;color:var(--muted);font-size:.84rem}
+  .ad-notify button{flex:none;height:44px;border:0;border-radius:14px;background:linear-gradient(145deg,var(--mango),var(--mango-2));color:var(--on-mango);font-weight:800;padding:0 14px}
+  .ad-notify.on button{background:var(--tile);color:var(--ink)}
+  .ad-help{margin:10px 0 0;padding:10px 12px;border-radius:12px;background:var(--tile);font-size:.88rem}
+</style>
+</head>
+<body>
+<header class="ad-band"><img src="icons/logo-mark.png" alt="" width="44" height="44" style="float:right;border-radius:13px"><small>NoPencil</small><h1>Panel de cuentas</h1></header>
+<main class="ad-main">
+  <form class="ad-card" id="login">
+    <p style="margin:0 0 10px;color:var(--muted)">Escribe la contraseña de administración (la variable <b>ADMIN_PASSWORD</b> que pusiste en Netlify).</p>
+    <div class="ad-row"><input id="pw" type="password" autocomplete="current-password" placeholder="Contraseña"><button type="submit">Entrar</button></div>
+    <p class="pc-error hidden" id="err" role="alert"></p>
+  </form>
+  <section id="data" class="hidden">
+    <div class="ad-card ad-notify" id="notifyCard">
+      <div><b>🔔 Avisos en este teléfono</b><small id="notifyTxt">Te avisamos cuando alguien se registre o pida un código de contraseña (con el código incluido).</small></div>
+      <button type="button" id="notifyBtn">Activar</button>
+    </div>
+    <p class="ad-help hidden" id="notifyHelp"></p>
+    <div class="ad-stats">
+      <div><b id="sTotal">0</b><span>Cuentas</span></div>
+      <div><b id="sFounders">0</b><span id="sFoundersLbl">Fundadoras</span></div>
+      <div><b id="sPaying">0</b><span>Pagan Plus</span></div>
+    </div>
+    <div class="ad-card">
+      <div class="ad-tools"><input id="q" type="search" placeholder="Buscar por nombre o correo"><button type="button" id="csv">Descargar</button><button type="button" id="reload">Actualizar</button></div>
+      <ul class="ad-list" id="list"></ul>
+    </div>
+    <p style="color:var(--muted);font-size:.84rem;margin:0 4px">Si alguien olvidó su contraseña y pidió un código, aparece aquí en rojo para que se lo des (vence en 30 minutos).</p>
+  </section>
+</main>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  let users = [], pass = "";
+  const fmt = t => t ? new Date(t).toLocaleDateString("es", { day: "numeric", month: "short", year: "numeric" }) : "";
+  async function load() {
+    $("err").classList.add("hidden");
+    const r = await fetch("/api/admin-users", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: pass }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) { $("err").textContent = d.error || "No se pudo entrar"; $("err").classList.remove("hidden"); return; }
+    users = d.users || [];
+    $("login").classList.add("hidden"); $("data").classList.remove("hidden");
+    $("sTotal").textContent = users.length;
+    $("sFounders").textContent = users.filter(u => u.founder).length + " / " + d.founders;
+    $("sPaying").textContent = users.filter(u => u.paying && ["active", "trialing", "past_due"].includes(u.plusStatus)).length;
+    render();
+  }
+  function render() {
+    const q = $("q").value.trim().toLowerCase();
+    const list = users.filter(u => !q || (u.name + " " + u.email).toLowerCase().includes(q)).slice().reverse();
+    $("list").replaceChildren(...list.map(u => {
+      const li = document.createElement("li");
+      const n = document.createElement("span"); n.className = "ad-n"; n.textContent = u.n;
+      if (u.photo) { const im = document.createElement("img"); im.src = u.photo; im.alt = ""; n.replaceChildren(im); n.classList.add("has-photo"); n.title = "#" + u.n; }
+      const who = document.createElement("div"); who.className = "ad-who";
+      const b = document.createElement("b"); b.textContent = u.name;
+      const s = document.createElement("small"); s.textContent = u.email + " · " + fmt(u.created);
+      who.append(b, s);
+      if (u.familyOf) { const fm = document.createElement("small"); fm.textContent = "👨‍👩‍👧 Familia de " + u.familyOf; who.append(fm); }
+      if (u.reset) { const c = document.createElement("span"); c.className = "ad-code"; c.textContent = "Código para su contraseña: " + u.reset; who.append(c); }
+      const tag = document.createElement("span");
+      tag.className = "ad-tag" + (u.founder ? " f" : (u.familyOf || u.paying) ? " p" : "");
+      tag.textContent = u.founder ? "Fundadora" : u.familyOf ? "Familia" : u.paying ? (u.plusStatus === "trialing" ? "Prueba" : ["active", "past_due"].includes(u.plusStatus) ? "Paga" : "Canceló") : "Gratis";
+      li.append(n, who, tag); return li;
+    }));
+  }
+  $("login").onsubmit = e => { e.preventDefault(); pass = $("pw").value; load(); };
+
+  /* ---------- avisos para la administradora ---------- */
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  const help = msg => { $("notifyHelp").textContent = msg; $("notifyHelp").classList.toggle("hidden", !msg); };
+  function setOn(on) {
+    $("notifyCard").classList.toggle("on", on);
+    $("notifyBtn").textContent = on ? "Probar" : "Activar";
+    $("notifyTxt").textContent = on ? "Activados en este teléfono. Te llegará un aviso con cada registro y cada código de contraseña."
+      : "Te avisamos cuando alguien se registre o pida un código de contraseña (con el código incluido).";
+  }
+  try { setOn(localStorage.getItem("admin-notify-v1") === "1" && Notification.permission === "granted"); } catch {}
+  const b64 = s => { const p = "=".repeat((4 - s.length % 4) % 4); const r = atob((s + p).replace(/-/g, "+").replace(/_/g, "/")); return Uint8Array.from(r, c => c.charCodeAt(0)); };
+  $("notifyBtn").onclick = async () => {
+    help("");
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+      help(isIOS && !standalone
+        ? "En iPhone primero agrega este panel a tu pantalla de inicio: toca Compartir → Agregar a inicio. Ábrelo desde ese ícono nuevo (NoPencil Panel), entra con tu contraseña y toca Activar."
+        : "Este navegador no permite avisos. Prueba con Chrome o Safari actualizados.");
+      return;
+    }
+    try {
+      const perm = await Notification.requestPermission();
+      if (perm !== "granted") { help("Sin permiso no se pueden enviar avisos. Actívalo en los ajustes del teléfono para este sitio."); return; }
+      const reg = await navigator.serviceWorker.register("/sw.js");
+      await navigator.serviceWorker.ready;
+      const { publicKey } = await (await fetch("/api/push-key", { cache: "no-store" })).json();
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64(publicKey) });
+      const r = await fetch("/api/admin-subscribe", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: pass, subscription: sub.toJSON(), test: true }) });
+      if (!r.ok) { const d = await r.json().catch(() => ({})); help(d.error || "No se pudieron activar los avisos."); return; }
+      try { localStorage.setItem("admin-notify-v1", "1"); } catch {}
+      setOn(true);
+      help("Listo. Te enviamos un aviso de prueba; debe llegarte en unos segundos.");
+    } catch (e) { help("No se pudieron activar los avisos. Revisa tu conexión e intenta otra vez."); }
+  };
+  // Se actualiza sola cada minuto mientras el panel está abierto.
+  setInterval(() => { if (pass && !document.hidden && !$("data").classList.contains("hidden")) load(); }, 60000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && pass && !$("data").classList.contains("hidden")) load(); });
+  $("q").oninput = render;
+  $("reload").onclick = load;
+  $("csv").onclick = () => {
+    const rows = [["Número", "Nombre", "Correo", "Fecha de registro", "Fundadora", "Plus"]].concat(users.map(u => [u.n, u.name, u.email, fmt(u.created), u.founder ? "Sí" : "No", u.plusStatus || (u.founder ? "gratis" : "")]));
+    const csv = rows.map(r => r.map(v => /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : v).join(",")).join("\r\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv" })); a.download = "cuentas-mi-lista.csv"; a.click();
+  };
+})();
+</script>
+</body>
+</html>

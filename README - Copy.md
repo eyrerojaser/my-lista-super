@@ -1,4 +1,4 @@
-# Mi lista del súper
+# NoPencil (tu lista del súper, sin papel)
 
 Lista de compras para el teléfono: apuntas la cámara al código de barras, la app identifica el producto y lo agrega sola a tu lista. La lista se guarda en el teléfono y la app funciona aunque no tengas señal dentro de la tienda.
 
@@ -10,17 +10,17 @@ La cámara solo funciona en sitios seguros (https), por eso hay que subirla a un
 
 ### Opción rápida: Netlify Drop (sin GitHub)
 
-1. Descomprime el archivo `mi-lista-super.zip` en tu computadora.
+1. Descomprime el archivo `nopencil.zip` en tu computadora.
 2. Entra a https://app.netlify.com/drop e inicia sesión o crea una cuenta.
-3. Arrastra la carpeta `mi-lista-super` completa a la página.
+3. Arrastra la carpeta `nopencil` completa a la página.
 4. En unos segundos te da una dirección como `https://nombre-raro-123.netlify.app`. Esa es tu app.
-5. Opcional: en **Site configuration → Change site name** puedes cambiarla a algo como `mi-lista-super.netlify.app`.
+5. Opcional: en **Site configuration → Change site name** puedes cambiarla a algo como `nopencil.netlify.app`.
 
 Para actualizarla más adelante, en tu sitio de Netlify ve a **Deploys** y arrastra la carpeta nueva.
 
 ### Opción con GitHub (se actualiza sola)
 
-1. Crea una cuenta en https://github.com y un repositorio nuevo, por ejemplo `mi-lista-super`.
+1. Crea una cuenta en https://github.com y un repositorio nuevo, por ejemplo `nopencil`.
 2. En el repositorio toca **Add file → Upload files** y arrastra *el contenido* de la carpeta (index.html, sw.js, las carpetas css, js, icons, etc.), no la carpeta de afuera. Toca **Commit changes**.
 3. Entra a https://app.netlify.com, toca **Add new site → Import an existing project → GitHub** y elige el repositorio.
 4. No cambies nada en la configuración (el archivo `netlify.toml` ya lo dice todo) y toca **Deploy**.
@@ -51,11 +51,15 @@ Queda un ícono propio en tu pantalla de inicio y se abre a pantalla completa, c
 
 **Enviar la lista.** Toca *Enviar lista* y elige WhatsApp (o cualquier app de mensajes). La otra persona recibe la lista escrita para leerla directo en el chat, y un enlace: si lo abre, la app le pregunta si quiere agregar esos productos a su lista para ir marcándolos en la tienda. En iPhone, conviene copiar ese enlace y abrirlo en Safari.
 
-**Categorías automáticas.** Cada producto que agregas (escaneado o escrito) se acomoda solo en su categoría: Frutas y verduras, Carnes, Lácteos, Panadería, Despensa, Congelados, Bebidas, Botanas y dulces, Limpieza y hogar, Cuidado personal, Bebé y mascotas u Otros. Funciona en español e inglés (leche o milk → Lácteos, pollo o chicken → Carnes). Si alguno queda en la categoría equivocada, toca su imagen y elige la correcta: la app se acuerda para la próxima vez.
+**Idiomas: español e inglés.** Toda la app está en los dos idiomas. Arriba a la derecha (y en la pantalla de registro) está el selector **ES | EN**: el idioma activo se ve resaltado en naranja; toca el otro para cambiar. La primera vez, la app usa el idioma del teléfono. Lo que escribe cada persona (nombres de productos, tiendas) no se traduce. Las listas descargadas, los resúmenes de Mis Compras y los mensajes para compartir salen en el idioma elegido. Las traducciones están en `js/i18n.js`: si quieres cambiar alguna palabra en inglés, búscala ahí.
 
-**Productos comunes.** Al tocar *Agregar por nombre* aparecen productos comunes para agregarlos con un toque. Al escribir, la app sugiere productos que coinciden, en español o inglés (por ejemplo "chick" → Chicken, Chicken breast…).
+**Categorías automáticas.** Cada producto que agregas (escaneado o escrito) se acomoda solo en su sección del súper: Frutas y Vegetales, Carnes y Mariscos, Lácteos y Huevos, Panadería, Despensa, Bebidas, Congelados, Limpieza del Hogar, Cuidado Personal, Bebé, Mascotas u Otros (las mismas de *Productos comunes*). Funciona en español e inglés (leche o milk → Lácteos, pollo o chicken → Carnes). Si alguno queda en la categoría equivocada, toca su imagen y elige la correcta: la app se acuerda para la próxima vez.
 
-**Lista compartida en tiempo real.** Toca *Lista compartida* → *Compartir mi lista* y envía la invitación por WhatsApp. La otra persona abre el enlace (o escribe el código de 12 letras en *Lista compartida*) y ve la misma lista. Si cualquiera agrega, quita o marca un producto, el cambio aparece en los demás teléfonos en unos segundos. Sin señal, los cambios se guardan y se envían al volver la conexión. Con *Salir de la lista compartida* cada quien se queda con su copia.
+**Productos comunes.** Al tocar *Agregar por nombre* (o su botón *Agregar*) se abre una página aparte, con todo el espacio de la pantalla, para agregar productos: arriba el campo para escribir y debajo los productos comunes agrupados como en el súper, cada sección con su color (verde para frutas y vegetales, rojo para carnes, azul para lácteos…). Los mismos colores aparecen como franja en cada categoría de Mi lista. Toca *Listo* para volver. Las secciones son: Frutas y Vegetales, Carnes y Mariscos, Lácteos y Huevos, Panadería, Despensa, Bebidas, Congelados, Limpieza del Hogar, Cuidado Personal, Bebé, Mascotas y Otros (en inglés: Fruits & Vegetables, Meat & Seafood, Dairy & Eggs…). Con un toque se agregan a la lista; los que ya están en la lista se ven en verde con ✓. Las secciones y sus productos están en `js/categorias.js` (busca `SECTIONS`) por si quieres agregar o cambiar alguno. Al escribir, la app sugiere productos que coinciden, en español o inglés (por ejemplo "chick" → Chicken, Chicken breast…).
+
+**Lista compartida en tiempo real.** Toca *Lista compartida* → *Compartir mi lista* y envía la invitación por WhatsApp. La otra persona abre el enlace (o, en *Lista compartida*, toca *Me invitaron: tengo un código* y lo escribe) y ve la misma lista. Si cualquiera agrega, quita o marca un producto, el cambio aparece en los demás teléfonos en unos segundos. Sin señal, los cambios se guardan y se envían al volver la conexión. Con *Salir de la lista compartida* cada quien se queda con su copia.
+
+**Copia en la cuenta.** Todo lo importante se guarda solo en la cuenta de cada persona: Mi lista, Mis Compras (con las fotos de los recibos), Freezer/Refri/Despensa y los productos que agregó a las categorías. Cada cambio se sube a los pocos segundos y, al abrir la app, se trae lo más nuevo. Si alguien cambia de teléfono, borra la app o la instala en otro, entra con su correo y contraseña y aparece todo. En *Mi cuenta* se ve la hora de la última copia y el botón *Guardar ahora*. Si en un teléfono entra otra cuenta, los datos de la anterior se quitan de ese teléfono (siguen guardados en su cuenta). Se guarda en Netlify Blobs (almacén `respaldos`); no hay que configurar nada.
 
 **Mis Compras.** En Mi lista, toca *Mis Compras* para abrir el calendario de tus visitas al súper:
 
@@ -69,7 +73,7 @@ Debajo del total del mes aparecen, lado a lado, las dos formas de guardar un rec
 6. **Escanear recibo** (funciona mejor con recibos de hasta 20 productos): toca *Escanear recibo* y toma una foto del recibo completo (o elígela de tus fotos). La app lee la tienda, la fecha, cada producto con su precio y el total, y te lo muestra para que corrijas lo que haga falta: puedes cambiar nombres y precios, quitar o agregar productos y ajustar el total. Si la suma de productos no coincide con el total, te muestra la diferencia: si es parecida a los impuestos del recibo dice *Impuestos y otros*, y si es mayor te avisa que hay *productos no leídos*. El total del recibo siempre se guarda completo. Al tocar *Guardar compra* se registra en el día del recibo, se suma al total del mes y la foto queda guardada como respaldo. Después puedes volver a ver y corregir los productos desde el lápiz → *Ver y corregir productos*. Consejo: pon el recibo sobre una superficie oscura, estirado y con buena luz.
 7. *Descargar resumen mensual* guarda un archivo (.csv) con cada fecha de compra, lo que gastaste y el total del mes. Se abre en Excel, Google Sheets o Numbers.
 
-**Freezer Scan.** Toca el botón *❄️ Freezer* arriba a la derecha. Ahí llevas la cuenta de lo que tienes congelado, aparte de Mi lista:
+**Freezer Scan (fechas de vencimiento).** Toca el botón *❄️ Freezer* arriba a la derecha. Arriba eliges dónde guardas el producto: **❄️ Freezer, 🥛 Refri o 🥫 Despensa**. Cada lugar tiene su propia lista y el escáner guarda en el lugar elegido. Si no hay fecha impresa, se cuenta desde hoy: 3 meses en el freezer, 7 días en el refri y 6 meses en la despensa. Los avisos de 3 días antes funcionan para los tres. Ahí llevas la cuenta de lo que tienes congelado, aparte de Mi lista:
 
 1. Toca *Empezar* y escanea el código de barras del producto (o usa *Sin código de barras* para carne del carnicero o comida hecha en casa). Si la cámara en vivo no lo lee, toca *Tomar foto*: una foto sale más nítida y se lee mejor.
 2. Se abre un segundo escáner, solo para la fecha. Apunta a la fecha impresa dentro del recuadro. Abajo vas viendo lo que está leyendo ("Leyendo: …") para que sepas si estás bien apuntada. Reconoce si dice **Freeze By, Sell By, Use By o Best By**. Cuando la lee dos veces igual, te la muestra para que confirmes con *Usar* o toques *Reintentar*.
@@ -106,35 +110,70 @@ Para una familia es más que suficiente. Si algún día muchas familias la usan 
 
 **En iPhone:** la app instalada en la pantalla de inicio y Safari guardan cosas por separado. Si alguien ya tiene la app instalada, es mejor que se una escribiendo el **código** dentro de la app, en vez de abrir el enlace en Safari.
 
-## Activar Mi Lista Plus (suscripción con Stripe)
+## Cuentas (registro obligatorio)
 
-La app ya trae el sistema de suscripción, **apagado**. Mientras esté apagado todo es gratis y no se ve nada de Plus. Qué funciones son de Plus lo decides en `js/plus-config.js` (por defecto: Freezer Scan y Mis Compras).
+Para usar la app hay que crear una cuenta con **nombre, correo y contraseña**. Las contraseñas se guardan cifradas en tu sitio de Netlify (nunca se pueden leer), y la sesión queda abierta en el teléfono, así que la app funciona sin señal una vez que entraste. Se activa o desactiva con `authRequired` en `js/plus-config.js`.
+
+**Lo que haces una vez en Netlify** (tu sitio → **Site configuration → Environment variables → Add a variable**):
+
+| Variable | Para qué | ¿Obligatoria? |
+|---|---|---|
+| `ADMIN_PASSWORD` | Contraseña de tu panel de cuentas (mínimo 10 caracteres, que no uses en otro lado) | Sí |
+| `FOUNDERS_LIMIT` | Cuántas de las primeras cuentas tienen la app gratis. Si no la pones, son 5 | No |
+| `RESEND_API_KEY` y `MAIL_FROM` | Para enviar por correo el código de "Olvidé mi contraseña" (con una cuenta gratis de resend.com). Sin esto, el código lo ves tú en el panel y se lo das | No |
+
+Después de agregarlas: **Deploys → Trigger deploy**.
+
+**Tu panel de cuentas:** abre `https://TU-APP.netlify.app/admin.html` y escribe tu `ADMIN_PASSWORD`. Ves cuántas cuentas hay, quiénes son fundadoras, quiénes pagan, puedes buscar y descargar la lista en Excel. Si alguien olvidó su contraseña y pidió un código, aparece ahí en rojo para que se lo des.
+
+**Foto de perfil.** En *Mi cuenta* cada persona toca su foto (o *Agregar foto*) para elegir una de la galería o tomarla. Se guarda en su cuenta, así que aparece en cualquier teléfono donde entre, y tú también la ves en tu panel.
+
+**Avisos para ti.** En el panel toca **🔔 Activar** y te llegará una notificación al teléfono cada vez que alguien se registre (con su nombre, correo y número) y cada vez que alguien pida un código para cambiar su contraseña (con el código incluido, para que se lo des sin abrir el panel). Al tocar el aviso se abre el panel.
+- **iPhone:** primero agrega el panel a tu pantalla de inicio: abre `admin.html` en Safari → **Compartir → Agregar a inicio**. Te queda un ícono llamado *NoPencil Panel*. Ábrelo desde ese ícono, entra con tu contraseña y toca **Activar**.
+- **Android:** ábrelo en Chrome, entra y toca **Activar**.
+
+**Las primeras 5 son gratis.** El servidor cuenta las cuentas en el orden en que se registran; las primeras 5 (o lo que diga `FOUNDERS_LIMIT`) tienen todo gratis para siempre. **Ojo:** tus propias cuentas de prueba también cuentan. Si tú te registras primero, pon `FOUNDERS_LIMIT` en 6 para que queden 5 lugares para tus clientas.
+
+**Cartel de promoción.** En la pantalla de registro aparece *"🎉 Promoción de lanzamiento: ¡Gratis para las primeras 10!"* con una barra y cuántos lugares quedan, que se actualiza sola con cada registro. Cuando se acaban los lugares, el cartel desaparece. El número que se muestra es `foundersLimit` en `js/plus-config.js`; para apagar el cartel pon `promo: false`. Los lugares que quedan los calcula el servidor con `FOUNDERS_LIMIT` (tu cuenta cuenta como una: con 10 lugares para clientas y tu cuenta, pon 11).
+
+**Privacidad:** como ahora guardas nombre y correo de tus usuarias, necesitas una política de privacidad que lo explique.
+
+## Activar NoPencil Plus (suscripción con Stripe)
+
+La app ya trae el sistema de suscripción, **apagado**. Mientras esté apagado, todas las personas con cuenta usan la app gratis. Está configurada como pediste: **toda la app** se paga (`features: ["todo"]`) a **$5.99 al mes**, y las primeras 5 cuentas no pagan. Si prefieres cobrar solo algunas funciones, cambia `features` en `js/plus-config.js` (por ejemplo `["freezer", "compras"]`).
+
+Con cuentas, el pago queda **unido a la cuenta** de la clienta: la app manda su número de cuenta y su correo a Stripe al pagar, y luego Plus se activa en cualquier teléfono donde entre con su correo. No necesita ningún código.
 
 Hazlo primero en **modo de prueba** de Stripe (Test mode) y, cuando todo funcione, repítelo en modo real.
 
-1. **Producto y precios.** En Stripe → **Product catalog → Add product**: nombre *Mi Lista Plus*. Agrega un precio **recurrente mensual** y otro **recurrente anual** con los montos que decidiste.
+1. **Producto y precios.** En Stripe → **Product catalog → Add product**: nombre *NoPencil Plus*. Agrega un precio **recurrente mensual** y otro **recurrente anual** con los montos que decidiste.
 2. **Enlaces de pago.** **Payment Links → New**, uno por cada precio. Si das prueba gratis, actívala ahí (mismos días para los dos). En **After payment** elige **Don't show confirmation page / redirigir a tu sitio** y pega esta dirección, cambiando el principio por la de tu app:
    `https://TU-APP.netlify.app/?plus_session={CHECKOUT_SESSION_ID}`
    (Escribe `{CHECKOUT_SESSION_ID}` tal cual, con las llaves: Stripe lo cambia solo por el número del pago.)
 3. **Portal de clientes.** **Settings → Billing → Customer portal**: actívalo y permite cancelar la suscripción y cambiar la tarjeta (y cambiar de plan, si quieres).
-4. **Clave restringida.** **Developers → API keys → Create restricted key**. Ponle nombre *Mi Lista Netlify* y da solo estos permisos:
+4. **Clave restringida.** **Developers → API keys → Create restricted key**. Ponle nombre *NoPencil Netlify* y da solo estos permisos:
    - Checkout Sessions: **Read**
    - Subscriptions: **Read**
    - Customers: **Write**
    - Customer portal: **Write**
    Todo lo demás en *None*. Copia la clave (empieza con `rk_test_` o `rk_live_`).
 5. **Pégala en Netlify, no en GitHub.** En Netlify → tu sitio → **Site configuration → Environment variables → Add a variable**: nombre `STRIPE_SECRET_KEY`, valor tu clave. Luego **Deploys → Trigger deploy** para que la tome.
-6. **Configura la app.** En `js/plus-config.js` pega los dos enlaces de pago, escribe los precios como quieres que se vean (por ejemplo `"$2.99 al mes"`), los días de prueba, tu correo de soporte, y cambia `enabled: false` por `enabled: true`. Sube el cambio a GitHub.
-7. **Prueba.** Abre la app, toca **Mi Lista Plus**, elige un plan y paga con la tarjeta de prueba `4242 4242 4242 4242`, cualquier fecha futura y cualquier CVC. Al terminar, Stripe te regresa a la app con Plus activo y un **código de 12 letras**. Prueba también **Administrar suscripción** y cancelar.
+6. **Configura la app.** En `js/plus-config.js` pega tu enlace de pago mensual en `monthly.link` (el anual es opcional; si no lo usas, déjalo vacío), revisa el precio que se muestra (`"$5.99 al mes"`), los días de prueba, tu correo de soporte, y cambia `enabled: false` por `enabled: true`. Sube el cambio a GitHub.
+7. **Prueba.** Abre la app, toca **NoPencil Plus**, elige un plan y paga con la tarjeta de prueba `4242 4242 4242 4242`, cualquier fecha futura y cualquier CVC. Al terminar, Stripe te regresa a la app con Plus activo y un **código de 12 letras**. Prueba también **Administrar suscripción** y cancelar.
 8. **Pasar a cobrar de verdad.** Repite los pasos 1 a 5 en modo real (enlaces y clave `rk_live_`), reemplaza la variable `STRIPE_SECRET_KEY` en Netlify y los enlaces en `js/plus-config.js`.
 
-**El código de Plus.** Cada clienta recibe un código al pagar. Con él desbloquea Plus en la app instalada o en otro teléfono (**Mi Lista Plus → ¿Ya pagaste? Escribe tu código**). Esto es importante en iPhone: el pago se abre en Safari, y la app instalada guarda sus datos aparte, así que ahí se desbloquea con el código. Si alguien lo pierde, lo encuentras en Stripe → **Customers** → la clienta → **Metadata**, como `codigo_mi_lista`.
+**Plan familiar.** Hay dos planes: **Individual ($5.99 al mes)** y **Familiar** (el precio lo decides tú). Quien paga el plan familiar comparte su lista (*Lista compartida → Invitar a alguien*) y cada persona que se une crea su cuenta y **entra gratis**, hasta 5 personas más (cámbialo con la variable `FAMILY_MEMBERS` en Netlify). Las fundadoras también tienen el plan familiar gratis. En *Mi cuenta* quien paga ve su familia y puede quitar a alguien; quien es familiar ve "Plan familiar de …" y puede salir. Si se cancela el plan familiar, la familia pierde el acceso al terminar el periodo pagado. Para el plan familiar en Stripe:
+1. En el producto *NoPencil Plus* (o uno nuevo), agrega un precio mensual con el monto que decidas.
+2. Abre ese precio → **Metadata** → agrega `plan` = `family`. Así la app sabe que es el plan familiar.
+3. Crea su enlace de pago (con la misma dirección de regreso que el individual) y pégalo en `family.link` en `js/plus-config.js`, con su precio en `family.price`.
+
+**El código de Plus** (solo si apagas las cuentas con `authRequired: false`). Cada clienta recibe un código al pagar. Con él desbloquea Plus en la app instalada o en otro teléfono (**NoPencil Plus → ¿Ya pagaste? Escribe tu código**). Esto es importante en iPhone: el pago se abre en Safari, y la app instalada guarda sus datos aparte, así que ahí se desbloquea con el código. Si alguien lo pierde, lo encuentras en Stripe → **Customers** → la clienta → **Metadata**, como `codigo_mi_lista`.
 
 **Si cancelan:** Plus sigue activo hasta el final del periodo pagado y luego se bloquea. Sus datos no se borran; si vuelve a pagar, recupera todo.
 
 ## ¿Cómo sé que tengo la versión nueva?
 
-Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 1.8.1*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
+Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 2.3.2*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
 
 ## Cambiar algo después
 
@@ -151,11 +190,16 @@ css/styles.css          Diseño
 js/app.js               Lista, escáner y pantallas
 js/scanner.js           Lectura del código de barras con la cámara
 js/products.js          Identificación del producto por código
+js/i18n.js              Traducciones al inglés y botón de idioma
 js/categorias.js        Categorías automáticas y productos comunes (español e inglés)
 js/compartir.js         Lista compartida en tiempo real
 netlify/functions/list-*  Funciones que guardan la lista compartida
-js/plus.js              Mi Lista Plus: bloqueo de funciones y desbloqueo con Stripe
-js/plus-config.js       Aquí activas Plus y pegas tus enlaces de pago y precios
+js/plus.js              NoPencil Plus: bloqueo de funciones y desbloqueo con Stripe
+js/plus-config.js       Aquí activas el registro y Plus, y pegas tus enlaces de pago y precios
+js/cuenta.js            Registro, inicio de sesión y "olvidé mi contraseña"
+admin.html              Tu panel de cuentas (protegido con ADMIN_PASSWORD), con avisos a tu teléfono
+admin.webmanifest       Para instalar el panel en tu pantalla de inicio
+netlify/functions/auth-*  Funciones de las cuentas
 netlify/functions/plus-*  Funciones que confirman pagos con Stripe
 js/compras.js           Mis Compras: calendario, gastos y fotos de recibos
 js/recibo.js            Mis Compras: lectura de recibos (tienda, fecha, productos, total)

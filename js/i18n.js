@@ -91,7 +91,7 @@
     "Nombre del producto": "Product name", "Por ejemplo: carne molida, tamales, pan.": "For example: ground beef, tamales, bread.",
     "Buscando el código en la foto…": "Looking for the barcode in the photo…", "No encontré un código en la foto. Acércate más o escribe el nombre.": "I couldn't find a barcode in the photo. Get closer or type the name.",
     "Preparando el lector de fechas…": "Getting the date reader ready…", "Apunta a la fecha impresa (Freeze By, Sell By, Use By, Best By)": "Point at the printed date (Freeze By, Sell By, Use By, Best By)",
-    "Leyendo…": "Reading…", "Leyendo la fecha en la foto…": "Reading the date in the photo…",
+    "Leyendo…": "Reading…", "Casi… acércate un poco más a la fecha": "Almost… move a little closer to the date", "La fecha suele estar en la tapa, abajo o junto al código": "The date is usually on the lid, the bottom or next to the barcode", "Leyendo la fecha en la foto…": "Reading the date in the photo…",
     "Elige la fecha impresa en el empaque, o cuánto tiempo lo quieres guardar.": "Pick the date printed on the package, or how long you want to keep it.",
     "Permite el acceso a la cámara en los ajustes del teléfono.": "Allow camera access in your phone settings.", "No se encontró una cámara.": "No camera found.",
     "La cámara está ocupada por otra app.": "The camera is being used by another app.", "No se pudo abrir la cámara.": "Couldn't open the camera.",

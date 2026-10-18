@@ -23,7 +23,7 @@
   function daysLeft(iso) { return Math.round(dayNum(iso) - dayNum(todayISO())); }
   function fmtDate(iso) {
     const [y, m, d] = iso.split("-").map(Number);
-    return new Date(y, m - 1, d).toLocaleDateString("es", { day: "numeric", month: "short", year: "numeric" }).replace(".", "");
+    return new Date(y, m - 1, d).toLocaleDateString(window.I18N ? I18N.loc() : "es", { day: "numeric", month: "short", year: "numeric" }).replace(".", "");
   }
   function daysText(n) {
     if (n > 1) return "Quedan " + n + " días";
@@ -32,12 +32,23 @@
     if (n === -1) return "Venció ayer";
     return "Venció hace " + -n + " días";
   }
-  const ENTRY_DAYS = 90; // sin fecha impresa: usar dentro de 3 meses desde que entró al freezer
+  // Dónde se guarda: freezer, refrigerador o despensa. Sin fecha impresa, se cuenta desde que entró.
+  const LOCS = {
+    freezer: { emoji: "❄️", hero: "Escanear para el freezer", head: "En el freezer", empty: "Aún no hay nada en el freezer", saved: "Guardado en el freezer: ", entryDays: 90, icon: "🧊" },
+    refri: { emoji: "🥛", hero: "Escanear para el refrigerador", head: "En el refrigerador", empty: "Aún no hay nada en el refrigerador", saved: "Guardado en el refrigerador: ", entryDays: 7, icon: "🥛" },
+    despensa: { emoji: "🥫", hero: "Escanear para la despensa", head: "En la despensa", empty: "Aún no hay nada en la despensa", saved: "Guardado en la despensa: ", entryDays: 180, icon: "🥫" },
+  };
+  const LOC_KEY = "freezer-loc-v1";
+  let loc = "freezer";
+  try { const l = localStorage.getItem(LOC_KEY); if (LOCS[l]) loc = l; } catch {}
+  const locOf = it => (LOCS[it.loc] ? it.loc : "freezer");
+  const ENTRY_DAYS = 90;
+  const entryDays = l => (LOCS[l] || LOCS.freezer).entryDays;
   function addDays(iso, n) {
     const [y, m, d] = iso.split("-").map(Number); const t = new Date(y, m - 1, d + n);
     return t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0") + "-" + String(t.getDate()).padStart(2, "0");
   }
-  const dueOf = it => it.due || (it.type === "entry" ? addDays(it.date, ENTRY_DAYS) : it.date);
+  const dueOf = it => it.due || (it.type === "entry" ? addDays(it.date, entryDays(locOf(it))) : it.date);
   function dateLine(it) {
     if (it.type === "entry") return "Entró: " + fmtDate(it.date) + " · usar antes del " + fmtDate(dueOf(it));
     const label = (window.FreezerDate && FreezerDate.TYPE_LABEL[it.type]) || "Fecha";
@@ -90,10 +101,21 @@
   }
   function render() {
     items.sort((a, b) => (dueOf(a) < dueOf(b) ? -1 : dueOf(a) > dueOf(b) ? 1 : 0));
+    const L = LOCS[loc];
+    const shown = items.filter(i => locOf(i) === loc);
+    // Pestañas: cuántos hay en cada lugar (y si alguno vence pronto).
+    document.querySelectorAll(".fz-locs [data-loc]").forEach(b => {
+      const l = b.dataset.loc, mine = items.filter(i => locOf(i) === l);
+      b.setAttribute("aria-selected", String(l === loc));
+      const n = b.querySelector(".fz-loc-n"); n.textContent = mine.length ? mine.length : "";
+      n.classList.toggle("warn", mine.some(i => daysLeft(dueOf(i)) <= WARN_DAYS));
+    });
+    $("fzHeroTitle").textContent = L.hero; $("fzHeroEmoji").textContent = L.emoji;
+    $("fzHeadTitle").textContent = L.head; $("fzEmptyTitle").textContent = L.empty; $("fzEmptyIco").textContent = L.icon;
     // "Usar primero": el que vence antes y cualquiera que venza en 3 días o menos.
-    $("fzList").replaceChildren(...items.map((it, i) => row(it, items.length > 1 && (i === 0 || daysLeft(dueOf(it)) <= WARN_DAYS))));
-    $("fzEmpty").classList.toggle("hidden", items.length > 0);
-    $("fzCount").textContent = items.length ? (items.length === 1 ? "1 producto" : items.length + " productos") : "";
+    $("fzList").replaceChildren(...shown.map((it, i) => row(it, shown.length > 1 && (i === 0 || daysLeft(dueOf(it)) <= WARN_DAYS))));
+    $("fzEmpty").classList.toggle("hidden", shown.length > 0);
+    $("fzCount").textContent = shown.length ? (shown.length === 1 ? "1 producto" : shown.length + " productos") : "";
     const soon = items.filter(i => daysLeft(dueOf(i)) <= WARN_DAYS);
     const badge = $("fzBadge");
     badge.textContent = soon.length; badge.classList.toggle("hidden", !soon.length);
@@ -112,12 +134,12 @@
 
   function addItem(p, info) {
     if (typeof info === "string") info = { date: info, type: "date" };
-    const it = { id: uid(), name: p.name, emoji: p.emoji || "🧊", img: p.img || "", code: p.code || "",
-      date: info.date, type: info.type || "date", added: todayISO() };
+    const it = { id: uid(), name: p.name, emoji: p.emoji || LOCS[loc].icon, img: p.img || "", code: p.code || "",
+      date: info.date, type: info.type || "date", added: todayISO(), loc };
     it.due = dueOf(it);
     items.push(it); lastNewId = it.id;
     render(); save();
-    toast("Guardado en el freezer: " + it.name);
+    toast(LOCS[loc].saved + it.name);
     localCheck();
   }
   function removeItem(id) {
@@ -197,11 +219,26 @@
           await identify(code);
         });
         $("fzScanMsg").textContent = "Coloca el código de barras dentro del recuadro";
-      } catch (e) { $("fzScanMsg").textContent = camError(e) + " Puedes tomar una foto o escribir el nombre."; }
+        clearTimeout(hintTimer);
+        hintTimer = setTimeout(() => {
+          if (productOpen && !handled) { $("fzScanMsg").textContent = "¿Carne, pollo o pescado de la tienda? Ese código no se puede escanear: toca Leer etiqueta."; labelAttn(true); }
+        }, 5000);
+      } catch (e) { $("fzScanMsg").textContent = camError(e) + " Puedes leer la etiqueta o escribir el nombre."; }
     });
   }
-  let handled = false;
+  let handled = false, hintTimer = null;
+  // Hace brillar el botón "Leer etiqueta" cuando el código no se puede usar.
+  const labelAttn = on => { const b = document.querySelector(".fz-label-btn"); if (b) b.classList.toggle("attn", !!on); };
+  // Códigos de peso variable (carne, pollo, pescado y queso pesados en la tienda): empiezan con 2
+  // y son internos de cada tienda, así que ninguna base de datos los conoce.
+  const isWeightCode = c => /^0?2\d{11}$/.test(String(c));
   async function identify(code) {
+          if (isWeightCode(code)) {
+            handled = false; $("fzScanFound").classList.add("hidden"); productScanner.pause(4000);
+            $("fzScanMsg").textContent = "Ese código es de la tienda (producto pesado). Toca Leer etiqueta para sacar el nombre y la fecha.";
+            labelAttn(true);
+            return;
+          }
           const res = await Products.lookup(code);
           if (res.status === "found") return finishProduct(res.product);
           const name = await ask({
@@ -263,17 +300,48 @@
     $("fzScanMsg").textContent = "Buscando el código en la foto…";
     let code = null;
     try { code = await barcodeFromPhoto(file); } catch {}
-    if (code && !handled) {
+    if (code && !handled && !isWeightCode(code)) {
       handled = true; beep(); FreezerDateReader.warmup();
       showFound({ name: "Buscando producto…", emoji: "🔎" }, "Código " + code);
       $("fzScanMsg").textContent = "";
       await identify(code);
+    } else if (!handled) {
+      // Sin código legible: se lee el texto de la etiqueta (nombre y fecha).
+      await fromLabel(file);
     } else {
       $("fzScanMsg").textContent = "No encontré un código en la foto. Acércate más o escribe el nombre.";
       await restartIfEnded(productScanner, () => productScanner.start(c => { if (!handled) { handled = true; productScanner.pause(60000); beep(); FreezerDateReader.warmup(); showFound({ name: "Buscando producto…", emoji: "🔎" }, "Código " + c); identify(c); } }));
       productScanner.pause(300);
     }
   };
+  /* ---------- Leer etiqueta (carne, pollo, pescado de la tienda) ---------- */
+  async function fromLabel(file) {
+    if (handled) return;
+    handled = true; clearTimeout(hintTimer); labelAttn(false);
+    productScanner.pause(120000);
+    showFound({ name: "Leyendo la etiqueta…", emoji: "📄" }, "Nombre y fecha");
+    $("fzScanMsg").textContent = "";
+    let r = { name: "", info: null };
+    try { r = await FreezerDateReader.readLabel(file, m => { $("fzScanMsg").textContent = m; }); } catch {}
+    $("fzScanMsg").textContent = "";
+    if (!productOpen) return;
+    const name = await ask({
+      title: r.name ? "Revisa el nombre" : "Nombre del producto",
+      text: r.name ? "Esto leí en la etiqueta. Corrígelo o escríbelo como prefieras (por ejemplo, Milanesa)." : "No pude leer el nombre en la etiqueta. Escríbelo.",
+      value: r.name, placeholder: "Ej. Milanesa de res", ok: "Continuar",
+    });
+    if (!name) { handled = false; $("fzScanFound").classList.add("hidden"); productScanner.pause(500); return; }
+    if (navigator.vibrate) navigator.vibrate(30);
+    closeProductScanner({ name, emoji: Products.emojiFor([], name), preDate: r.info || null });
+  }
+  $("fzLabelIn").addEventListener("click", () => productScanner.pause(120000));
+  $("fzLabelIn").onchange = async e => {
+    const file = e.target.files && e.target.files[0]; e.target.value = "";
+    if (!file) { productScanner.pause(300); return; }
+    await fromLabel(file);
+    if (productOpen && !handled) await restartIfEnded(productScanner, () => productScanner.start(c => { if (!handled) { handled = true; productScanner.pause(60000); beep(); identify(c); } }));
+  };
+
   // Si al tomar la foto el teléfono apagó la cámara en vivo, se vuelve a encender.
   async function restartIfEnded(sc, startFn) {
     const tr = sc.stream && sc.stream.getVideoTracks()[0];
@@ -288,7 +356,7 @@
   }
   function closeProductScanner(result) {
     if (!productOpen) return;
-    productOpen = false; productScanner.stop();
+    productOpen = false; productScanner.stop(); clearTimeout(hintTimer); labelAttn(false);
     $("fzScanner").classList.add("hidden");
     const r = productResolve; productResolve = null; if (r) r(result || null);
   }
@@ -311,7 +379,7 @@
     if (info.type === "entry") {
       lbl.textContent = "No se encontró fecha impresa";
       $("fzDateValue").textContent = "Entrada: hoy";
-      $("fzDateDays").textContent = "Usar antes del " + fmtDate(addDays(info.date, ENTRY_DAYS));
+      $("fzDateDays").textContent = "Usar antes del " + fmtDate(addDays(info.date, entryDays(loc)));
     } else {
       lbl.textContent = (FreezerDate.TYPE_LABEL[info.type] || "Fecha") + " · fecha leída";
       $("fzDateValue").textContent = fmtDate(info.date);
@@ -320,6 +388,7 @@
     $("fzDateFound").classList.remove("hidden");
     $("fzDateMsg").textContent = "";
   }
+  let readTicks = 0;
   function armNoDate() {
     clearTimeout(noDateTimer);
     noDateTimer = setTimeout(() => {
@@ -348,13 +417,18 @@
           if (status === "loading") $("fzDateMsg").textContent = "Preparando el lector de fechas…";
           else { $("fzDateMsg").textContent = "Apunta a la fecha impresa (Freeze By, Sell By, Use By, Best By)"; armNoDate(); }
         }, text => {
-          // Muestra lo que está viendo para ayudar a apuntar.
+          // Mensajes sencillos para ayudar a apuntar (sin mostrar el texto que va leyendo, que confunde).
           if (foundDate) return;
-          const t = text.replace(/\s+/g, " ").trim().slice(0, 42);
-          if (t.length >= 3) $("fzDateMsg").textContent = "Leyendo: " + t;
+          const t = String(text || "").toUpperCase();
+          const near = /\d{1,2}\s*[\/\-.]\s*\d{1,2}|\b(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC|ENE|ABR|AGO|DIC)\b|BEST|USE BY|SELL|EXP|FREEZE/.test(t);
+          readTicks++;
+          $("fzDateMsg").textContent = near ? "Casi… acércate un poco más a la fecha"
+            : readTicks % 6 < 3 ? "Buscando la fecha…" : "La fecha suele estar en la tapa, abajo o junto al código";
         });
         if (dateReader.hasTorch()) $("fzTorch").classList.remove("hidden");
+        if (product.preDate && dateOpen) { dateReader.pause(true); clearTimeout(noDateTimer); beep(); showDateResult(product.preDate); }
       } catch (e) {
+        if (product.preDate) { clearTimeout(noDateTimer); showDateResult(product.preDate); return; }
         const msg = e && e.name && e.name !== "Error" ? camError(e) : "No se pudo preparar el lector de fechas.";
         $("fzDateMsg").textContent = msg + " Toma una foto o escribe la fecha.";
         armNoDate();
@@ -408,6 +482,7 @@
     if (!product) return;
     const info = await openDateScanner(product);
     if (!info) { toast("No se guardó " + product.name); return; }
+    delete product.preDate;
     addItem(product, info);
   }
   $("fzScanBtn").onclick = () => startFlow();
@@ -427,6 +502,9 @@
     $("freezerView").classList.add("hidden");
     document.body.style.overflow = "";
   }
+  document.querySelectorAll(".fz-locs [data-loc]").forEach(b => {
+    b.onclick = () => { loc = b.dataset.loc; try { localStorage.setItem(LOC_KEY, loc); } catch {} render(); };
+  });
   $("freezerBtn").onclick = openView;
   $("fzBack").onclick = closeView;
   document.addEventListener("visibilitychange", () => {
@@ -519,8 +597,9 @@
     if (!due.length) return;
     try {
       const reg = await navigator.serviceWorker.ready;
-      await reg.showNotification("❄️ Freezer: úsalo pronto", {
-        body: due.map(i => i.name + " — " + daysText(daysLeft(dueOf(i))).toLowerCase()).join("\n"),
+      const T = x => (window.I18N ? I18N.t(x) : x);
+      await reg.showNotification(T("⏰ Úsalo pronto"), {
+        body: due.map(i => i.name + " — " + T(daysText(daysLeft(dueOf(i)))).toLowerCase()).join("\n"),
         icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: "freezer", data: { url: "./?freezer=1" },
       });
       due.forEach(i => { done[i.id + "|" + dueOf(i)] = 1; });

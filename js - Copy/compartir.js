@@ -55,7 +55,7 @@
         try { const d = await call("/api/list-get?code=" + encodeURIComponent(code)); return { items: d.items || {}, v: d.v }; }
         catch (e) { if (e.code === "not-found") return null; throw e; }
       },
-      async create(code, itemsMap) { await call("/api/list-create", { code, items: itemsMap }); },
+      async create(code, itemsMap) { await call("/api/list-create", { code, items: itemsMap, auth: (window.MiCuenta && MiCuenta.token()) || undefined }); },
       async update(code, set, del) {
         const change = { set, del };
         inflight.push(change);
@@ -201,6 +201,8 @@
       $("shJoinIn").value = "";
       closeSheet();
       window.MiLista.toast("Te uniste a la lista compartida" + (mine.length === 1 ? ". Se agregó tu producto." : mine.length ? ". Se agregaron tus " + mine.length + " productos." : "."));
+      // Plan familiar: si quien creó la lista tiene plan familiar, esta cuenta entra gratis.
+      if (window.MiListaPlus && window.MiListaPlus.familyJoin) window.MiListaPlus.familyJoin(code, true);
     } catch (e) {
       setStatus(info ? "error" : "off"); renderSheet();
       window.MiLista.toast("No se pudo abrir la lista compartida. Revisa tu conexión.");
@@ -214,8 +216,11 @@
   }
   function inviteText() {
     const url = location.origin + location.pathname + "?unirse=" + info.code;
+    if (window.I18N && I18N.lang() === "en")
+      return "🛒 I'm sharing my grocery list with you. Whatever we add or check off shows on both phones.\n\n" +
+        "Open it here (in Safari or Chrome): " + url + "\n\nOr in the app: Shared list → I was invited → type the code " + pretty(info.code);
     return "🛒 Te comparto mi lista del súper. Lo que agreguemos o marquemos se verá en los dos teléfonos.\n\n" +
-      "Ábrela aquí (en Safari o Chrome): " + url + "\n\nO en la app: Lista compartida → escribe el código " + pretty(info.code);
+      "Ábrela aquí (en Safari o Chrome): " + url + "\n\nO en la app: Lista compartida → Me invitaron → escribe el código " + pretty(info.code);
   }
   async function invite() {
     const text = inviteText();
@@ -255,10 +260,16 @@
       return;
     }
     if (!info) {
-      $("shText").textContent = "Comparte tu lista con tu familia. Cuando alguien agregue, quite o marque un producto, el cambio aparecerá en los demás teléfonos en unos segundos.";
-      $("shJoinBox").classList.remove("hidden");
+      $("shText").textContent = "Toca Compartir mi lista y la app te dará un código para invitar a tu familia. Cuando alguien agregue, quite o marque un producto, el cambio aparecerá en los demás teléfonos en unos segundos.";
+      // Unirse con código es para quien RECIBE la invitación: queda escondido detrás de su propio botón.
+      const joinBtn = btn("Me invitaron: tengo un código", "sh-ghost", () => {
+        $("shJoinBox").classList.remove("hidden");
+        joinBtn.remove();
+        setTimeout(() => $("shJoinIn").focus(), 50);
+      });
       acts.replaceChildren(
         btn(status === "connecting" ? "Creando…" : "Compartir mi lista", "sh-primary", () => { if (status !== "connecting") createList(); }),
+        joinBtn,
         btn("Cerrar", "sh-ghost", closeSheet));
       return;
     }
@@ -301,11 +312,14 @@
     catch { setStatus("offline"); }
   }
   window.addEventListener("online", () => { if (info && !unsub) resume(); });
-  window.ListShare = { onLocalChange, status: () => status, info: () => info };
+  window.ListShare = { onLocalChange, status: () => status, info: () => info, join: c => join(c) };
 
   const params = new URLSearchParams(location.search);
   const inviteCode = params.get("unirse");
-  if (inviteCode) { history.replaceState(null, "", location.pathname); }
+  if (inviteCode) {
+    history.replaceState(null, "", location.pathname);
+    try { sessionStorage.setItem("invite-code", inviteCode); } catch {} // para el plan familiar (después de registrarse)
+  }
   setStatus(info ? "connecting" : "off");
   resume().then(() => { if (inviteCode && configured()) join(inviteCode); });
 })();
