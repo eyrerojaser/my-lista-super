@@ -100,6 +100,7 @@
     return li;
   }
   function render() {
+    try { updateBell(); } catch {}
     items.sort((a, b) => (dueOf(a) < dueOf(b) ? -1 : dueOf(a) > dueOf(b) ? 1 : 0));
     const L = LOCS[loc];
     const shown = items.filter(i => locOf(i) === loc);
@@ -521,7 +522,9 @@
   function updateBell() {
     const on = notifOn();
     $("fzBell").setAttribute("aria-pressed", String(on));
-    $("fzBellTxt").textContent = on ? "Avisos activos" : "Activar avisos";
+    $("fzBellTxt").textContent = on ? "Avisos activos · probar" : "Activar avisos";
+    // Si hay productos y los avisos están apagados, el botón se nota más.
+    $("fzBell").classList.toggle("attn", !on && items.length > 0);
   }
   function b64ToBytes(b64) {
     const pad = "=".repeat((4 - (b64.length % 4)) % 4);
@@ -541,9 +544,9 @@
   }
   let syncTimer = null;
   function syncSoon() { clearTimeout(syncTimer); syncTimer = setTimeout(sync, 800); }
-  async function sync(retried) {
+  async function sync(retried, test) {
     const info = pushInfo();
-    if (!info || info.mode !== "push" || !("serviceWorker" in navigator)) return;
+    if (!info || info.mode !== "push" || !("serviceWorker" in navigator)) return null;
     try {
       const reg = await navigator.serviceWorker.ready;
       let sub = await reg.pushManager.getSubscription();
@@ -554,16 +557,30 @@
           subscription: sub.toJSON(),
           tz: Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Chicago",
           items: items.map(i => ({ id: i.id, name: i.name, date: dueOf(i) })),
+          test: !!test,
         }),
       });
-      if (!r.ok) return;
+      if (!r.ok) return { test: "error" };
       const data = await r.json().catch(() => ({}));
-      if (data.publicKey && data.publicKey !== info.publicKey && !retried) { await subscribe(true); return sync(true); }
-    } catch {}
+      if (data.publicKey && data.publicKey !== info.publicKey && !retried) { await subscribe(true); return sync(true, test); }
+      // El servidor ya no puede llegar a este teléfono (suscripción vencida): se crea una nueva.
+      if (data.test === "gone" && !retried) { await subscribe(true); return sync(true, test); }
+      return data;
+    } catch { return { test: "offline" }; }
+  }
+  // Aviso de prueba: comprueba todo el camino (servidor → teléfono).
+  async function testPush() {
+    toast("Enviando un aviso de prueba…");
+    const res = await sync(false, true);
+    if (res && res.test === "sent") toast("Te enviamos un aviso de prueba. Debe llegar en unos segundos.");
+    else if (res && res.test === "wait") toast("Ya enviamos una prueba hace un momento. Espera unos segundos.");
+    else if (res && res.test === "offline") toast("Sin conexión. Intenta de nuevo con internet.");
+    else toast("No se pudo enviar el aviso. Toca Activar avisos otra vez.");
   }
   $("fzBell").onclick = async () => {
     if (notifOn()) {
-      toast("Los avisos están activos. Para apagarlos, usa los ajustes de notificaciones del teléfono.");
+      if (pushInfo().mode === "push") await testPush();
+      else toast("Los avisos están activos. Para apagarlos, usa los ajustes de notificaciones del teléfono.");
       return;
     }
     if (!("Notification" in window) || !("serviceWorker" in navigator)) {
@@ -577,8 +594,8 @@
     try {
       if (!("PushManager" in window)) throw new Error("no-push");
       await subscribe();
-      await sync();
-      toast("Listo: te avisaremos 3 días antes de cada fecha.");
+      const res = await sync(false, true);
+      toast(res && res.test === "sent" ? "Listo: te avisaremos 3 días antes de cada fecha. Te enviamos un aviso de prueba." : "Listo: te avisaremos 3 días antes de cada fecha.");
     } catch (e) {
       setPushInfo({ mode: "local" });
       toast("Avisos activados: se revisan cada vez que abres la app.");
@@ -590,7 +607,7 @@
   async function localCheck() {
     render();
     const info = pushInfo();
-    if (!info || info.mode === "push") return;
+    if (!info) return;
     if (!("Notification" in window) || Notification.permission !== "granted") return;
     let done = {}; try { done = JSON.parse(localStorage.getItem(LOCAL_NOTIFIED)) || {}; } catch {}
     const due = items.filter(i => daysLeft(dueOf(i)) <= WARN_DAYS && !done[i.id + "|" + dueOf(i)]);

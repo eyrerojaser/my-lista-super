@@ -734,3 +734,6 @@ ul{list-style:none;margin:0;padding:0}
 .fz-label-btn.attn{animation:labelAttn 1.1s ease-in-out infinite;box-shadow:0 0 0 0 rgba(255,138,61,.7)}
 @keyframes labelAttn{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(255,138,61,.65)}50%{transform:scale(1.04);box-shadow:0 0 0 10px rgba(255,138,61,0)}}
 @media (prefers-reduced-motion:reduce){.fz-label-btn.attn{animation:none;outline:3px solid var(--mango)}}
+.fz-bell.attn{animation:bellAttn 1.3s ease-in-out infinite}
+@keyframes bellAttn{0%,100%{box-shadow:0 0 0 0 rgba(234,248,253,.55)}50%{box-shadow:0 0 0 8px rgba(234,248,253,0)}}
+@media (prefers-reduced-motion:reduce){.fz-bell.attn{animation:none;border-color:var(--frost)}}
