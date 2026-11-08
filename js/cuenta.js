@@ -29,7 +29,7 @@
   /* ---------- cartel de la promoción (lugares gratis que quedan) ---------- */
   let promo = null;
   async function loadPromo() {
-    if (!CFG.promo || !CFG.foundersLimit) return;
+    if (!CFG.promo) return;
     try {
       const r = await fetch("/api/promo", { cache: "no-store" });
       if (r.ok) promo = await r.json();
@@ -39,9 +39,20 @@
   function renderPromo() {
     const box = $("authPromo");
     const total = CFG.foundersLimit;
-    const show = CFG.promo && total && mode === "register" && !(promo && promo.left === 0);
+    const founderSpots = !!total && !(promo && promo.left === 0);
+    const trial = promo && promo.trialDays > 0 ? promo.trialDays : 0;
+    const show = CFG.promo && mode === "register" && (founderSpots || trial);
     box.classList.toggle("hidden", !show);
     if (!show) return;
+    if (!founderSpots) {
+      // Se acabaron los lugares gratis: se anuncia la prueba gratis.
+      $("promoTag").textContent = "🎉 Prueba gratis";
+      $("promoTitle").textContent = "¡" + trial + " días gratis!";
+      $("promoText").textContent = "Sin tarjeta. Crea tu cuenta y usa todo NoPencil durante " + trial + " días.";
+      $("promoMeter").classList.add("hidden");
+      return;
+    }
+    $("promoTag").textContent = "🎉 Promoción de lanzamiento";
     $("promoTitle").textContent = "¡Gratis para las primeras " + total + "!";
     $("promoText").textContent = "Regístrate ahora y, si estás entre las primeras " + total + ", usas la app gratis para siempre.";
     if (promo && typeof promo.left === "number") {

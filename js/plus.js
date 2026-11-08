@@ -161,6 +161,7 @@
     if (u && u.founder) return "Plus gratis (de las primeras)";
     if (isPlus()) {
       if (ast && ast.plan === "member") return "Plan familiar de " + (ast.ownerName || "tu familia");
+      if (ast && ast.plan === "trial") return ast.trialLeft > 1 ? "Prueba gratis: te quedan " + ast.trialLeft + " días" : "Prueba gratis: último día";
       if ((ast && ast.status === "trialing") || (st && st.status === "trialing")) return "Prueba gratis activa";
       if (ast && ast.plan === "family") return "Plan familiar";
       if (ast && ast.plan === "individual") return "Plan individual";
@@ -269,7 +270,7 @@
     } else { // paywall
       title.textContent = "NoPencil Plus ⭐";
       box.append(el("p", "plus-lead", whole
-        ? "Para seguir usando la app, suscríbete a Plus."
+        ? (ast && ast.trialEnded ? "Tu prueba gratis terminó. Para seguir usando la app, elige un plan." : "Para seguir usando la app, suscríbete a Plus.")
         : feature ? FEATURES[feature].name + " es parte de Plus." : "Desbloquea todo lo que hace más fácil tu súper."));
       const ul = el("ul", "plus-feats");
       (whole ? ALL_DESC : feats.map(f => [FEATURES[f].name, FEATURES[f].desc])).forEach(([n, d]) => { const li = el("li"); li.append(el("b", "", n), el("span", "", d)); ul.append(li); });

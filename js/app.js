@@ -42,6 +42,8 @@
   function toggle(id) {
     const it = items.find(i => i.id === id); if (!it) return;
     it.done = !it.done; it.t = Date.now();
+    // Aprende cada cuánto compras cada cosa ("Te toca comprar").
+    if (it.done && window.Habitos) window.Habitos.bought(it);
     if (navigator.vibrate) navigator.vibrate(12);
     render(); save();
   }
@@ -138,6 +140,7 @@
     $("shareBtn").classList.toggle("hidden", !todo.length);
     $("downloadBtn").classList.toggle("hidden", !items.length);
     lastNewId = null;
+    if (window.Habitos) window.Habitos.render();
   }
 
   /* ---------- cambiar categoría ---------- */
@@ -303,6 +306,7 @@
   /* ---------- para la lista compartida ---------- */
   window.MiLista = {
     getItems: () => items.map(i => Object.assign({}, i)),
+    add: p => addProduct(p),
     // Reemplaza la lista con la que llegó de otro teléfono.
     setItems(arr) { items = arr.map(i => Object.assign({}, i)); render(); save(); },
     toast: (m, u) => toast(m, u),

@@ -59,12 +59,20 @@
     <button type="submit">Agregar</button>
   </form>
   <div id="suggest" class="suggest hidden" role="listbox" aria-label="Productos sugeridos"></div>
+  <label class="paper-btn hidden" id="paperBtn" for="paperIn" role="button" tabindex="0">
+    <span class="paper-ico" aria-hidden="true">📝</span>
+    <span class="paper-txt"><b>Pasar mi lista de papel</b><small>Tómale foto y se agrega sola</small></span>
+    <span class="ai-tag">IA</span>
+  </label>
+  <input id="paperIn" class="fz-file" type="file" accept="image/*" tabindex="-1" aria-hidden="true">
 
   <div class="stats">
     <div class="stat s1"><b id="stTodo">0</b><span>Por comprar</span></div>
     <div class="stat s2"><b id="stDone">0</b><span>En el carrito</span></div>
     <div class="stat"><b id="stTotal">0</b><span>Unidades</span></div>
   </div>
+
+  <div id="smartCard" class="smart-card hidden" aria-live="polite"></div>
 
   <button class="pc-link" id="comprasBtn" type="button">
     <span class="pc-link-ico" aria-hidden="true">🧾</span>
@@ -207,6 +215,11 @@
 </div>
 
 
+<!-- Funciones inteligentes -->
+<div id="smartSheet" class="sheet-wrap hidden" role="dialog" aria-modal="true" aria-labelledby="smartTitle">
+  <div class="sheet smart-sheet" id="smartBody"></div>
+</div>
+
 <!-- Mi Lista Plus -->
 <div id="plusSheet" class="sheet-wrap hidden" role="dialog" aria-modal="true" aria-labelledby="plusTitle">
   <div class="sheet plus-sheet">
@@ -223,7 +236,7 @@
     <small>Tu lista del súper, sin papel</small>
   </div>
   <div class="promo hidden" id="authPromo" aria-live="polite">
-    <div class="promo-top"><span class="promo-tag">🎉 Promoción de lanzamiento</span></div>
+    <div class="promo-top"><span class="promo-tag" id="promoTag">🎉 Promoción de lanzamiento</span></div>
     <b class="promo-title" id="promoTitle">¡Gratis para las primeras 10!</b>
     <p class="promo-text" id="promoText">Regístrate ahora y usa la app gratis para siempre.</p>
     <div class="promo-meter hidden" id="promoMeter">
@@ -286,6 +299,11 @@
     </button>
 
     <div id="fzAlert" class="fz-alert hidden"></div>
+    <button class="cook-btn hidden" id="cookBtn" type="button">
+      <span class="cook-ico" aria-hidden="true">👩‍🍳</span>
+      <span class="cook-txt"><b>¿Qué cocino con lo que tengo?</b><small>Recetas con lo que está por vencer</small></span>
+      <span class="ai-tag">IA</span>
+    </button>
 
     <div class="fz-head">
       <h2 id="fzHeadTitle">En el freezer</h2>
@@ -394,6 +412,7 @@
         <small>TOTAL GASTADO DEL MES</small>
         <b id="pcTotal">$0.00</b>
         <span id="pcVisits">Sin compras este mes</span>
+        <div class="pc-budget" id="pcBudget"></div>
       </div>
     </div>
   </div>
@@ -420,6 +439,11 @@
         </label>
       </div>
     </div>
+    <button class="pc-link price-link" id="priceBtn" type="button">
+      <span class="pc-link-ico" aria-hidden="true">🏷️</span>
+      <span class="pc-link-txt"><b>Comparar precios</b><small>Dónde compraste más barato cada producto</small></span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
     <input id="rcIn" class="fz-file" type="file" accept="image/*" tabindex="-1" aria-hidden="true">
     <input id="pcQuickPhotoIn" class="fz-file" type="file" accept="image/*" tabindex="-1" aria-hidden="true">
 
@@ -448,7 +472,7 @@
     <div class="pc-head"><h2>Compras del mes</h2><span id="pcCount" class="fz-count"></span></div>
     <p class="pc-day-empty pc-month-empty" id="pcMonthEmpty">Toca un día del calendario para registrar tu primera compra.</p>
     <ul class="pc-records pc-month-list" id="pcMonthList"></ul>
-    <p class="pc-version">Versión 2.3.3</p>
+    <p class="pc-version">Versión 2.5.0</p>
   </div>
 </section>
 
@@ -537,6 +561,7 @@
 <script src="js/products.js"></script>
 <script src="js/scanner.js"></script>
 <script src="js/app.js"></script>
+<script src="js/inteligente.js"></script>
 <script src="js/compartir.js"></script>
 <script src="js/freezer-date.js"></script>
 <script src="js/freezer.js"></script>

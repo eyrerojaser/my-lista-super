@@ -107,7 +107,8 @@
       if (u.reset) { const c = document.createElement("span"); c.className = "ad-code"; c.textContent = "Código para su contraseña: " + u.reset; who.append(c); }
       const tag = document.createElement("span");
       tag.className = "ad-tag" + (u.founder ? " f" : (u.familyOf || u.paying) ? " p" : "");
-      tag.textContent = u.founder ? "Fundadora" : u.familyOf ? "Familia" : u.paying ? (u.plusStatus === "trialing" ? "Prueba" : ["active", "past_due"].includes(u.plusStatus) ? "Paga" : "Canceló") : "Gratis";
+      const trialLeft = u.trialDays > 0 && u.created ? Math.ceil((u.created + u.trialDays * 864e5 - Date.now()) / 864e5) : 0;
+      tag.textContent = u.founder ? "Fundadora" : u.familyOf ? "Familia" : u.paying ? (u.plusStatus === "trialing" ? "Prueba" : ["active", "past_due"].includes(u.plusStatus) ? "Paga" : "Canceló") : trialLeft > 0 ? "Prueba · " + trialLeft + (trialLeft === 1 ? " día" : " días") : u.trialDays > 0 ? "Prueba terminó" : "Gratis";
       li.append(n, who, tag); return li;
     }));
   }

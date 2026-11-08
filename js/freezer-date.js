@@ -455,7 +455,12 @@
       let best = null, bd = 9;
       for (const v of VOCAB) { const d = lev(up, v); if (d < bd) { bd = d; best = v; } }
       const lim = up.length >= 7 ? 2 : up.length >= 4 ? 1 : 0;
-      return best && bd <= lim ? best.charAt(0) + best.slice(1).toLowerCase() : w.replace(/[^A-Za-zÑñ]/g, "");
+      if (!(best && bd <= lim)) {
+        // Palabra cortada al final de la línea ("THI" → "Thin").
+        const pre = up.length >= 3 && VOCAB.find(v => v.length === up.length + 1 && v.startsWith(up));
+        if (pre) { best = pre; bd = 0; }
+      }
+      return best && bd <= Math.max(lim, 0) ? best.charAt(0) + best.slice(1).toLowerCase() : w.replace(/[^A-Za-zÑñ]/g, "");
     };
     let toks = name.split(" ").map(t => t.split(/([/-])/).map(p => /[/-]/.test(p) ? p : fixWord(p)).join("")).filter(Boolean);
     while (toks.length > 1 && toks[toks.length - 1].length < 2) toks.pop();
@@ -467,6 +472,34 @@
     const out = [];
     (data.blocks || []).forEach(b => (b.paragraphs || []).forEach(p => (p.lines || []).forEach(l => (l.words || []).forEach(w => out.push(w)))));
     return out;
+  }
+  function sellByFallback(text) {
+    const T = String(text || "").toUpperCase();
+    if (!/SEL{1,2}\s*B|PACK|USE\s*BY|BEST/.test(T)) return null;
+    const now = new Date(), today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    const MN = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+    const re = /(?:^|[^A-Z0-9])([A-Z]{0,4})\s?([0-3]?\d)\s*[,.]?\s+(2\d)(?![0-9/.])/g;
+    const found = [];
+    let m;
+    while ((m = re.exec(T))) {
+      const day = +m[2], yy = 2000 + +m[3];
+      if (day < 1 || day > 31 || yy < now.getFullYear() - 1 || yy > now.getFullYear() + 1) continue;
+      const letters = m[1].replace(/0/g, "O");
+      let best = null;
+      for (let mo = 0; mo < 12; mo++) {
+        if (letters && !MN[mo].startsWith(letters.slice(0, Math.min(letters.length, 3))) && MN[mo][0] !== letters[0]) continue;
+        const t = Date.UTC(yy, mo, day); if (new Date(t).getUTCDate() !== day) continue;
+        const diff = (t - today) / 864e5;
+        if (diff < -10 || diff > 60) continue;
+        if (!best || Math.abs(diff) < Math.abs(best.diff)) best = { t, diff };
+      }
+      if (best) found.push(best.t);
+    }
+    if (!found.length) return null;
+    const t = Math.max(...found); // "Sell by" va después de "Pack date": la más tardía
+    const iso = new Date(t).toISOString().slice(0, 10);
+    const sell = /SEL{1,2}\s*B/.test(T);
+    return { date: iso, type: sell ? "sell" : "date", label: sell ? FreezerDate.TYPE_LABEL.sell : (FreezerDate.TYPE_LABEL.date || ""), fuzzy: true };
   }
   async function readLabel(file, onProgress) {
     const prog = onProgress || (() => {});
@@ -512,6 +545,9 @@
         }
       }
     }
+    // Costco y otras: "Nov 10, 26" en letra gruesa; a veces el mes no se alcanza a leer ("N 10, 26").
+    // Si la etiqueta dice SELL BY / PACK DATE, se deduce el mes: la fecha de carne fresca está cerca de hoy.
+    if (!info) info = sellByFallback(text);
     // El nombre va arriba de "SAFE HANDLING" y a veces tiene brillo del plástico: se lee esa zona ampliada.
     try {
       const all = words(r1.data || {});

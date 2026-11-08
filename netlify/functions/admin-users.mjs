@@ -1,3 +1,4 @@
+import { trialDays } from "../lib/trial.mjs";
 import { store, json, readBody, FOUNDERS } from "../lib/auth-core.mjs";
 import { timingSafeEqual, createHash } from "node:crypto";
 
@@ -15,7 +16,7 @@ export default async (req) => {
   for (const { key } of blobs) {
     const u = await s.get(key, { type: "json" });
     if (!u) continue;
-    users.push({ n: u.n, name: u.name, email: u.email, created: u.created, founder: !!u.founder, paying: !!u.stripeCustomer,
+    users.push({ n: u.n, name: u.name, email: u.email, created: u.created, founder: !!u.founder, paying: !!u.stripeCustomer, trialDays: trialDays(),
       plusStatus: u.plusStatus || "", photo: u.photo || "", reset: u.reset && u.reset.exp > Date.now() ? u.reset.code : "" });
   }
   // Familia: de quién es familiar cada cuenta.

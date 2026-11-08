@@ -452,7 +452,7 @@
   async function typeDate(defaultDate) {
     return ask({
       title: "Escribir fecha", text: "Elige la fecha impresa en el empaque, o cuánto tiempo lo quieres guardar.",
-      type: "date", value: defaultDate || addMonths(3), quick: true, ok: "Guardar",
+      type: "date", value: defaultDate || todayISO(), quick: true, ok: "Guardar",
     });
   }
   $("fzDateType").onclick = async () => {

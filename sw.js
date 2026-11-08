@@ -1,6 +1,6 @@
 /* Service worker: permite abrir la app sin internet.
    Cambia VERSION cada vez que subas cambios para que los teléfonos se actualicen. */
-const VERSION = "v2.3.3";
+const VERSION = "v2.5.0";
 const SHELL = "shell-" + VERSION;
 const IMAGES = "product-images";
 const FILES = [
@@ -8,6 +8,7 @@ const FILES = [
   "index.html",
   "css/styles.css",
   "js/app.js",
+  "js/inteligente.js",
   "js/products.js",
   "js/scanner.js",
   "js/i18n.js",
