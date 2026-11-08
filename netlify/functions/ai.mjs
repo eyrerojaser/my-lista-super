@@ -12,11 +12,12 @@ const MODEL = () => process.env.AI_MODEL || "claude-haiku-5-5";
 const LIMIT = () => Math.max(1, +(process.env.AI_DAILY_LIMIT || 15));
 const MAX_IMG = 4_000_000; // base64
 
-async function useQuota(uid) {
+const PRICE_LIMIT = () => Math.max(1, +(process.env.AI_PRICE_DAILY || 100)); // lecturas de precio al día (son muy baratas)
+async function useQuota(uid, kind) {
   const s = getStore({ name: "ia-uso", consistency: "strong" });
-  const day = new Date().toISOString().slice(0, 10), key = uid + "/" + day;
+  const day = new Date().toISOString().slice(0, 10), key = uid + "/" + (kind ? kind + "/" : "") + day;
   const n = (await s.get(key, { type: "json" })) || 0;
-  if (n >= LIMIT()) return false;
+  if (n >= (kind === "price" ? PRICE_LIMIT() : LIMIT())) return false;
   await s.setJSON(key, n + 1);
   return true;
 }
@@ -111,6 +112,34 @@ export default async (req) => {
         .map(i => ({ name: clean(i.name, 80), qty: Math.max(1, Math.min(99, Math.round(+i.qty || 1))) }))
         .filter(i => i.name);
       return json({ items });
+    }
+
+    if (b.action === "price") {
+      // Foto de la etiqueta de precio en el anaquel → nombre del producto y precio (para "Mi carrito").
+      const m = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(String(b.image || ""));
+      if (!m) return json({ error: "Foto inválida" }, 400);
+      if (!(await useQuota(user.uid, "price"))) return json({ error: "limit" }, 429);
+      const out = await claude([
+        { type: "image", source: { type: "base64", media_type: m[1], data: m[2] } },
+        { type: "text", text:
+          "This is a photo taken in a US grocery store of a shelf price tag, a product sticker or a product with its price. " +
+          "Find the price the shopper will pay for ONE unit today. Rules:\n" +
+          "- If there is a sale/club/digital-coupon price and a regular price, price = the sale price, regular = the regular price.\n" +
+          "- Multi-buy deals like '2 for $5' or '2/$5': price = the price of one (2.50) and write the deal text in deal.\n" +
+          "- Big digits with small raised cents (e.g. '3 98') mean 3.98.\n" +
+          "- IGNORE the unit price (per oz, per lb, per count, ¢/oz), item numbers, UPC and dates — unless the item is sold by weight: then set per to 'lb' (or 'kg') and price = price per lb.\n" +
+          "- name: short common name of the product as on the tag, with size if shown (e.g. 'Whole milk 1 gal', 'Large eggs 12 ct'), " + (en ? "in English" : "in Spanish (Latin American); keep brand only if it is short") + ". Empty string if not readable.\n" +
+          "- If you cannot read any price, price = null.\n" +
+          'Answer ONLY with JSON: {"name":"","price":3.98,"regular":null,"per":"each","deal":""}' },
+      ], 300);
+      const num = v => { const n = +String(v == null ? "" : v).replace(/[^0-9.]/g, ""); return Number.isFinite(n) && n > 0 && n < 10000 ? Math.round(n * 100) : null; };
+      return json({
+        name: clean(out.name, 60),
+        cents: num(out.price),
+        regular: num(out.regular),
+        per: ["lb", "kg", "oz"].includes(out.per) ? out.per : "each",
+        deal: clean(out.deal, 40),
+      });
     }
 
     if (b.action === "recipes") {

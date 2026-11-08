@@ -74,6 +74,7 @@ Queda un ícono propio en tu pantalla de inicio y se abre a pantalla completa, c
   3. Opcional: **`AI_DAILY_LIMIT`** (usos por cuenta al día, 15 por defecto) y **`AI_MODEL`** (por defecto `claude-haiku-5-5`, el más económico).
   4. Deploys → Trigger deploy. Sin la variable, los botones de IA no aparecen y todo lo demás sigue igual.
 - *¿Qué cocino?* como recetario: tarjetas con foto, tiempo, porciones y dificultad; al tocar una se abre la ficha completa con ingredientes separados en *De tu inventario*, *Básicos de cocina* y *Te falta comprar* (botón para agregar lo que falta a tu lista), pasos numerados y consejos.
+- *Mi carrito* (menú → Tus gastos): mientras compras, tómale foto a la etiqueta del precio y se suma sola. Le pones un límite a la compra (y el impuesto si quieres) y avisa con vibración al llegar al 80 % y al pasarte; antes de sumar cada producto dice cuánto te quedaría o por cuánto te pasas. Lee ofertas ("2 por $5", precio de oferta y normal) y productos por libra (pregunta cuánto pesa). Con la IA activa lee nombre y precio (límite aparte: `AI_PRICE_DAILY`, 100 al día por cuenta, cuesta fracciones de centavo); sin IA o sin internet lee el número con el lector del teléfono. El carrito se guarda en el teléfono hasta tocar *Terminé mi compra*.
 - *Fotos de las recetas con IA (OpenAI)*: cada receta lleva una foto realista del plato creada con IA, con el letrero "Imagen creada con IA". Mientras se crea (unos segundos) la tarjeta dice "Preparando la foto…". Cada foto se crea una sola vez y se guarda (almacén `recetas-ia-fotos`): si otra persona recibe el mismo plato, se usa la misma foto sin volver a pagar. Para activarlas:
   1. Crea una cuenta en platform.openai.com, agrega un método de pago y pon un **límite de gasto mensual** (Settings → Limits).
   2. Crea una API key (API keys → Create new secret key) y pégala en Netlify como variable **`OPENAI_API_KEY`**. Nunca la pegues en un chat ni en GitHub.
@@ -194,7 +195,7 @@ Hazlo primero en **modo de prueba** de Stripe (Test mode) y, cuando todo funcion
 
 ## ¿Cómo sé que tengo la versión nueva?
 
-Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 2.9.2*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
+Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 2.10.0*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
 
 ## Cambiar algo después
 

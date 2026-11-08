@@ -551,6 +551,7 @@
         { e: "🥫", c: "#E8802F", n: "Despensa", s: "Lo que tienes", go: () => openFreezerAt("despensa") },
       ] },
       { t: "Tus gastos", items: [
+        { e: "🛒", c: "#2E9E6A", n: "Mi carrito", s: (() => { const c = cartData(); return c.items.length ? T("Llevas") + " " + money(cartTotal(c)) : "Suma precios al comprar"; })(), go: openCart },
         { e: "🧾", c: "#C98A3C", n: "Mis Compras", s: amt || "Recibos y calendario", go: () => openCompras() },
         { e: "💰", c: "#1AA3A3", n: "Presupuesto", s: "Cuánto te queda", go: () => openCompras(editBudget) },
         { e: "🏷️", c: "#9A6A4A", n: "Comparar precios", s: "Dónde es más barato", go: () => openCompras(openPrices) },
@@ -586,6 +587,229 @@
   if ($("pcLinkAmt")) new MutationObserver(() => { const t = document.querySelector('.tool-ico + b + small'); renderMenu(); }).observe($("pcLinkAmt"), { childList: true, characterData: true, subtree: true });
 
   if ($("plusCard")) new MutationObserver(renderMenu).observe($("plusCard"), { attributes: true, attributeFilter: ["class"] });
+
+  /* ================= Mi carrito: escanear precios en la tienda ================= */
+  // Mientras compras, tómale foto a la etiqueta del precio: se suma sola y te avisa antes de pasarte de tu límite.
+  const CKEY = "cart-v1";
+  const cartData = () => { const c = readJSON(CKEY, null) || {}; return { limit: c.limit || 0, tax: +c.tax || 0, items: Array.isArray(c.items) ? c.items : [], warned: c.warned || 0 }; };
+  const cartSave = c => { try { localStorage.setItem(CKEY, JSON.stringify(c)); } catch {} };
+  const cartSub = c => c.items.reduce((a, i) => a + Math.round(i.cents * (+i.qty || 1)), 0);
+  const cartTotal = c => { const sub = cartSub(c); return sub + Math.round(sub * c.tax / 100); };
+  const toCents = v => { const n = parseFloat(String(v || "").replace(/[^0-9.,]/g, "").replace(",", ".")); return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : 0; };
+  const buzz = p => { try { navigator.vibrate && navigator.vibrate(p); } catch {} };
+  let cv = null;
+
+  function cartLevel(c, total) { if (!c.limit) return 0; const r = total / c.limit; return r > 1 ? 3 : r >= 1 ? 2 : r >= 0.8 ? 1 : 0; }
+  // Avisos al cruzar el 80 % y el 100 % del límite.
+  function cartAlert(c) {
+    const total = cartTotal(c), lvl = cartLevel(c, total);
+    if (lvl > c.warned) {
+      if (lvl === 1) { toast("⚠️ " + T("Ya llevas el 80% de tu límite. Te quedan") + " " + money(c.limit - total)); buzz([120, 80, 120]); }
+      else if (lvl === 2) { toast("🛑 " + T("Llegaste a tu límite.")); buzz([250, 100, 250]); }
+      else { toast("🛑 " + T("Te pasaste de tu límite por") + " " + money(total - c.limit)); buzz([300, 120, 300, 120, 300]); }
+    }
+    c.warned = lvl;
+  }
+
+  function closeCart() { if (cv) { cv.remove(); cv = null; document.body.classList.remove("rv-open"); renderMenu(); } }
+  function openCart() {
+    closeSheet(); closeCart();
+    cv = el("section", "cart"); cv.setAttribute("role", "dialog"); cv.setAttribute("aria-modal", "true"); cv.setAttribute("aria-label", T("Mi carrito"));
+    document.body.append(cv); document.body.classList.add("rv-open");
+    paintCart();
+  }
+  function paintCart() {
+    if (!cv) return;
+    const c = cartData(), sub = cartSub(c), total = cartTotal(c), lvl = cartLevel(c, total);
+    const head = el("header", "cart-head");
+    const back = el("button", "rv-back cart-back"); back.type = "button"; back.setAttribute("aria-label", T("Cerrar"));
+    back.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>';
+    back.onclick = closeCart;
+    const ht = el("div", "cart-htxt"); ht.append(el("h2", "", "Mi carrito"), el("small", "", "Escanea el precio y se suma solo"));
+    head.append(back, ht);
+
+    // Total y límite
+    const box = el("div", "cart-total lvl" + lvl);
+    box.append(el("small", "", T("Llevas")), el("b", "cart-amt", money(total)));
+    if (c.tax) box.append(el("small", "cart-taxnote", T("Incluye impuesto") + " " + c.tax + "% (" + money(total - sub) + ")"));
+    if (c.limit) {
+      const bar = el("div", "cart-bar"); const fill = el("span"); fill.style.width = Math.min(100, Math.round(total / c.limit * 100)) + "%"; bar.append(fill);
+      const left = c.limit - total;
+      box.append(bar, el("div", "cart-left", left >= 0 ? (en() ? "You have " + money(left) + " left of " + money(c.limit) : "Te quedan " + money(left) + " de " + money(c.limit)) : "🛑 " + T("Te pasaste por") + " " + money(-left)));
+    }
+    box.append(btn(c.limit ? "✏️ " + T("Cambiar límite") : "🎯 " + T("Ponle un límite a tu compra"), "cart-limit-btn", editCartLimit));
+
+    // Botones para agregar
+    const add = el("div", "cart-add");
+    const scanLab = el("label", "cart-scan");
+    const inp = el("input"); inp.type = "file"; inp.accept = "image/*"; inp.setAttribute("capture", "environment"); inp.className = "sr-only";
+    inp.onchange = e => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) readPrice(f); };
+    scanLab.append(inp, el("span", "cart-scan-ico", "📷"), el("b", "", T("Escanear precio")), el("small", "", T("Tómale foto a la etiqueta")));
+    const typeBtn = btn("✍️ " + T("Escribir precio"), "cart-type", () => confirmItem({}));
+    add.append(scanLab, typeBtn);
+
+    // Lista de productos
+    const list = el("ul", "cart-list");
+    c.items.slice().reverse().forEach(it => {
+      const li = el("li");
+      const info = el("div", "cart-info");
+      info.append(el("b", "", it.name || T("Producto")), el("small", "", money(it.cents) + (it.per && it.per !== "each" ? " / " + it.per : "") + (it.deal ? " · " + it.deal : "")));
+      const step = el("div", "cart-step");
+      const qtyTxt = it.per && it.per !== "each" ? it.qty + " " + it.per : "×" + it.qty;
+      const minus = btn("−", "", () => { const d = cartData(), x = d.items.find(y => y.id === it.id); if (!x) return; if (x.per && x.per !== "each") { d.items = d.items.filter(y => y.id !== it.id); } else if (x.qty > 1) x.qty--; else d.items = d.items.filter(y => y.id !== it.id); d.warned = Math.min(d.warned, cartLevel(d, cartTotal(d))); cartSave(d); paintCart(); });
+      minus.setAttribute("aria-label", T("Quitar uno"));
+      const plus = btn("+", "", () => { const d = cartData(), x = d.items.find(y => y.id === it.id); if (!x) return; x.qty = (+x.qty || 1) + 1; cartAlert(d); cartSave(d); paintCart(); });
+      plus.setAttribute("aria-label", T("Agregar otro"));
+      if (it.per && it.per !== "each") plus.disabled = true;
+      step.append(minus, el("span", "", qtyTxt), plus);
+      li.append(info, el("b", "cart-line", money(Math.round(it.cents * (+it.qty || 1)))), step);
+      list.append(li);
+    });
+    const empty = !c.items.length ? el("p", "cart-empty", "Tu carrito está vacío. Cuando eches algo al carrito, escanea su precio.") : null;
+
+    const foot = el("div", "cart-foot");
+    if (c.items.length) foot.append(btn("✅ " + T("Terminé mi compra"), "cart-done", () => {
+      if (!confirm(T("¿Vaciar el carrito? Se borra la suma de esta compra."))) return;
+      const d = cartData(); d.items = []; d.warned = 0; cartSave(d); paintCart(); toast(T("Carrito vacío. ¡Listo para la próxima compra!"));
+    }));
+    const main = el("div", "cart-main");
+    main.append(box, add);
+    if (c.items.length) main.append(el("h3", "cart-h", T("En tu carrito") + " · " + c.items.reduce((a, i) => a + (i.per && i.per !== "each" ? 1 : +i.qty || 1), 0)));
+    main.append(empty || list, foot);
+    cv.replaceChildren(head, main);
+  }
+
+  function editCartLimit() {
+    const c = cartData();
+    const f = el("form", "cart-form");
+    const l1 = el("label", "", T("¿Cuánto puedes gastar en esta compra?"));
+    const lim = el("input"); lim.type = "text"; lim.inputMode = "decimal"; lim.placeholder = "$80"; lim.value = c.limit ? (c.limit / 100).toFixed(2) : "";
+    const l2 = el("label", "", T("Impuesto (%) — opcional"));
+    const tax = el("input"); tax.type = "text"; tax.inputMode = "decimal"; tax.placeholder = "0"; tax.value = c.tax || "";
+    const hint = el("small", "cart-hint", "En Texas casi toda la comida no paga impuesto. Déjalo en 0 si compras solo comida.");
+    f.append(l1, lim, l2, tax, hint);
+    const save = btn("Guardar", "primary", () => {
+      const d = cartData(); d.limit = toCents(lim.value); d.tax = Math.max(0, Math.min(20, parseFloat(String(tax.value).replace(",", ".")) || 0));
+      d.warned = 0; cartAlert(d); d.warned = cartLevel(d, cartTotal(d)); cartSave(d); cartModalClose(); paintCart();
+    });
+    f.onsubmit = e => { e.preventDefault(); save.click(); };
+    cartModal(el("h2", "", "Límite de esta compra"), f, actions(btn("Cancelar", "ghost", cartModalClose), save));
+    setTimeout(() => lim.focus(), 50);
+  }
+
+  // Ventanita dentro de "Mi carrito"
+  let cm = null;
+  function cartModal(...nodes) {
+    cartModalClose();
+    cm = el("div", "cart-modal"); const card = el("div", "cart-card"); card.append(...nodes); cm.append(card);
+    cm.addEventListener("click", e => { if (e.target === cm) cartModalClose(); });
+    (cv || document.body).append(cm);
+  }
+  function cartModalClose() { if (cm) { cm.remove(); cm = null; } }
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && cv) { e.stopImmediatePropagation(); if (cm) cartModalClose(); else closeCart(); } }, true);
+
+  // Leer el precio de la foto: con IA si está activa; si no (o sin internet), con el lector del teléfono.
+  async function readPrice(file) {
+    const wait = el("div", "smart-loading"); wait.append(el("span", "smart-spin"), el("b", "", T("Leyendo el precio…")), el("small", "", T("Esto toma unos segundos")));
+    cartModal(wait);
+    let thumb = ""; try { thumb = await shrink(file, 480); } catch {}
+    let got = null;
+    if (aiOn && navigator.onLine) {
+      try { const image = await shrink(file, 1400); const d = await ai({ action: "price", image }); if (d.cents) got = { name: d.name, cents: d.cents, regular: d.regular, per: d.per, deal: d.deal }; else got = { name: d.name }; }
+      catch (e) { got = null; }
+    }
+    let options = [];
+    if (!got || !got.cents) {
+      try { options = await ocrPrices(file); } catch {}
+      got = Object.assign({}, got || {}, options.length ? { cents: options[0] } : {});
+    }
+    confirmItem(Object.assign({ thumb, options }, got));
+  }
+
+  let priceWorker = null;
+  async function ocrPrices(file) {
+    if (!window.Tesseract) await new Promise((ok, no) => { const s = document.createElement("script"); s.src = "vendor/tesseract/tesseract.min.js"; s.onload = ok; s.onerror = no; document.head.append(s); });
+    const abs = p => new URL(p, location.href).href;
+    if (!priceWorker) priceWorker = (async () => {
+      const w = await Tesseract.createWorker("eng", 1, { workerPath: abs("vendor/tesseract/worker.min.js"), corePath: abs("vendor/tesseract/"), langPath: abs("vendor/tesseract/"), gzip: false, cacheMethod: "none" });
+      await w.setParameters({ tessedit_char_whitelist: "0123456789$.,/¢ ", tessedit_pageseg_mode: "11" });
+      return w;
+    })().catch(e => { priceWorker = null; throw e; });
+    const w = await priceWorker;
+    const url = await shrink(file, 1600);
+    const { data } = await w.recognize(url, {}, { text: true, blocks: true });
+    return pricesFrom(data);
+  }
+  // De todo el texto de la etiqueta, los números que parecen precio (el más grande primero; nunca el precio por onza).
+  function pricesFrom(data) {
+    const words = [];
+    (data.blocks || []).forEach(b => (b.paragraphs || []).forEach(p => (p.lines || []).forEach(l => (l.words || []).forEach(w => words.push(w)))));
+    if (!words.length && data.text) data.text.split(/\s+/).forEach(t => words.push({ text: t, bbox: { y0: 0, y1: 1 } }));
+    const cands = [];
+    words.forEach((w, k) => {
+      const t = String(w.text || ""), next = String((words[k + 1] || {}).text || "");
+      if (/[¢\/]/.test(t) || /^[¢\/]/.test(next)) return;
+      const h = (w.bbox.y1 - w.bbox.y0) || 1;
+      let m = /\$?(\d{1,3})[.,](\d{2})(?!\d)/.exec(t);
+      if (m) { cands.push({ c: +m[1] * 100 + +m[2], h }); return; }
+      m = /^\$?(\d{3,4})$/.exec(t);
+      if (m) cands.push({ c: +m[1], h: h * 0.9 }); // "398" con centavos chiquitos = 3.98
+    });
+    const out = [];
+    cands.filter(x => x.c >= 10 && x.c < 100000).sort((a, b) => b.h - a.h).forEach(x => { if (!out.includes(x.c)) out.push(x.c); });
+    return out.slice(0, 3);
+  }
+
+  // Revisar antes de sumar: nombre, precio y cantidad. Avisa si con esto te pasas.
+  function confirmItem(d) {
+    const c = cartData();
+    const f = el("form", "cart-form");
+    if (d.thumb) { const im = el("img", "cart-thumb"); im.src = d.thumb; im.alt = ""; f.append(im); }
+    if (d.thumb && !d.cents) f.append(el("p", "cart-warn", "No pude leer el precio. Escríbelo aquí abajo."));
+    const ln = el("label", "", T("Producto"));
+    const name = el("input"); name.type = "text"; name.placeholder = T("Ej. leche, huevos, pollo"); name.value = d.name || ""; name.autocapitalize = "sentences";
+    const pend = (window.MiLista && MiLista.getItems ? MiLista.getItems() : []).filter(i => !i.done).slice(0, 8);
+    let chips = null;
+    if (!d.name && pend.length) { chips = el("div", "cart-chips"); pend.forEach(i => chips.append(btn(i.name, "chip", () => { name.value = i.name; }))); }
+    const lp = el("label", "", d.per && d.per !== "each" ? T("Precio por") + " " + d.per : T("Precio"));
+    const price = el("input"); price.type = "text"; price.inputMode = "decimal"; price.placeholder = "$0.00"; price.value = d.cents ? (d.cents / 100).toFixed(2) : "";
+    let pchips = null;
+    const opts = [...new Set([d.cents, ...(d.options || [])].filter(Boolean))];
+    if (opts.length > 1) { pchips = el("div", "cart-chips"); opts.forEach(o => pchips.append(btn(money(o), "chip", () => { price.value = (o / 100).toFixed(2); paintWarn(); }))); }
+    const deal = d.regular && d.cents && d.regular > d.cents ? el("p", "cart-deal", "🏷️ " + T("En oferta. Precio normal:") + " " + money(d.regular) + (d.deal ? " · " + d.deal : "")) : d.deal ? el("p", "cart-deal", "🏷️ " + d.deal) : null;
+    const weighed = d.per && d.per !== "each";
+    const lq = el("label", "", weighed ? T("¿Cuánto pesa?") + " (" + d.per + ")" : T("Cantidad"));
+    const qty = el("input"); qty.type = "text"; qty.inputMode = "decimal"; qty.value = weighed ? "" : "1"; qty.placeholder = weighed ? "1.5" : "1";
+    const warn = el("p", "cart-after");
+    function paintWarn() {
+      const cents = toCents(price.value), q = parseFloat(String(qty.value).replace(",", ".")) || (weighed ? 0 : 1);
+      if (!cents) { warn.textContent = ""; warn.className = "cart-after"; return; }
+      const sub = cartSub(c) + Math.round(cents * q), total = sub + Math.round(sub * c.tax / 100);
+      if (!c.limit) { warn.textContent = T("Total con este producto:") + " " + money(total); warn.className = "cart-after"; return; }
+      const left = c.limit - total;
+      if (left < 0) { warn.textContent = "🛑 " + T("Con este producto te pasas por") + " " + money(-left); warn.className = "cart-after over"; }
+      else if (total >= c.limit * 0.8) { warn.textContent = "⚠️ " + (en() ? "You'd have " + money(left) + " left of " + money(c.limit) : "Te quedarían " + money(left) + " de " + money(c.limit)); warn.className = "cart-after near"; }
+      else { warn.textContent = "✓ " + (en() ? "You'd have " + money(left) + " left" : "Te quedarían " + money(left)); warn.className = "cart-after ok"; }
+    }
+    price.oninput = paintWarn; qty.oninput = paintWarn;
+    f.append(ln, name); if (chips) f.append(chips);
+    f.append(lp, price); if (pchips) f.append(pchips); if (deal) f.append(deal);
+    f.append(lq, qty, warn);
+    const ok = btn("🛒 " + T("Sumar al carrito"), "primary", () => {
+      const cents = toCents(price.value);
+      if (!cents) { price.focus(); warn.textContent = T("Escribe el precio."); warn.className = "cart-after over"; return; }
+      let q = parseFloat(String(qty.value).replace(",", "."));
+      if (!(q > 0)) { if (weighed) { qty.focus(); warn.textContent = T("Escribe cuánto pesa."); warn.className = "cart-after over"; return; } q = 1; }
+      const dd = cartData();
+      dd.items.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: name.value.trim().slice(0, 60), cents, qty: weighed ? Math.round(q * 100) / 100 : Math.max(1, Math.round(q)), per: weighed ? d.per : "each", deal: d.deal || "" });
+      cartAlert(dd); cartSave(dd); cartModalClose(); paintCart();
+    });
+    f.onsubmit = e => { e.preventDefault(); ok.click(); };
+    cartModal(el("h2", "", d.thumb ? "Revisa el precio" : "Agregar producto"), f, actions(btn("Cancelar", "ghost", cartModalClose), ok));
+    paintWarn();
+    if (!d.thumb) setTimeout(() => price.focus(), 50);
+  }
+  window.Carrito = { open: openCart };
 
   /* ================= inicio ================= */
   renderCard();

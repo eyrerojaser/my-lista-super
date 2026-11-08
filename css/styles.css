@@ -204,7 +204,7 @@ ul{list-style:none;margin:0;padding:0}
 .sheet .primary{background:var(--plum);color:var(--on-plum)}
 
 /* ===== toast ===== */
-.toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;
+.toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:80;
   display:flex;align-items:center;gap:12px;max-width:calc(100% - 32px);background:var(--ink);color:var(--bg);
   padding:10px 10px 10px 16px;border-radius:16px;font-weight:600;font-size:.92rem;box-shadow:0 12px 30px -10px rgba(0,0,0,.5);animation:up .2s ease-out}
 .toast button{border:0;background:transparent;color:var(--mango);font-weight:800;padding:6px 8px}
@@ -963,3 +963,60 @@ body.rv-open{overflow:hidden}
 .dish-hero .dish-wait-txt{bottom:36px}
 .dish-ai{position:absolute;right:8px;bottom:8px;padding:3px 8px;border-radius:999px;background:rgba(20,12,24,.55);color:#fff;font-size:.68rem;font-weight:700;backdrop-filter:blur(4px)}
 .dish-hero .dish-ai{bottom:32px}
+
+/* ---------- Mi carrito (escanear precios en la tienda) ---------- */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.cart{position:fixed;inset:0;z-index:65;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg);color:var(--ink);animation:rvIn .2s ease-out}
+@media (prefers-reduced-motion:reduce){.cart{animation:none}}
+.cart-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;background:#2A1636;color:#FFF4E4}
+.cart-back{position:static;flex:none}
+.cart-htxt h2{margin:0;font-size:1.25rem}
+.cart-htxt small{color:#FFC870;font-weight:600}
+.cart-main{max-width:640px;margin:0 auto;padding:16px 16px calc(28px + env(safe-area-inset-bottom,0px))}
+.cart-total{border-radius:22px;padding:16px 18px;background:#E3F5EA;color:#14462A;display:flex;flex-direction:column;gap:4px;transition:background .3s}
+.cart-total.lvl1{background:#FFF0C9;color:#5A4200}
+.cart-total.lvl2,.cart-total.lvl3{background:#FFE0DA;color:#7A1D10}
+.cart-total>small{font-weight:700;font-size:.85rem}
+.cart-amt{font-size:2.6rem;line-height:1.05;letter-spacing:-1px}
+.cart-taxnote{font-weight:600!important;opacity:.8}
+.cart-bar{height:12px;border-radius:999px;background:rgba(0,0,0,.1);overflow:hidden;margin-top:8px}
+.cart-bar span{display:block;height:100%;border-radius:inherit;background:#2E9E6A;transition:width .3s}
+.lvl1 .cart-bar span{background:#E3A008}.lvl2 .cart-bar span,.lvl3 .cart-bar span{background:#D93A25}
+.cart-left{font-weight:800;font-size:1rem;margin-top:2px}
+.cart-limit-btn{align-self:flex-start;margin-top:8px;border:0;background:rgba(255,255,255,.7);color:inherit;font:inherit;font-weight:700;font-size:.88rem;padding:7px 12px;border-radius:999px;cursor:pointer}
+.cart-add{display:grid;grid-template-columns:1.6fr 1fr;gap:10px;margin-top:14px}
+.cart-scan{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:16px 10px;border-radius:20px;background:#FF9A45;color:#2A1636;cursor:pointer;text-align:center;box-shadow:0 6px 16px rgba(255,122,46,.3)}
+.cart-scan:focus-within{outline:3px solid #2A1636;outline-offset:2px}
+.cart-scan-ico{font-size:2rem;line-height:1}
+.cart-scan b{font-size:1.05rem}
+.cart-scan small{font-size:.78rem;font-weight:600}
+.cart-type{border:2px solid var(--line);background:var(--surface);color:var(--ink);border-radius:20px;font:inherit;font-weight:700;cursor:pointer;padding:10px}
+.cart-h{margin:22px 0 8px;font-size:1.05rem}
+.cart-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.cart-list li{display:grid;grid-template-columns:1fr auto;grid-template-areas:"info line" "info step";gap:4px 10px;align-items:center;background:var(--surface);border-radius:16px;padding:10px 12px}
+.cart-info{grid-area:info;min-width:0}
+.cart-info b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cart-info small{color:var(--muted)}
+.cart-line{grid-area:line;text-align:right}
+.cart-step{grid-area:step;display:flex;align-items:center;gap:6px}
+.cart-step button{width:34px;height:34px;border-radius:50%;border:0;background:var(--bg);color:var(--ink);font-size:1.2rem;font-weight:800;cursor:pointer}
+.cart-step button:disabled{opacity:.3}
+.cart-step span{min-width:34px;text-align:center;font-weight:700;font-size:.9rem}
+.cart-empty{color:var(--muted);text-align:center;margin:26px 10px}
+.cart-foot{margin-top:18px}
+.cart-done{width:100%;padding:13px;border:0;border-radius:14px;background:#2A1636;color:#FFF4E4;font:inherit;font-weight:800;cursor:pointer}
+.cart-modal{position:fixed;inset:0;z-index:66;background:rgba(20,10,26,.5);display:flex;align-items:flex-end;justify-content:center}
+.cart-card{width:100%;max-width:520px;max-height:92vh;overflow-y:auto;background:var(--surface);color:var(--ink);border-radius:24px 24px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom,0px))}
+.cart-card h2{margin:0 0 10px}
+.cart-form{display:flex;flex-direction:column;gap:6px}
+.cart-form label{font-weight:700;font-size:.88rem;margin-top:6px}
+.cart-form input{font:inherit;font-size:1.1rem;padding:12px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
+.cart-thumb{width:100%;max-height:170px;object-fit:cover;border-radius:14px}
+.cart-chips{display:flex;flex-wrap:wrap;gap:6px}
+.cart-chips .chip{border:0;border-radius:999px;padding:6px 11px;background:var(--bg);color:var(--ink);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
+.cart-deal{margin:2px 0 0;font-size:.85rem;font-weight:700;color:#A2481A}
+.cart-warn{margin:4px 0 0;font-weight:700;color:#A2481A}
+.cart-after{margin:8px 0 0;font-weight:800;font-size:.98rem;min-height:1.3em}
+.cart-after.ok{color:#1F6A37}.cart-after.near{color:#8A6100}.cart-after.over{color:#C0301C}
+.cart-hint{color:var(--muted)}
+.cart-card .primary{background:var(--plum);color:var(--on-plum)}.cart-card .ghost{background:var(--tile);color:var(--ink)}
