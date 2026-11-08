@@ -1102,7 +1102,6 @@ body.rv-open{overflow:hidden}
 .walking .ms-goods>*:nth-child(2n){animation-delay:.15s}
 .walking .ms-smile{animation:msSmile 5s infinite}
 .walking .ms-grin{animation:msGrin 5s infinite}
-.walk-in .ms-walker{animation:msWalkIn 2.4s cubic-bezier(.2,.7,.3,1) both,msBob .3s ease-in-out 2.4s infinite alternate}
 .waiting .ms-head{animation:msNod 3.4s ease-in-out infinite}
 .waiting .ms-arm{transform-origin:10% 90%;animation:msWave 2.6s ease-in-out infinite}
 @keyframes msStep{0%{transform:rotate(22deg)}100%{transform:rotate(-22deg)}}
@@ -1114,7 +1113,6 @@ body.rv-open{overflow:hidden}
 @keyframes msBlink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
 @keyframes msSmile{0%,55%,85%,100%{opacity:1}60%,80%{opacity:0}}
 @keyframes msGrin{0%,55%,85%,100%{opacity:0}60%,80%{opacity:1}}
-@keyframes msWalkIn{from{transform:translateX(-115%)}to{transform:translateX(0)}}
 @keyframes msWave{0%,60%,100%{transform:rotate(0)}70%{transform:rotate(-14deg)}80%{transform:rotate(6deg)}90%{transform:rotate(-10deg)}}
 @media (prefers-reduced-motion:reduce){.mascot *{animation:none!important}}
 .shop-day{position:relative;display:flex;align-items:center;gap:10px;margin:-2px -2px 10px;padding:8px 34px 8px 6px;border-radius:18px;background:linear-gradient(135deg,#FFE7C7,#FFD4A8);overflow:hidden}
@@ -1133,3 +1131,26 @@ body.rv-open{overflow:hidden}
 .shop-dayb[aria-pressed=true]{background:#FF9A45;border-color:#FF9A45;color:#2A1636}
 .shop-see{width:100%;margin-top:14px;padding:12px;border:0;border-radius:14px;background:var(--tile);color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
 .shop-days+p,.shop-days+.shop-see{margin-top:16px}
+
+/* Recorrido continuo: entra, avanza despacio mientras caen los alimentos al carrito, sale y vuelve a empezar */
+.mascot{overflow:hidden}
+.ms-travel{transform-box:view-box}
+.walking .ms-travel{animation:msTravel 8s infinite}
+.ms-drop{opacity:0;transform-box:fill-box;transform-origin:50% 50%}
+.walking .ms-drop{animation:8s infinite}
+.walking .ms-drop.d1{animation-name:msDrop1}.walking .ms-drop.d2{animation-name:msDrop2}
+.walking .ms-drop.d3{animation-name:msDrop3}.walking .ms-drop.d4{animation-name:msDrop4}
+@keyframes msTravel{
+  0%{transform:translateX(-300px);animation-timing-function:cubic-bezier(.25,.7,.35,1)}
+  24%{transform:translateX(-14px);animation-timing-function:linear}
+  74%{transform:translateX(18px);animation-timing-function:cubic-bezier(.6,0,.8,.4)}
+  96%,100%{transform:translateX(320px)}}
+@keyframes msDrop1{0%,28%{opacity:0;transform:translateY(-120px) rotate(-30deg)}29%{opacity:1;transform:translateY(-120px) rotate(-30deg);animation-timing-function:cubic-bezier(.55,0,1,.45)}
+  35%{transform:translateY(0) rotate(0)}37.5%{transform:translateY(-10px) rotate(6deg)}40%,90%{opacity:1;transform:translateY(0) rotate(0)}93%,100%{opacity:0;transform:translateY(0)}}
+@keyframes msDrop2{0%,38%{opacity:0;transform:translateY(-120px) rotate(40deg)}39%{opacity:1;transform:translateY(-120px) rotate(40deg);animation-timing-function:cubic-bezier(.55,0,1,.45)}
+  45%{transform:translateY(0) rotate(-8deg)}47.5%{transform:translateY(-9px) rotate(4deg)}50%,90%{opacity:1;transform:translateY(0) rotate(0)}93%,100%{opacity:0;transform:translateY(0)}}
+@keyframes msDrop3{0%,48%{opacity:0;transform:translateY(-120px) rotate(-50deg)}49%{opacity:1;transform:translateY(-120px) rotate(-50deg);animation-timing-function:cubic-bezier(.55,0,1,.45)}
+  55%{transform:translateY(0) rotate(6deg)}57.5%{transform:translateY(-8px) rotate(-4deg)}60%,90%{opacity:1;transform:translateY(0) rotate(0)}93%,100%{opacity:0;transform:translateY(0)}}
+@keyframes msDrop4{0%,58%{opacity:0;transform:translateY(-120px) rotate(30deg)}59%{opacity:1;transform:translateY(-120px) rotate(30deg);animation-timing-function:cubic-bezier(.55,0,1,.45)}
+  65%{transform:translateY(0) rotate(-6deg)}67.5%{transform:translateY(-8px) rotate(3deg)}70%,90%{opacity:1;transform:translateY(0) rotate(0)}93%,100%{opacity:0;transform:translateY(0)}}
+@media (prefers-reduced-motion:reduce){.ms-drop{opacity:1}}

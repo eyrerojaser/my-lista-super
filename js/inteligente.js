@@ -59,8 +59,7 @@
   const dayName = (d, style) => new Date(2024, 0, 7 + d).toLocaleDateString(window.I18N ? I18N.loc() : "es-US", { weekday: style || "long" });
   const MASCOT_SVG = `<svg class="mascot-svg" viewBox="0 0 280 170" aria-hidden="true">
     <g class="ms-ground"><path d="M-40 160h400" stroke="rgba(42,22,54,.12)" stroke-width="3" stroke-dasharray="16 14" stroke-linecap="round"/></g>
-    <ellipse cx="140" cy="160" rx="112" ry="6" fill="rgba(42,22,54,.12)"/>
-    <g class="ms-walker">
+    <g class="ms-travel"><ellipse cx="140" cy="160" rx="112" ry="6" fill="rgba(42,22,54,.12)"/><g class="ms-walker">
       <g class="ms-leg ms-leg-b"><path d="M70 120v30" stroke="#2A1636" stroke-width="9" stroke-linecap="round"/><ellipse cx="74" cy="154" rx="9" ry="5" fill="#2A1636"/></g>
       <g class="ms-cart">
         <g class="ms-goods">
@@ -69,6 +68,12 @@
           <circle class="g3" cx="200" cy="74" r="12" fill="#E5484D"/><path d="M200 62q2-6 7-6" stroke="#3FA35B" stroke-width="3" fill="none" stroke-linecap="round"/>
           <path class="g4" d="M214 52c10-8 22-2 20 10-2 10-16 16-26 10" fill="#3FA35B"/><path d="M216 70l12-12" stroke="#2B7A43" stroke-width="2"/>
           <path class="g5" d="M158 70l14-8 14 8-14 8z" fill="#FFC870"/>
+        </g>
+        <g class="ms-drops">
+          <g class="ms-drop d1"><circle cx="196" cy="60" r="10" fill="#FF8A1F"/><path d="M196 50q3-4 7-3" stroke="#3FA35B" stroke-width="3" fill="none" stroke-linecap="round"/></g>
+          <g class="ms-drop d2"><path d="M150 52l8 26 8-26z" fill="#F57C1F"/><path d="M154 52l4-9 4 9M158 52l-6-6M158 52l6-6" stroke="#3FA35B" stroke-width="3" fill="none" stroke-linecap="round"/></g>
+          <g class="ms-drop d3"><path d="M220 66q6-22 26-20-14 6-18 24z" fill="#FFD84A" stroke="#E0B21E" stroke-width="2"/></g>
+          <g class="ms-drop d4"><path d="M168 64l22-12 6 14z" fill="#FFC93C"/><circle cx="182" cy="60" r="2" fill="#E0A21E"/><circle cx="188" cy="63" r="1.6" fill="#E0A21E"/></g>
         </g>
         <path d="M118 66h134l-18 52H136z" fill="#FF9A45"/>
         <path d="M150 76l-4 32M178 76l-3 32M206 76l-2 32M232 76l-4 30" stroke="rgba(42,22,54,.28)" stroke-width="5" stroke-linecap="round"/>
@@ -93,19 +98,13 @@
         </g>
       </g>
       <g class="ms-leg ms-leg-f"><path d="M78 120v30" stroke="#3A1A48" stroke-width="9" stroke-linecap="round"/><ellipse cx="82" cy="154" rx="9" ry="5" fill="#3A1A48"/></g>
-    </g>
+    </g></g>
   </svg>`;
-  let walkedIn = false;
   function mascot(cls) { const m = el("div", "mascot " + (cls || "")); m.innerHTML = MASCOT_SVG; return m; }
   function shopBanner() {
     const cfg = shopCfg(), tk = todayKey();
     const box = el("div", "shop-day");
-    // Cada vez que abres la app en tu día de compras, el muñequito entra caminando (cuando se ve en pantalla).
     const m = mascot("walking");
-    if (!walkedIn) {
-      const io = "IntersectionObserver" in window ? new IntersectionObserver(es => { if (es.some(e => e.isIntersecting) && !walkedIn) { walkedIn = true; m.classList.add("walk-in"); io.disconnect(); } }, { threshold: 0.6 }) : null;
-      if (io) io.observe(m); else walkedIn = true;
-    }
     const txt = el("div", "shop-day-txt");
     const n = (window.MiLista ? MiLista.getItems() : []).filter(i => !i.done).length;
     txt.append(el("b", "", en() ? "It's shopping day! Let's go to the market!" : "¡Hoy es día de compras! ¡Vamos al Market!"),
@@ -749,7 +748,7 @@
     const list = suggestions();
     const cfg = shopCfg(), today = isShopDay();
     const stage = el("div", "shop-stage" + (today ? " is-today" : ""));
-    stage.append(mascot(today ? "walking" : "waiting"));
+    stage.append(mascot("walking"));
     const msg = el("p", "shop-msg");
     const paintMsg = () => {
       const c = shopCfg();
@@ -765,7 +764,7 @@
         const c = shopCfg(); c.days = c.days.includes(d) ? c.days.filter(x => x !== d) : c.days.concat(d); c.hide = ""; shopSave(c);
         b.setAttribute("aria-pressed", c.days.includes(d)); paintMsg(); renderCard();
         const on = c.days.includes(new Date().getDay());
-        stage.classList.toggle("is-today", on); stage.replaceChildren(mascot(on ? "walking" + (d === new Date().getDay() ? " walk-in" : "") : "waiting"));
+        stage.classList.toggle("is-today", on);
       });
       b.setAttribute("aria-pressed", cfg.days.includes(d)); b.setAttribute("aria-label", dayName(d));
       days.append(b);
