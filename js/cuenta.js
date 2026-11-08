@@ -41,7 +41,8 @@
     const total = CFG.foundersLimit;
     const founderSpots = !!total && !(promo && promo.left === 0);
     const trial = promo && promo.trialDays > 0 ? promo.trialDays : 0;
-    const show = CFG.promo && mode === "register" && (founderSpots || trial);
+    // Se espera a saber qué promoción hay (así no aparece un cartel y luego otro).
+    const show = !!promo && CFG.promo && mode === "register" && (founderSpots || trial);
     box.classList.toggle("hidden", !show);
     if (!show) return;
     if (!founderSpots) {

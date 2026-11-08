@@ -805,3 +805,94 @@ ul{list-style:none;margin:0;padding:0}
 .mic-btn.on{background:#E5484D;color:#fff;animation:micPulse 1s ease-in-out infinite}
 @keyframes micPulse{0%,100%{box-shadow:0 0 0 0 rgba(229,72,77,.5)}50%{box-shadow:0 0 0 8px rgba(229,72,77,0)}}
 @media (prefers-reduced-motion:reduce){.mic-btn.on{animation:none}}
+
+/* ---------- Menú por categorías (v2.6.0) ---------- */
+.tools{margin-top:16px;padding:16px 14px 6px;border-radius:24px;background:var(--surface);box-shadow:0 1px 0 var(--line)}
+.tools-title{margin:0 2px 4px;font-size:1.15rem;letter-spacing:-.02em}
+.tools-group{margin-top:12px}
+.tools-group h3{margin:0 2px 8px;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800}
+.tools-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tool{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:12px 4px 10px;border:0;border-radius:18px;background:var(--tile);color:var(--ink);min-height:118px}
+.tool:active{transform:scale(.97)}
+.tool-ico{position:relative;width:54px;height:54px;border-radius:17px;display:grid;place-items:center;font-size:1.65rem;background:color-mix(in srgb,var(--tc) 22%,transparent);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--tc) 35%,transparent);margin-bottom:2px}
+.tool b{font-size:.86rem;line-height:1.15}
+.tool small{font-size:.7rem;color:var(--muted);line-height:1.2}
+.tool-ai{position:absolute;top:-6px;right:-10px;font-size:.58rem;font-weight:800;letter-spacing:.05em;padding:2px 5px;border-radius:999px;background:linear-gradient(135deg,var(--mango),var(--mango-2));color:var(--on-mango)}
+.smart-card.flash{animation:flashCard 1.2s ease}
+@keyframes flashCard{0%,100%{box-shadow:0 1px 0 var(--line)}40%{box-shadow:0 0 0 4px var(--mango)}}
+.smart-note{color:var(--muted);font-size:.88rem}
+@media (max-width:340px){.tools-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* Sin huecos: si una fila queda incompleta, los cuadritos se estiran para llenarla */
+.tools-grid{display:flex;flex-wrap:wrap}
+.tools-grid .tool{flex:1 1 calc(33.333% - 6px);min-width:calc(33.333% - 6px)}
+@media (max-width:340px){.tools-grid .tool{flex-basis:calc(50% - 4px);min-width:calc(50% - 4px)}}
+
+/* ---------- Entrada animada (v2.7.0) ---------- */
+.splash{position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;
+  background:radial-gradient(90% 60% at 25% 10%,#5A2A66 0%,#2E1640 55%,#1B0C26 100%);transition:opacity .45s ease}
+.splash.out{opacity:0;pointer-events:none}
+.sp-stage{position:relative;width:300px;height:380px}
+.sp-phone{position:absolute;left:50%;top:0;width:150px;height:250px;margin-left:-75px;border-radius:28px;background:#FFF8EE;box-shadow:0 0 0 7px #120818,0 0 0 9px rgba(255,255,255,.14),0 24px 50px rgba(0,0,0,.45);
+  padding:30px 12px 0;display:flex;flex-direction:column;gap:10px;animation:spPhone .5s cubic-bezier(.2,.9,.3,1.2) both}
+.sp-notch{position:absolute;top:9px;left:50%;width:46px;height:8px;margin-left:-23px;border-radius:6px;background:#120818}
+.sp-row{display:flex;align-items:center;gap:7px;height:36px;padding:0 8px;border-radius:11px;background:#F1E8DA;border-left:4px solid #FF8A3D}
+.sp-row i{font-style:normal;font-size:15px}
+.sp-row span{flex:1;height:7px;border-radius:4px;background:#D9CCBA}
+.sp-row b{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;color:#fff;background:#2F9E5B;transform:scale(0);animation:spCheck .3s ease both}
+.sp-row.r2{border-left-color:#D2483E}.sp-row.r3{border-left-color:#C98A3C}.sp-row.r4{border-left-color:#3FA35B}
+.sp-row.r1 b{animation-delay:.55s}.sp-row.r2 b{animation-delay:.85s}.sp-row.r3 b{animation-delay:1.15s}.sp-row.r4 b{animation-delay:1.45s}
+.sp-cart{position:absolute;z-index:2;left:50%;bottom:0;margin-left:-88px;animation:spCart .9s cubic-bezier(.25,.9,.3,1.05) .15s both}
+.sp-wheel{transform-box:fill-box;transform-origin:center;animation:spWheel .9s linear .15s both}
+.sp-drop{position:absolute;z-index:1;left:50%;top:212px;font-size:30px;opacity:0;animation:spDrop .55s cubic-bezier(.5,0,.7,1) both}
+.sp-drop.d1{margin-left:-46px;animation-delay:.7s}.sp-drop.d2{margin-left:-14px;animation-delay:1s}
+.sp-drop.d3{margin-left:16px;animation-delay:1.3s}.sp-drop.d4{margin-left:44px;animation-delay:1.6s}
+.sp-word{text-align:center;color:#FFF4E4;opacity:0;animation:spWord .5s ease 1.9s both}
+.sp-word b{display:block;font-size:44px;font-weight:800;letter-spacing:-1.5px}
+.sp-word em{font-style:normal;color:#FFB23F}
+.sp-word small{display:block;margin-top:2px;font-size:15px;color:#FFC870;font-weight:600}
+@keyframes spPhone{from{transform:translateY(24px) scale(.9);opacity:0}to{transform:none;opacity:1}}
+@keyframes spCheck{from{transform:scale(0)}to{transform:scale(1)}}
+@keyframes spCart{from{transform:translateX(-260px)}to{transform:translateX(0)}}
+@keyframes spWheel{from{transform:rotate(-540deg)}to{transform:rotate(0)}}
+@keyframes spDrop{0%{opacity:0;transform:translateY(-14px) scale(.7)}25%{opacity:1}100%{opacity:1;transform:translateY(50px) scale(1)}}
+@keyframes spWord{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* ---------- Portada de entrada: logo arriba, carrito avanzando en el centro, formulario abajo (v2.8.0) ---------- */
+.auth-band{padding:max(22px,env(safe-area-inset-top)) 0 64px !important;overflow:hidden;text-align:center}
+.auth-band .auth-logo-img{width:118px;height:118px;margin:0 auto}
+.auth-scene{position:relative;height:210px;margin-top:6px}
+.as-shelves{position:absolute;left:0;right:0;top:4px;height:110px;overflow:hidden;opacity:.35;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}
+.as-track{display:flex;width:max-content;animation:asShelf 9s linear infinite}
+.as-shelf-svg{display:block;flex:none}
+.as-floor{position:absolute;left:0;right:0;bottom:6px;height:44px;overflow:hidden;
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,0));
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.as-lines{position:absolute;left:0;top:22px;width:200%;height:4px;border-radius:2px;
+  background:repeating-linear-gradient(90deg,rgba(255,244,228,.35) 0 34px,transparent 34px 70px);animation:asLines .7s linear infinite}
+.as-cart{position:absolute;left:50%;bottom:16px;width:190px;height:130px;margin-left:-95px;animation:asBob .45s ease-in-out infinite alternate}
+.as-cart-svg{position:absolute;inset:0;z-index:2;filter:drop-shadow(0 10px 14px rgba(0,0,0,.35))}
+.as-wheel{transform-box:fill-box;transform-origin:center;animation:asWheel .6s linear infinite}
+.as-load{position:absolute;z-index:1;left:46px;top:-26px;width:142px;height:70px}
+.as-load span{position:absolute;font-size:30px;line-height:1;animation:asJiggle .45s ease-in-out infinite alternate}
+.as-load .p1{left:2px;top:6px;font-size:34px;transform:rotate(-24deg)}
+.as-load .p2{left:30px;top:-4px;font-size:34px;animation-delay:.1s}
+.as-load .p3{left:62px;top:-14px;font-size:32px;animation-delay:.2s}
+.as-load .p4{left:94px;top:-18px;font-size:34px;animation-delay:.05s}
+.as-load .p5{left:16px;top:24px;animation-delay:.15s}
+.as-load .p6{left:46px;top:20px;animation-delay:.25s}
+.as-load .p7{left:76px;top:16px;animation-delay:.12s}
+.as-load .p8{left:104px;top:14px;transform:rotate(28deg);animation-delay:.3s}
+.as-load .p9{left:118px;top:-2px;animation-delay:.18s}
+.as-puff{position:absolute;z-index:0;bottom:2px;width:14px;height:14px;border-radius:50%;background:rgba(255,244,228,.35);animation:asPuff .9s ease-out infinite}
+.as-puff.a{left:58px}.as-puff.b{left:140px;animation-delay:.45s}
+.as-speed{position:absolute;z-index:0;left:-46px;height:4px;border-radius:3px;background:linear-gradient(90deg,transparent,rgba(255,200,112,.8));animation:asSpeed .8s linear infinite}
+.as-speed.s1{top:40px;width:44px}.as-speed.s2{top:64px;width:60px;left:-62px;animation-delay:.25s}.as-speed.s3{top:88px;width:36px;animation-delay:.5s}
+@keyframes asShelf{to{transform:translateX(-650px)}}
+@keyframes asLines{to{transform:translateX(-70px)}}
+@keyframes asBob{from{transform:translateY(0) rotate(-.6deg)}to{transform:translateY(-4px) rotate(.6deg)}}
+@keyframes asWheel{to{transform:rotate(360deg)}}
+@keyframes asJiggle{from{translate:0 0}to{translate:0 -3px}}
+@keyframes asPuff{0%{transform:translateX(0) scale(.5);opacity:.8}100%{transform:translateX(-46px) scale(1.4);opacity:0}}
+@keyframes asSpeed{0%{transform:translateX(30px);opacity:0}30%{opacity:1}100%{transform:translateX(-50px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.as-track,.as-lines,.as-cart,.as-wheel,.as-load span,.as-puff,.as-speed{animation:none}.as-puff,.as-speed{display:none}}

@@ -149,7 +149,7 @@
     const b = document.createElement("b"); b.textContent = fmt(r.cents);
     const s = document.createElement("small");
     const nItems = Array.isArray(r.items) ? r.items.length : 0;
-    s.textContent = [withDate ? shortDate(r.date) : "", r.store || "", nItems ? (nItems === 1 ? "1 producto" : nItems + " productos") : "", r.photo ? "" : "Sin foto"].filter(Boolean).join(" · ") || "Compra";
+    s.textContent = [withDate ? shortDate(r.date) : "", (r.store || "").replace(/[\s\-–—·.,:|]+$/, ""), nItems ? (nItems === 1 ? "1 producto" : nItems + " productos") : "", r.photo ? "" : "Sin foto"].filter(Boolean).join(" · ") || "Compra";
     info.append(b, s);
     if (withDate) { info.style.cursor = "pointer"; info.onclick = () => { selected = r.date; render(); $("pcDayTitle").scrollIntoView({ behavior: "smooth", block: "center" }); }; }
     const ed = document.createElement("button"); ed.type = "button"; ed.className = "pc-icon"; ed.setAttribute("aria-label", "Editar compra de " + fmt(r.cents));

@@ -180,7 +180,8 @@
   }
   function setAI(on) {
     aiOn = on;
-    $("paperBtn").classList.toggle("hidden", !on);
+    $("paperBtn").classList.add("hidden");
+    renderMenu();
     $("cookBtn").classList.toggle("hidden", !on || !freezerItems().length);
   }
   async function ai(body) {
@@ -382,8 +383,78 @@
     };
   }
 
+  /* ================= 6. Menú con todo, por categorías ================= */
+  function openFreezerAt(loc) {
+    $("freezerBtn").click();
+    setTimeout(() => { const t = document.querySelector('.fz-locs [data-loc="' + loc + '"]'); if (t) t.click(); }, 60);
+  }
+  function openCompras(then) { $("comprasBtn").click(); if (then) setTimeout(then, 120); }
+  function explainHabits() {
+    const list = suggestions();
+    if (list.length) { const c = $("smartCard"); c.scrollIntoView({ behavior: "smooth", block: "center" }); c.classList.add("flash"); setTimeout(() => c.classList.remove("flash"), 1200); return; }
+    openSheet(title("Te toca comprar"), el("p", "", "NoPencil aprende cada cuánto compras cada cosa. Cuando ya te toca comprar algo otra vez (el café, las tortillas, la leche…), aparece arriba de tu lista para agregarlo con un toque."),
+      el("p", "smart-note", "Para aprender, marca los productos como comprados (el círculo de la derecha) cuando los eches al carrito. Después de 2 compras de lo mismo empieza a avisarte."), actions(btn("Entendido", "primary", closeSheet)));
+  }
+  function startVoice() {
+    $("typeIn").click();
+    setTimeout(() => { const m = document.querySelector(".mic-btn"); if (m) m.click(); }, 350);
+  }
+  function menuGroups() {
+    const amt = ($("pcLinkAmt") || {}).textContent || "";
+    return [
+      { t: "Agrega a tu lista", items: [
+        { e: "📷", c: "#FFB23F", n: "Escanear", s: "Código de barras", go: () => $("scanBtn").click() },
+        SR && { e: "🎤", c: "#E5484D", n: "Con tu voz", s: "Dilo y se agrega", go: startVoice },
+        { e: "🥦", c: "#3FA35B", n: "Categorías", s: "Productos comunes", go: () => $("typeIn").click() },
+        aiOn && { e: "📝", c: "#8B67CF", n: "Lista de papel", s: "Tómale foto", ai: true, go: () => $("paperIn").click() },
+        { e: "💡", c: "#E3B93B", n: "Te toca comprar", s: "Te recuerda", go: explainHabits },
+        aiOn && { e: "👩‍🍳", c: "#DD6A9E", n: "¿Qué cocino?", s: "Recetas con lo tuyo", ai: true, go: () => { if (!freezerItems().length) { toast(T("Agrega productos al Freezer, Refri o Despensa primero")); return; } $("cookBtn").click(); } },
+      ] },
+      { t: "En tu cocina", items: [
+        { e: "❄️", c: "#58B9E6", n: "Freezer", s: "Fechas y avisos", go: () => openFreezerAt("freezer") },
+        { e: "🥛", c: "#3E8ED8", n: "Refri", s: "Lo que vence pronto", go: () => openFreezerAt("refri") },
+        { e: "🥫", c: "#E8802F", n: "Despensa", s: "Lo que tienes", go: () => openFreezerAt("despensa") },
+      ] },
+      { t: "Tus gastos", items: [
+        { e: "🧾", c: "#C98A3C", n: "Mis Compras", s: amt || "Recibos y calendario", go: () => openCompras() },
+        { e: "💰", c: "#1AA3A3", n: "Presupuesto", s: "Cuánto te queda", go: () => openCompras(editBudget) },
+        { e: "🏷️", c: "#9A6A4A", n: "Comparar precios", s: "Dónde es más barato", go: () => openCompras(openPrices) },
+      ] },
+      { t: "Familia y cuenta", items: [
+        { e: "👨‍👩‍👧", c: "#7A5BBF", n: "Lista compartida", s: "Con tu familia", go: () => $("shareLiveBtn").click() },
+        { e: "📤", c: "#3FA35B", n: "Enviar lista", s: "Por mensaje", go: () => $("shareBtn").click() },
+        ($("plusCard") && !$("plusCard").classList.contains("hidden")) && { e: "👤", c: "#8C8C8C", n: "Mi cuenta", s: "Plan y foto", go: () => $("plusCard").click() },
+      ] },
+    ].map(g => ({ t: g.t, items: g.items.filter(Boolean) }));
+  }
+  function renderMenu() {
+    const box = $("toolsMenu"); if (!box) return;
+    const h = el("h2", "tools-title", "Todo lo que puedes hacer");
+    const parts = [h];
+    menuGroups().forEach(g => {
+      const sec = el("div", "tools-group");
+      sec.append(el("h3", "", g.t));
+      const grid = el("div", "tools-grid");
+      g.items.forEach(it => {
+        const b = el("button", "tool"); b.type = "button";
+        const ic = el("span", "tool-ico", it.e); ic.style.setProperty("--tc", it.c); ic.setAttribute("aria-hidden", "true");
+        if (it.ai) { const tag = el("span", "tool-ai", "IA"); ic.append(tag); }
+        b.append(ic, el("b", "", it.n), el("small", "", it.s));
+        b.onclick = it.go;
+        grid.append(b);
+      });
+      sec.append(grid); parts.push(sec);
+    });
+    box.replaceChildren(...parts);
+  }
+  // El total de Mis Compras cambia: se actualiza en el menú.
+  if ($("pcLinkAmt")) new MutationObserver(() => { const t = document.querySelector('.tool-ico + b + small'); renderMenu(); }).observe($("pcLinkAmt"), { childList: true, characterData: true, subtree: true });
+
+  if ($("plusCard")) new MutationObserver(renderMenu).observe($("plusCard"), { attributes: true, attributeFilter: ["class"] });
+
   /* ================= inicio ================= */
   renderCard();
+  renderMenu();
   checkAI();
   if (window.MiCuenta) MiCuenta.onChange(() => checkAI());
   window.addEventListener("storage", e => { if (e.key === HKEY) renderCard(); if (e.key === BKEY || e.key === "purchases-v1") renderBudget(false); });

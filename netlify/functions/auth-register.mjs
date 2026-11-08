@@ -1,4 +1,5 @@
 import { store, normEmail, validEmail, emailKey, hashPassword, nextNumber, FOUNDERS, sessionFor, publicProfile, json, readBody } from "../lib/auth-core.mjs";
+import { foundersOpen } from "../lib/trial.mjs";
 import { randomBytes } from "node:crypto";
 import { notifyAdmins } from "../lib/admin-notify.mjs";
 
@@ -15,7 +16,7 @@ export default async (req) => {
   const r = await s.setJSON(key, user, { onlyIfNew: true });
   if (r && r.modified === false) return json({ error: "Ya existe una cuenta con ese correo. Inicia sesión." }, 409);
   user.n = await nextNumber();
-  user.founder = user.n <= FOUNDERS();     // las primeras cuentas tienen Plus gratis
+  user.founder = user.n <= FOUNDERS() && foundersOpen();     // las primeras cuentas tienen Plus gratis (si no hay prueba gratis)
   await s.setJSON(key, user);
   await s.setJSON("ids/" + user.uid, { key });
   // Aviso para la dueña de la app.

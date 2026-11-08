@@ -59,7 +59,9 @@ Queda un ícono propio en tu pantalla de inicio y se abre a pantalla completa, c
 
 **Lista compartida en tiempo real.** Toca *Lista compartida* → *Compartir mi lista* y envía la invitación por WhatsApp. La otra persona abre el enlace (o, en *Lista compartida*, toca *Me invitaron: tengo un código* y lo escribe) y ve la misma lista. Si cualquiera agrega, quita o marca un producto, el cambio aparece en los demás teléfonos en unos segundos. Sin señal, los cambios se guardan y se envían al volver la conexión. Con *Salir de la lista compartida* cada quien se queda con su copia.
 
-**Prueba gratis de 14 días (sin tarjeta).** Cada cuenta nueva que no sea fundadora puede usar todo NoPencil gratis durante 14 días desde que se registra; no pide tarjeta. Al terminar, la app le muestra los planes para seguir. En la pantalla de registro, cuando se acaban los lugares de fundadoras, el cartel cambia solo a "¡14 días gratis!". En el panel aparece "Prueba · N días" o "Prueba terminó". Para cambiar los días pon en Netlify la variable **`FREE_TRIAL_DAYS`** (por ejemplo 7 o 30; 0 = sin prueba) y haz Trigger deploy. Para cerrar ya los lugares de fundadoras, pon `FOUNDERS_LIMIT` igual al número de fundadoras que ya tienes.
+**Prueba gratis de 14 días (sin tarjeta).** Cada cuenta nueva que no sea fundadora puede usar todo NoPencil gratis durante 14 días desde que se registra; no pide tarjeta. Al terminar, la app le muestra los planes para seguir. En la pantalla de registro, cuando se acaban los lugares de fundadoras, el cartel cambia solo a "¡14 días gratis!". En el panel aparece "Prueba · N días" o "Prueba terminó". Para cambiar los días pon en Netlify la variable **`FREE_TRIAL_DAYS`** (por ejemplo 7 o 30; 0 = sin prueba) y haz Trigger deploy. Mientras la prueba gratis esté activa ya no se crean fundadoras nuevas (las que ya lo son, siguen gratis). Para volver a abrir lugares de fundadora pon `FREE_TRIAL_DAYS=0` o `FOUNDERS_OPEN=1`.
+
+**Entrada animada.** Al abrir la app (una vez por sesión) sale una animación de 3 segundos: el teléfono con la lista y el carrito que se llena. Se salta tocando la pantalla, y no aparece si el teléfono tiene "reducir movimiento".
 
 **Funciones inteligentes.**
 - *Te toca comprar*: cada vez que marcas algo como comprado, la app aprende cada cuánto lo compras. Cuando ya toca, aparece arriba de tu lista para agregarlo con un toque (✕ = ahora no). Funciona solo, sin costo.
@@ -186,7 +188,7 @@ Hazlo primero en **modo de prueba** de Stripe (Test mode) y, cuando todo funcion
 
 ## ¿Cómo sé que tengo la versión nueva?
 
-Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 2.5.0*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
+Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 2.8.0*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
 
 ## Cambiar algo después
 
