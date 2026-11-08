@@ -268,24 +268,52 @@
   let lastRecipes = null;
   const mins = n => n == null ? "" : n >= 60 ? Math.floor(n / 60) + " h" + (n % 60 ? " " + (n % 60) + " min" : "") : n + " min";
   const ingText = i => [i.qty, i.unit, i.name].filter(Boolean).join(" ");
-  // Imagen del plato: foto real (Wikipedia) o, si no hay una confiable, un diseño con el ingrediente principal.
+  // Imagen del plato: foto creada con IA (OpenAI) o foto de Wikipedia. Mientras se crea, un diseño con el ícono del plato.
+  const photoWait = {};
+  const aiSrc = id => "/api/recipe-photo?id=" + id;
+  function waitPhoto(r) {
+    const id = r.aiPhoto.id;
+    if (!photoWait[id]) photoWait[id] = (async () => {
+      const start = Date.now();
+      while (Date.now() - start < 180000) {
+        try {
+          const res = await fetch(aiSrc(id));
+          if (res.status === 200 && /^image\//.test(res.headers.get("content-type") || "")) { r.aiPhoto.ready = true; return true; }
+          const d = await res.json().catch(() => ({}));
+          if (d.state === "error" || (d.state === "none" && Date.now() - start > 25000)) return false;
+        } catch {}
+        await new Promise(ok => setTimeout(ok, 3000));
+      }
+      return false;
+    })();
+    return photoWait[id];
+  }
   function dishArt(r, cls) {
     const box = el("div", "dish " + cls);
     const pal = PALETTES[Math.abs([...r.title].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7)) % PALETTES.length];
     box.style.setProperty("--d1", pal[0]); box.style.setProperty("--d2", pal[1]);
-    const fallback = () => {
-      box.classList.add("no-photo");
+    const design = waiting => {
+      box.classList.add("no-photo"); box.classList.toggle("dish-wait", !!waiting);
       const em = el("span", "dish-emoji", r.emoji || "🍽️"); em.setAttribute("aria-hidden", "true");
       const deco = el("span", "dish-deco"); deco.setAttribute("aria-hidden", "true");
       const ems = r.ingredients.map(i => window.Products ? Products.emojiFor([], i.name) : "").filter(e => e && e !== "🛒" && e !== r.emoji);
       deco.textContent = [...new Set(ems)].slice(0, 4).join("  ");
-      box.replaceChildren(em, deco);
+      box.replaceChildren(em, waiting ? el("span", "dish-wait-txt", "📸 " + T("Preparando la foto…")) : deco);
     };
-    if (r.photo && r.photo.src) {
-      const img = el("img"); img.alt = r.title; img.loading = "lazy"; img.decoding = "async"; img.referrerPolicy = "no-referrer";
-      img.src = r.photo.src; img.onerror = fallback;
-      box.append(img);
-    } else fallback();
+    const show = (src, ai) => {
+      const img = el("img"); img.alt = r.title; img.decoding = "async"; img.referrerPolicy = "no-referrer";
+      img.onerror = () => design(false);
+      img.onload = () => box.classList.add("dish-loaded");
+      img.src = src;
+      box.classList.remove("no-photo", "dish-wait");
+      box.replaceChildren(img);
+      if (ai) box.append(el("span", "dish-ai", "✨ " + T("Imagen creada con IA")));
+    };
+    if (r.aiPhoto) {
+      if (r.aiPhoto.ready) show(aiSrc(r.aiPhoto.id), true);
+      else { design(true); waitPhoto(r).then(ok => { if (ok) show(aiSrc(r.aiPhoto.id), true); else design(false); }); }
+    } else if (r.photo && r.photo.src) show(r.photo.src, false);
+    else design(false);
     return box;
   }
   function metaRow(r) {
@@ -368,7 +396,8 @@
       r.tips.forEach(tp => { const d = el("div", "rv-tip"); d.append(el("span", "rv-tip-ico", "💡"), el("p", "", tp)); main.append(d); });
     }
     // Crédito de la foto (Wikimedia pide dar crédito)
-    if (r.photo && r.photo.src) {
+    if (r.aiPhoto) main.append(el("p", "rv-credit", "Imagen creada con IA para mostrar cómo puede quedar el plato."));
+    else if (r.photo && r.photo.src) {
       const c = el("p", "rv-credit");
       c.append(document.createTextNode(T("Foto:") + " " + r.photo.credit + (r.photo.license ? " · " + r.photo.license : "") + " · "));
       const a = el("a", "", "Wikimedia Commons"); a.href = r.photo.link || "https://commons.wikimedia.org"; a.target = "_blank"; a.rel = "noopener";

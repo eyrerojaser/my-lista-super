@@ -73,7 +73,12 @@ Queda un ícono propio en tu pantalla de inicio y se abre a pantalla completa, c
   2. Crea una API key (API Keys → Create key) y pégala en Netlify como variable **`ANTHROPIC_API_KEY`**. Nunca la pegues en un chat ni en GitHub.
   3. Opcional: **`AI_DAILY_LIMIT`** (usos por cuenta al día, 15 por defecto) y **`AI_MODEL`** (por defecto `claude-haiku-5-5`, el más económico).
   4. Deploys → Trigger deploy. Sin la variable, los botones de IA no aparecen y todo lo demás sigue igual.
-- *¿Qué cocino?* como recetario: tarjetas con foto, tiempo, porciones y dificultad; al tocar una se abre la ficha completa con ingredientes separados en *De tu inventario*, *Básicos de cocina* y *Te falta comprar* (botón para agregar lo que falta a tu lista), pasos numerados y consejos. La foto sale solo de Wikipedia/Wikimedia Commons cuando existe un artículo de ese plato con su foto, y se muestra el crédito del autor y la licencia. Si no hay una foto confiable, se muestra un diseño de color con el ícono del plato (nunca una foto inventada). Las fotos encontradas se guardan 30 días (almacén `recetas-fotos`).
+- *¿Qué cocino?* como recetario: tarjetas con foto, tiempo, porciones y dificultad; al tocar una se abre la ficha completa con ingredientes separados en *De tu inventario*, *Básicos de cocina* y *Te falta comprar* (botón para agregar lo que falta a tu lista), pasos numerados y consejos.
+- *Fotos de las recetas con IA (OpenAI)*: cada receta lleva una foto realista del plato creada con IA, con el letrero "Imagen creada con IA". Mientras se crea (unos segundos) la tarjeta dice "Preparando la foto…". Cada foto se crea una sola vez y se guarda (almacén `recetas-ia-fotos`): si otra persona recibe el mismo plato, se usa la misma foto sin volver a pagar. Para activarlas:
+  1. Crea una cuenta en platform.openai.com, agrega un método de pago y pon un **límite de gasto mensual** (Settings → Limits).
+  2. Crea una API key (API keys → Create new secret key) y pégala en Netlify como variable **`OPENAI_API_KEY`**. Nunca la pegues en un chat ni en GitHub.
+  3. Opcional: **`OPENAI_IMAGE_MODEL`** (por defecto `gpt-image-2`), **`OPENAI_IMAGE_QUALITY`** (`low`, `medium` o `high`; por defecto `medium`) y **`AI_PHOTOS_DAILY`** (fotos nuevas al día en toda la app, 300 por defecto).
+  4. Deploys → Trigger deploy. Sin la variable, la app usa la foto de Wikipedia cuando existe un artículo de ese plato.
 
 **Copia en la cuenta.** Todo lo importante se guarda solo en la cuenta de cada persona: Mi lista, Mis Compras (con las fotos de los recibos), Freezer/Refri/Despensa y los productos que agregó a las categorías. Cada cambio se sube a los pocos segundos y, al abrir la app, se trae lo más nuevo. Si alguien cambia de teléfono, borra la app o la instala en otro, entra con su correo y contraseña y aparece todo. En *Mi cuenta* se ve la hora de la última copia y el botón *Guardar ahora*. Si en un teléfono entra otra cuenta, los datos de la anterior se quitan de ese teléfono (siguen guardados en su cuenta). Se guarda en Netlify Blobs (almacén `respaldos`); no hay que configurar nada.
 
@@ -189,7 +194,7 @@ Hazlo primero en **modo de prueba** de Stripe (Test mode) y, cuando todo funcion
 
 ## ¿Cómo sé que tengo la versión nueva?
 
-Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 2.9.0*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
+Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 2.9.1*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
 
 ## Cambiar algo después
 

@@ -955,3 +955,11 @@ body.rv-open{overflow:hidden}
 .rv-credit a{color:inherit}
 .rv-ai{margin:6px 0 0;font-size:.72rem;color:var(--muted)}
 .dish-hero .dish-deco{bottom:34px}
+.dish img{opacity:0;transition:opacity .35s ease}.dish.dish-loaded img{opacity:1}
+.dish-wait::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.28) 50%,transparent 70%);background-size:220% 100%;animation:dishShine 1.4s linear infinite}
+@keyframes dishShine{from{background-position:120% 0}to{background-position:-120% 0}}
+@media (prefers-reduced-motion:reduce){.dish-wait::after{animation:none}.dish img{transition:none}}
+.dish-wait-txt{position:absolute;left:0;right:0;bottom:12px;text-align:center;font-size:.82rem;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.35)}
+.dish-hero .dish-wait-txt{bottom:36px}
+.dish-ai{position:absolute;right:8px;bottom:8px;padding:3px 8px;border-radius:999px;background:rgba(20,12,24,.55);color:#fff;font-size:.68rem;font-weight:700;backdrop-filter:blur(4px)}
+.dish-hero .dish-ai{bottom:32px}

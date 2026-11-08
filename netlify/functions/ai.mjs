@@ -1,5 +1,6 @@
 import { getStore } from "@netlify/blobs";
 import { readSession, json } from "../lib/auth-core.mjs";
+import { OPENAI, internalKey, photoId, photoState } from "../lib/dish-image.mjs";
 
 // Funciones inteligentes de NoPencil (con la IA de Claude, de Anthropic):
 //   · "list":    foto de una lista escrita en papel → productos para la lista
@@ -132,8 +133,9 @@ export default async (req) => {
         "- prep_min and cook_min are whole minutes; servings is a number; difficulty is easy, medium or hard.\n" +
         "- photo_wiki: the exact English Wikipedia article title of this dish ONLY if it is a well-known, specific named dish with its own article (e.g. 'Chilaquiles', 'Fried rice', 'Shepherd\'s pie'); otherwise null. Never guess a title.\n" +
         "- emoji: one food emoji that represents the main ingredient.\n" +
+        "- look: in English, one sentence describing what the finished plated dish looks like (colors, textures, garnish, serving dish), for a food photographer.\n" +
         "Write title, description, ingredient names, steps and tips in " + lang + ".\n" +
-        'Answer ONLY with JSON: {"recipes":[{"title":"","description":"one or two sentences","emoji":"🍗","prep_min":10,"cook_min":25,"servings":4,"difficulty":"easy","ingredients":[{"name":"chicken breast","qty":"1","unit":"lb","have":true,"basic":false}],"steps":["..."],"tips":["..."],"photo_wiki":null}]}' }], 4000);
+        'Answer ONLY with JSON: {"recipes":[{"title":"","description":"one or two sentences","emoji":"🍗","prep_min":10,"cook_min":25,"servings":4,"difficulty":"easy","ingredients":[{"name":"chicken breast","qty":"1","unit":"lb","have":true,"basic":false}],"steps":["..."],"tips":["..."],"look":"","photo_wiki":null}]}' }], 4000);
       const DIFF = { easy: 1, medium: 2, hard: 3 };
       const num = (v, lo, hi) => { const n = Math.round(+v); return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : null; };
       const recipes = (Array.isArray(out.recipes) ? out.recipes : []).slice(0, 4).map(r => ({
@@ -146,9 +148,29 @@ export default async (req) => {
         steps: (Array.isArray(r.steps) ? r.steps : []).slice(0, 12).map(x => clean(x, 400)).filter(Boolean),
         tips: (Array.isArray(r.tips) ? r.tips : []).slice(0, 4).map(x => clean(x, 240)).filter(Boolean),
         wiki: typeof r.photo_wiki === "string" ? clean(r.photo_wiki, 80) : "",
+        look: clean(r.look, 300),
       })).filter(r => r.title && r.steps.length && r.ingredients.length);
       // Foto real del plato: solo si Wikipedia tiene un artículo de ese plato con su foto. Si no, la app muestra un diseño sin foto.
-      await Promise.all(recipes.map(async r => { r.photo = r.wiki ? await dishPhoto(r.wiki) : null; delete r.wiki; }));
+      if (OPENAI()) {
+        // Foto creada con IA (OpenAI) para cada receta. Se crea en segundo plano y la app la muestra cuando está lista.
+        const pending = [];
+        await Promise.all(recipes.map(async r => {
+          const id = photoId(r.title), st = await photoState(id).catch(() => null);
+          r.aiPhoto = { id, ready: st === "ready" };
+          if (!st) pending.push({ id, title: r.title, look: r.look, ingredients: r.ingredients.filter(i => !i.basic).map(i => i.name) });
+        }));
+        if (pending.length) {
+          try {
+            await fetch(new URL("/.netlify/functions/recipe-photo-background", req.url), {
+              method: "POST", headers: { "Content-Type": "application/json", "x-np-key": internalKey() }, body: JSON.stringify({ photos: pending }),
+            });
+          } catch (e) { console.error("no se pudo pedir la foto", e.message); }
+        }
+        recipes.forEach(r => { r.photo = null; delete r.wiki; delete r.look; });
+      } else {
+        // Sin OpenAI: foto de Wikipedia si existe un artículo de ese plato.
+        await Promise.all(recipes.map(async r => { r.photo = r.wiki ? await dishPhoto(r.wiki) : null; delete r.wiki; delete r.look; }));
+      }
       return json({ recipes });
     }
   } catch (e) {
