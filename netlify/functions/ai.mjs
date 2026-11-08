@@ -12,12 +12,13 @@ const MODEL = () => process.env.AI_MODEL || "claude-haiku-5-5";
 const LIMIT = () => Math.max(1, +(process.env.AI_DAILY_LIMIT || 15));
 const MAX_IMG = 4_000_000; // base64
 
+const CHEF_LIMIT = () => Math.max(1, +(process.env.AI_CHEF_DAILY || 40)); // mensajes con la chef al día
 const PRICE_LIMIT = () => Math.max(1, +(process.env.AI_PRICE_DAILY || 100)); // lecturas de precio al día (son muy baratas)
 async function useQuota(uid, kind) {
   const s = getStore({ name: "ia-uso", consistency: "strong" });
   const day = new Date().toISOString().slice(0, 10), key = uid + "/" + (kind ? kind + "/" : "") + day;
   const n = (await s.get(key, { type: "json" })) || 0;
-  if (n >= (kind === "price" ? PRICE_LIMIT() : LIMIT())) return false;
+  if (n >= (kind === "price" ? PRICE_LIMIT() : kind === "chef" ? CHEF_LIMIT() : LIMIT())) return false;
   await s.setJSON(key, n + 1);
   return true;
 }
@@ -83,6 +84,59 @@ async function dishPhoto(title) {
 
 const clean = (s, n) => String(s || "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, n);
 
+
+/* ---------- recetas: reglas, limpieza y fotos (las usan "¿Qué cocino?" y la chef) ---------- */
+const recipeRules = en =>
+  "- Use first the items with the fewest days left. Never use items marked expired.\n" +
+  "- Inventory names may be long store/brand names (e.g. 'HEB Whole Milk 1 Gal', 'Philadelphia Original Cream Cheese 8oz'). ALWAYS write them with their common name (milk, cream cheese, ham, ground beef) in the ingredients and steps, never the brand or package text. Keep only what matters to identify it (e.g. 'whole milk', 'cream cheese').\n" +
+  "- Ingredients: exact quantities with units (US kitchen units: cup, tbsp, tsp, oz, lb, or units like '2 eggs'). Mark each ingredient: have=true if it comes from the inventory above, basic=true if it is a common pantry staple most homes have (salt, pepper, oil, water, sugar, flour, basic spices, garlic, onion), otherwise both false (the family must buy it).\n" +
+  "- Steps: detailed, clear, one action per step, 5 to 9 steps, with temperatures and times when relevant.\n" +
+  "- Tips: 1 to 3 short, genuinely useful cooking tips (substitutions, storage, how to know it is done). Empty list if none.\n" +
+  "- prep_min and cook_min are whole minutes; servings is a number; difficulty is easy, medium or hard.\n" +
+  "- photo_wiki: the exact English Wikipedia article title of this dish ONLY if it is a well-known, specific named dish with its own article (e.g. 'Chilaquiles', 'Fried rice', 'Shepherd\'s pie'); otherwise null. Never guess a title.\n" +
+  "- emoji: one food emoji that represents the main ingredient.\n" +
+  "- look: in English, one sentence describing what the finished plated dish looks like (colors, textures, garnish, serving dish), for a food photographer.\n" +
+  "Write title, description, ingredient names, steps and tips in " + (en ? "English" : "Spanish (Latin American, warm and simple)") + ".\n";
+const RECIPE_JSON = '{"title":"","description":"one or two sentences","emoji":"🍗","prep_min":10,"cook_min":25,"servings":4,"difficulty":"easy","ingredients":[{"name":"chicken breast","qty":"1","unit":"lb","have":true,"basic":false}],"steps":["..."],"tips":["..."],"look":"","photo_wiki":null}';
+const DIFF = { easy: 1, medium: 2, hard: 3 };
+const numIn = (v, lo, hi) => { const n = Math.round(+v); return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : null; };
+function normRecipes(arr) {
+  return (Array.isArray(arr) ? arr : []).slice(0, 4).map(r => ({
+    title: clean(r.title, 90), description: clean(r.description, 260), emoji: clean(r.emoji, 8),
+    prep: numIn(r.prep_min, 0, 600), cook: numIn(r.cook_min, 0, 900), servings: numIn(r.servings, 1, 24),
+    difficulty: DIFF[String(r.difficulty || "").toLowerCase()] || null,
+    ingredients: (Array.isArray(r.ingredients) ? r.ingredients : []).slice(0, 25).map(i => ({
+      name: clean(i && i.name, 70), qty: clean(i && i.qty, 12), unit: clean(i && i.unit, 16), have: !!(i && i.have), basic: !!(i && i.basic) && !(i && i.have),
+    })).filter(i => i.name),
+    steps: (Array.isArray(r.steps) ? r.steps : []).slice(0, 12).map(x => clean(x, 400)).filter(Boolean),
+    tips: (Array.isArray(r.tips) ? r.tips : []).slice(0, 4).map(x => clean(x, 240)).filter(Boolean),
+    wiki: typeof r.photo_wiki === "string" ? clean(r.photo_wiki, 80) : "",
+    look: clean(r.look, 300),
+  })).filter(r => r.title && r.steps.length && r.ingredients.length);
+}
+async function attachPhotos(recipes, req) {
+  if (OPENAI()) {
+    // Foto creada con IA (OpenAI) para cada receta. Se crea en segundo plano y la app la muestra cuando está lista.
+    const pending = [];
+    await Promise.all(recipes.map(async r => {
+      const id = photoId(r.title), st = await photoState(id).catch(() => null);
+      r.aiPhoto = { id, ready: st === "ready" };
+      if (!st) pending.push({ id, title: r.title, look: r.look, ingredients: r.ingredients.filter(i => !i.basic).map(i => i.name) });
+    }));
+    if (pending.length) {
+      try {
+        await fetch(new URL("/.netlify/functions/recipe-photo-background", req.url), {
+          method: "POST", headers: { "Content-Type": "application/json", "x-np-key": internalKey() }, body: JSON.stringify({ photos: pending }),
+        });
+      } catch (e) { console.error("no se pudo pedir la foto", e.message); }
+    }
+    recipes.forEach(r => { r.photo = null; delete r.wiki; delete r.look; });
+  } else {
+    // Sin OpenAI: foto de Wikipedia si existe un artículo de ese plato.
+    await Promise.all(recipes.map(async r => { r.photo = r.wiki ? await dishPhoto(r.wiki) : null; delete r.wiki; delete r.look; }));
+  }
+}
+
 export default async (req) => {
   if (req.method === "GET") return json({ on: !!KEY() });
   if (req.method !== "POST") return json({ error: "Método no permitido" }, 405);
@@ -142,6 +196,44 @@ export default async (req) => {
       });
     }
 
+    if (b.action === "chef") {
+      // Conversación con la chef de "¿Qué cocino?": responde, sugiere respuestas y, cuando ya sabe qué quieres, da recetas.
+      const items = (Array.isArray(b.items) ? b.items : []).slice(0, 60)
+        .map(i => ({ name: clean(i.name, 80), days: Number.isFinite(+i.days) ? Math.round(+i.days) : null, place: clean(i.place, 12) }))
+        .filter(i => i.name);
+      const hist = (Array.isArray(b.history) ? b.history : []).slice(-14)
+        .map(m => ({ who: m && m.who === "me" ? "me" : "chef", text: clean(m && m.text, 500) })).filter(m => m.text);
+      if (!hist.some(m => m.who === "me")) return json({ error: "empty" }, 400);
+      if (!(await useQuota(user.uid, "chef"))) return json({ error: "limit" }, 429);
+      const PLACE = { freezer: "Freezer", refri: "Fridge", despensa: "Pantry" };
+      const inv = items.length ? items.map(i => "- " + i.name + " [" + (PLACE[i.place] || i.place || "Freezer") + "]" + (i.days !== null ? " (" + (i.days < 0 ? "expired" : i.days + " days left") + ")" : "")).join("\n") : "(empty: they have not added anything yet)";
+      const name = clean(b.name, 30);
+      const lang = en ? "English" : "Spanish (Latin American, warm, simple, using 'tú')";
+      const out = await claude([{ type: "text", text:
+        "You are the friendly virtual chef inside NoPencil, a grocery list app. You talk with " + (name || "the user") + " to decide what to cook today, like a warm, cheerful friend who cooks very well.\n" +
+        "Their real kitchen inventory from the app:\n" + inv + "\n\n" +
+        "Conversation so far:\n" + hist.map(m => (m.who === "me" ? "USER: " : "CHEF: ") + m.text).join("\n") + "\n\n" +
+        "Write the CHEF's next message. Rules:\n" +
+        "- Reply in " + lang + ". 1 to 3 short sentences, natural and warm, at most one emoji. Never mention being an AI or JSON.\n" +
+        "- Ask at most one question per message, and at most two questions in the whole conversation before suggesting recipes.\n" +
+        "- Suggest recipes right away when the user asks you to check their Freezer, fridge or pantry, wants something quick, is not in the mood to cook, names a dish or ingredient, or after you already asked a question.\n" +
+        "- If they ask about a place (Freezer, fridge, pantry), base the recipes mainly on the items in that place, plus anything else they have. Prefer items with fewer days left; never use expired items.\n" +
+        "- Quick means 25 minutes or less in total. Not in the mood means very few steps and little cleanup.\n" +
+        "- If the inventory is empty or does not fit what they want, say so kindly and still suggest recipes, marking what they need to buy.\n" +
+        "- When you suggest, put 2 or 3 recipes in recipes and your message just introduces them briefly (do not list them in the text). Otherwise recipes is an empty list.\n" +
+        "- If they ask to change the ideas (faster, no meat, other ideas…), suggest new recipes.\n" +
+        "- chips: 2 to 4 short answers the user might tap next (max 5 words each), in the same language.\n" +
+        "Recipe rules (only when you include recipes):\n" + recipeRules(en) +
+        'Answer ONLY with JSON: {"reply":"","chips":[""],"recipes":[' + RECIPE_JSON + ']}' }], 4000);
+      const recipes = normRecipes(out.recipes).slice(0, 3);
+      await attachPhotos(recipes, req);
+      return json({
+        reply: clean(out.reply, 600) || (en ? "Here are some ideas for you!" : "¡Aquí tienes unas ideas!"),
+        chips: (Array.isArray(out.chips) ? out.chips : []).slice(0, 4).map(x => clean(x, 40)).filter(Boolean),
+        recipes,
+      });
+    }
+
     if (b.action === "recipes") {
       const items = (Array.isArray(b.items) ? b.items : []).slice(0, 60)
         .map(i => ({ name: clean(i.name, 80), days: Number.isFinite(+i.days) ? Math.round(+i.days) : null, place: clean(i.place, 12) }))
@@ -149,60 +241,17 @@ export default async (req) => {
       if (!items.length) return json({ error: "empty" }, 400);
       if (!(await useQuota(user.uid))) return json({ error: "limit" }, 429);
       const list = items.map(i => "- " + i.name + (i.days !== null ? " (" + (i.days < 0 ? "expired" : i.days + " days left") + ")" : "") + (i.place ? " [" + i.place + "]" : "")).join("\n");
-      const lang = en ? "English" : "Spanish (Latin American, warm and simple)";
       const out = await claude([{ type: "text", text:
         "You are a professional home-cooking recipe writer helping a family use the food they have before it goes bad.\n" +
         "Their inventory (Freezer / Fridge / Pantry):\n" + list + "\n\n" +
-        "Write 3 different, easy home recipes like a well-edited cookbook. Rules:\n" +
-        "- Use first the items with the fewest days left. Never use items marked expired.\n" +
-        "- Inventory names may be long store/brand names (e.g. 'HEB Whole Milk 1 Gal', 'Philadelphia Original Cream Cheese 8oz'). ALWAYS write them with their common name (milk, cream cheese, ham, ground beef) in the ingredients and steps, never the brand or package text. Keep only what matters to identify it (e.g. 'whole milk', 'cream cheese').\n" +
-        "- Ingredients: exact quantities with units (US kitchen units: cup, tbsp, tsp, oz, lb, or units like '2 eggs'). Mark each ingredient: have=true if it comes from the inventory above, basic=true if it is a common pantry staple most homes have (salt, pepper, oil, water, sugar, flour, basic spices, garlic, onion), otherwise both false (the family must buy it).\n" +
-        "- Steps: detailed, clear, one action per step, 5 to 9 steps, with temperatures and times when relevant.\n" +
-        "- Tips: 1 to 3 short, genuinely useful cooking tips (substitutions, storage, how to know it is done). Empty list if none.\n" +
-        "- prep_min and cook_min are whole minutes; servings is a number; difficulty is easy, medium or hard.\n" +
-        "- photo_wiki: the exact English Wikipedia article title of this dish ONLY if it is a well-known, specific named dish with its own article (e.g. 'Chilaquiles', 'Fried rice', 'Shepherd\'s pie'); otherwise null. Never guess a title.\n" +
-        "- emoji: one food emoji that represents the main ingredient.\n" +
-        "- look: in English, one sentence describing what the finished plated dish looks like (colors, textures, garnish, serving dish), for a food photographer.\n" +
-        "Write title, description, ingredient names, steps and tips in " + lang + ".\n" +
-        'Answer ONLY with JSON: {"recipes":[{"title":"","description":"one or two sentences","emoji":"🍗","prep_min":10,"cook_min":25,"servings":4,"difficulty":"easy","ingredients":[{"name":"chicken breast","qty":"1","unit":"lb","have":true,"basic":false}],"steps":["..."],"tips":["..."],"look":"","photo_wiki":null}]}' }], 4000);
-      const DIFF = { easy: 1, medium: 2, hard: 3 };
-      const num = (v, lo, hi) => { const n = Math.round(+v); return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : null; };
-      const recipes = (Array.isArray(out.recipes) ? out.recipes : []).slice(0, 4).map(r => ({
-        title: clean(r.title, 90), description: clean(r.description, 260), emoji: clean(r.emoji, 8),
-        prep: num(r.prep_min, 0, 600), cook: num(r.cook_min, 0, 900), servings: num(r.servings, 1, 24),
-        difficulty: DIFF[String(r.difficulty || "").toLowerCase()] || null,
-        ingredients: (Array.isArray(r.ingredients) ? r.ingredients : []).slice(0, 25).map(i => ({
-          name: clean(i && i.name, 70), qty: clean(i && i.qty, 12), unit: clean(i && i.unit, 16), have: !!(i && i.have), basic: !!(i && i.basic) && !(i && i.have),
-        })).filter(i => i.name),
-        steps: (Array.isArray(r.steps) ? r.steps : []).slice(0, 12).map(x => clean(x, 400)).filter(Boolean),
-        tips: (Array.isArray(r.tips) ? r.tips : []).slice(0, 4).map(x => clean(x, 240)).filter(Boolean),
-        wiki: typeof r.photo_wiki === "string" ? clean(r.photo_wiki, 80) : "",
-        look: clean(r.look, 300),
-      })).filter(r => r.title && r.steps.length && r.ingredients.length);
-      // Foto real del plato: solo si Wikipedia tiene un artículo de ese plato con su foto. Si no, la app muestra un diseño sin foto.
-      if (OPENAI()) {
-        // Foto creada con IA (OpenAI) para cada receta. Se crea en segundo plano y la app la muestra cuando está lista.
-        const pending = [];
-        await Promise.all(recipes.map(async r => {
-          const id = photoId(r.title), st = await photoState(id).catch(() => null);
-          r.aiPhoto = { id, ready: st === "ready" };
-          if (!st) pending.push({ id, title: r.title, look: r.look, ingredients: r.ingredients.filter(i => !i.basic).map(i => i.name) });
-        }));
-        if (pending.length) {
-          try {
-            await fetch(new URL("/.netlify/functions/recipe-photo-background", req.url), {
-              method: "POST", headers: { "Content-Type": "application/json", "x-np-key": internalKey() }, body: JSON.stringify({ photos: pending }),
-            });
-          } catch (e) { console.error("no se pudo pedir la foto", e.message); }
-        }
-        recipes.forEach(r => { r.photo = null; delete r.wiki; delete r.look; });
-      } else {
-        // Sin OpenAI: foto de Wikipedia si existe un artículo de ese plato.
-        await Promise.all(recipes.map(async r => { r.photo = r.wiki ? await dishPhoto(r.wiki) : null; delete r.wiki; delete r.look; }));
-      }
+        "Write 3 different, easy home recipes like a well-edited cookbook. Rules:\n" + recipeRules(en) +
+        'Answer ONLY with JSON: {"recipes":[' + RECIPE_JSON + ']}' }], 4000);
+      const recipes = normRecipes(out.recipes);
+      await attachPhotos(recipes, req);
       return json({ recipes });
     }
   } catch (e) {
+    console.error("ai fail", b && b.action, e && e.message);
     return json({ error: "fail" }, 502);
   }
   return json({ error: "Acción desconocida" }, 400);

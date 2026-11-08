@@ -50,11 +50,78 @@
     }
     return out.sort((a, b) => b.ratio - a.ratio).slice(0, 6);
   }
+  /* --- Día de compras con el muñequito de NoPencil --- */
+  const SDKEY = "shop-day-v1";
+  const shopCfg = () => { const c = readJSON(SDKEY, null) || {}; return { days: Array.isArray(c.days) ? c.days.filter(d => d >= 0 && d <= 6) : [], hide: c.hide || "" }; };
+  const shopSave = c => { try { localStorage.setItem(SDKEY, JSON.stringify(c)); } catch {} };
+  const todayKey = () => { const d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); };
+  const isShopDay = () => shopCfg().days.includes(new Date().getDay());
+  const dayName = (d, style) => new Date(2024, 0, 7 + d).toLocaleDateString(window.I18N ? I18N.loc() : "es-US", { weekday: style || "long" });
+  const MASCOT_SVG = `<svg class="mascot-svg" viewBox="0 0 280 170" aria-hidden="true">
+    <g class="ms-ground"><path d="M-40 160h400" stroke="rgba(42,22,54,.12)" stroke-width="3" stroke-dasharray="16 14" stroke-linecap="round"/></g>
+    <ellipse cx="140" cy="160" rx="112" ry="6" fill="rgba(42,22,54,.12)"/>
+    <g class="ms-walker">
+      <g class="ms-leg ms-leg-b"><path d="M70 120v30" stroke="#2A1636" stroke-width="9" stroke-linecap="round"/><ellipse cx="74" cy="154" rx="9" ry="5" fill="#2A1636"/></g>
+      <g class="ms-cart">
+        <g class="ms-goods">
+          <rect class="g1" x="140" y="44" width="14" height="40" rx="3" fill="#fff" stroke="#C9BBD6" stroke-width="2"/><rect x="140" y="44" width="14" height="10" rx="3" fill="#58B9E6"/>
+          <ellipse class="g2" cx="178" cy="58" rx="8" ry="26" transform="rotate(28 178 58)" fill="#E8B062"/><path d="M172 44l6 3M168 52l6 3M164 60l6 3" stroke="#B87A3E" stroke-width="2" stroke-linecap="round" transform="rotate(28 178 58) translate(4 0)"/>
+          <circle class="g3" cx="200" cy="74" r="12" fill="#E5484D"/><path d="M200 62q2-6 7-6" stroke="#3FA35B" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path class="g4" d="M214 52c10-8 22-2 20 10-2 10-16 16-26 10" fill="#3FA35B"/><path d="M216 70l12-12" stroke="#2B7A43" stroke-width="2"/>
+          <path class="g5" d="M158 70l14-8 14 8-14 8z" fill="#FFC870"/>
+        </g>
+        <path d="M118 66h134l-18 52H136z" fill="#FF9A45"/>
+        <path d="M150 76l-4 32M178 76l-3 32M206 76l-2 32M232 76l-4 30" stroke="rgba(42,22,54,.28)" stroke-width="5" stroke-linecap="round"/>
+        <path d="M100 52h18l18 66h98" fill="none" stroke="#FFF4E4" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M100 52h18l18 66h98" fill="none" stroke="#2A1636" stroke-width="2" stroke-opacity=".15" stroke-linecap="round" stroke-linejoin="round"/>
+        <g class="ms-wheel" style="transform-origin:150px 140px"><circle cx="150" cy="140" r="11" fill="#FFB23F" stroke="#2A1636" stroke-width="3"/><path d="M150 132v16M142 140h16" stroke="#2A1636" stroke-width="2.5"/></g>
+        <g class="ms-wheel" style="transform-origin:222px 140px"><circle cx="222" cy="140" r="11" fill="#FFB23F" stroke="#2A1636" stroke-width="3"/><path d="M222 132v16M214 140h16" stroke="#2A1636" stroke-width="2.5"/></g>
+      </g>
+      <g class="ms-body">
+        <path d="M52 86c0-14 10-22 22-22s22 8 22 22v34H52z" fill="#5A2A6E"/>
+        <path d="M60 78h28" stroke="#FFB23F" stroke-width="4" stroke-linecap="round"/>
+        <g class="ms-arm"><path d="M84 84q12 0 18-30" stroke="#5A2A6E" stroke-width="10" fill="none" stroke-linecap="round"/><circle cx="102" cy="52" r="6.5" fill="#F2C29B"/></g>
+        <g class="ms-head">
+          <circle cx="74" cy="44" r="24" fill="#F2C29B"/>
+          <path d="M50 40c0-16 11-26 26-26 13 0 22 8 23 20H50z" fill="#FF9A45"/>
+          <path d="M92 33h18a3 3 0 0 1 0 6H96z" fill="#E66A22"/>
+          <circle cx="76" cy="18" r="4" fill="#FFB23F"/>
+          <g class="ms-eyes"><g class="ms-eye"><ellipse cx="70" cy="46" rx="3.6" ry="4.6" fill="#2A1636"/><circle cx="71.2" cy="44.4" r="1.3" fill="#fff"/></g><g class="ms-eye"><ellipse cx="86" cy="46" rx="3.6" ry="4.6" fill="#2A1636"/><circle cx="87.2" cy="44.4" r="1.3" fill="#fff"/></g></g>
+          <circle cx="64" cy="55" r="4.5" fill="#F49A9A" opacity=".6"/><circle cx="92" cy="55" r="4.5" fill="#F49A9A" opacity=".6"/>
+          <path class="ms-smile" d="M71 56q7 7 14 0" stroke="#7A2E2E" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+          <path class="ms-grin" d="M70 55q8 11 16 0z" fill="#7A2E2E"/>
+        </g>
+      </g>
+      <g class="ms-leg ms-leg-f"><path d="M78 120v30" stroke="#3A1A48" stroke-width="9" stroke-linecap="round"/><ellipse cx="82" cy="154" rx="9" ry="5" fill="#3A1A48"/></g>
+    </g>
+  </svg>`;
+  let walkedIn = false;
+  function mascot(cls) { const m = el("div", "mascot " + (cls || "")); m.innerHTML = MASCOT_SVG; return m; }
+  function shopBanner() {
+    const cfg = shopCfg(), tk = todayKey();
+    const box = el("div", "shop-day");
+    // Cada vez que abres la app en tu día de compras, el muñequito entra caminando (cuando se ve en pantalla).
+    const m = mascot("walking");
+    if (!walkedIn) {
+      const io = "IntersectionObserver" in window ? new IntersectionObserver(es => { if (es.some(e => e.isIntersecting) && !walkedIn) { walkedIn = true; m.classList.add("walk-in"); io.disconnect(); } }, { threshold: 0.6 }) : null;
+      if (io) io.observe(m); else walkedIn = true;
+    }
+    const txt = el("div", "shop-day-txt");
+    const n = (window.MiLista ? MiLista.getItems() : []).filter(i => !i.done).length;
+    txt.append(el("b", "", en() ? "It's shopping day! Let's go to the market!" : "¡Hoy es día de compras! ¡Vamos al Market!"),
+      el("small", "", n ? (en() ? n + (n === 1 ? " item" : " items") + " on your list" : n + (n === 1 ? " producto" : " productos") + " en tu lista") : (en() ? "Your list is empty: add what you need" : "Tu lista está vacía: agrega lo que necesitas")));
+    const x = el("button", "shop-day-x", "✕"); x.type = "button"; x.setAttribute("aria-label", T("Ahora no"));
+    x.onclick = () => { const c = shopCfg(); c.hide = tk; shopSave(c); renderCard(); };
+    box.append(m, txt, x);
+    return box;
+  }
   function renderCard() {
     const card = $("smartCard"); if (!card) return;
     const list = suggestions();
-    card.classList.toggle("hidden", !list.length);
-    if (!list.length) { card.replaceChildren(); return; }
+    const banner = isShopDay() && shopCfg().hide !== todayKey();
+    card.classList.toggle("hidden", !list.length && !banner);
+    if (!list.length && !banner) { card.replaceChildren(); return; }
+    if (!list.length) { card.replaceChildren(shopBanner()); return; }
     const head = el("div", "smart-head");
     head.append(el("span", "smart-ico", "💡"), el("b", "", "Te toca comprar"), el("small", "", "Según cada cuánto lo compras"));
     const chips = el("div", "smart-chips");
@@ -72,7 +139,7 @@
       chip.append(add, x);
       chips.append(chip);
     });
-    card.replaceChildren(head, chips);
+    card.replaceChildren(...(banner ? [shopBanner()] : []), head, chips);
   }
   window.Habitos = { bought, render: renderCard, suggestions };
 
@@ -409,16 +476,170 @@
     rv.scrollTop = 0; back.focus();
   }
   document.addEventListener("keydown", e => { if (e.key === "Escape" && rv) { e.stopImmediatePropagation(); closeRecipe(); } }, true);
-  $("cookBtn").onclick = async () => {
-    const items = freezerItems();
-    if (!items.length) { toast(T("Agrega productos al Freezer, Refri o Despensa primero")); return; }
-    loading("Buscando recetas…", "Con lo que tienes, empezando por lo que vence primero");
-    let recipes;
-    try { recipes = (await ai({ action: "recipes", items })).recipes || []; } catch (err) { aiError(err); return; }
-    if (!recipes.length) { aiError(new Error("fail")); return; }
+  /* --- ¿Qué cocino? con la chef: conversación hasta elegir la receta --- */
+  const CHEF_SVG = `<svg class="chef-svg" viewBox="0 0 200 230" aria-hidden="true">
+    <defs><linearGradient id="chefHat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#EDE6F2"/></linearGradient></defs>
+    <ellipse cx="100" cy="222" rx="58" ry="7" fill="rgba(42,22,54,.15)"/>
+    <g class="ch-body">
+      <path d="M44 226c0-40 22-62 56-62s56 22 56 62z" fill="#fff" stroke="#E4DCEA" stroke-width="2"/>
+      <path d="M80 166l20 22 20-22c-6-3-13-4-20-4s-14 1-20 4z" fill="#FF8A3D"/>
+      <path d="M100 188l-9 14h18z" fill="#E66A22"/>
+      <circle cx="88" cy="204" r="3" fill="#C9BBD6"/><circle cx="112" cy="204" r="3" fill="#C9BBD6"/>
+      <circle cx="88" cy="218" r="3" fill="#C9BBD6"/><circle cx="112" cy="218" r="3" fill="#C9BBD6"/>
+      <g class="ch-arm"><path d="M150 196c10-8 16-22 14-36" fill="none" stroke="#fff" stroke-width="16" stroke-linecap="round"/><path d="M150 196c10-8 16-22 14-36" fill="none" stroke="#E4DCEA" stroke-width="2" stroke-dasharray="1 0"/>
+        <circle cx="164" cy="156" r="9" fill="#F2C29B"/><g class="ch-spoon"><rect x="161" y="108" width="6" height="44" rx="3" fill="#B87A3E"/><ellipse cx="164" cy="104" rx="10" ry="13" fill="#C98A4A"/></g></g>
+    </g>
+    <g class="ch-head">
+      <path d="M58 92c-6 18-4 44 4 58 6-10 8-30 8-46z M142 92c6 18 4 44-4 58-6-10-8-30-8-46z" fill="#4A2A1E"/>
+      <circle cx="100" cy="112" r="44" fill="#F2C29B"/>
+      <path d="M58 98c8-14 24-22 42-22s34 8 42 22c-14-6-28-8-42-8s-28 2-42 8z" fill="#4A2A1E"/>
+      <g class="ch-hat"><path d="M62 82h76l-4-22H66z" fill="url(#chefHat)" stroke="#E4DCEA" stroke-width="2"/>
+        <circle cx="72" cy="48" r="20" fill="#fff"/><circle cx="100" cy="36" r="24" fill="#fff"/><circle cx="128" cy="48" r="20" fill="#fff"/>
+        <rect x="62" y="72" width="76" height="12" rx="4" fill="#FFB23F"/></g>
+      <g class="ch-brows"><path d="M76 98q8-5 16 0" stroke="#4A2A1E" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M108 98q8-5 16 0" stroke="#4A2A1E" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>
+      <g class="ch-eyes"><g class="ch-eye"><ellipse cx="84" cy="112" rx="5.5" ry="7" fill="#2A1636"/><circle cx="86" cy="109" r="2" fill="#fff"/></g>
+        <g class="ch-eye"><ellipse cx="116" cy="112" rx="5.5" ry="7" fill="#2A1636"/><circle cx="118" cy="109" r="2" fill="#fff"/></g></g>
+      <circle cx="72" cy="128" r="7" fill="#F49A9A" opacity=".55"/><circle cx="128" cy="128" r="7" fill="#F49A9A" opacity=".55"/>
+      <path class="ch-smile" d="M88 132q12 12 24 0" stroke="#7A2E2E" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <path class="ch-grin" d="M86 130q14 18 28 0z" fill="#7A2E2E"/>
+      <ellipse class="ch-talk" cx="100" cy="134" rx="8" ry="6" fill="#7A2E2E"/>
+    </g>
+  </svg>`;
+  let chat = null;
+  function chefFace(mode) { if (chat) { chat.stage.dataset.mode = mode; } }
+  function closeChef() { if (chat) { chat.box.remove(); chat = null; if (!rv) document.body.classList.remove("rv-open"); } }
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && chat && !rv) { e.stopImmediatePropagation(); closeChef(); } }, true);
+
+  function greetText() {
+    const h = new Date().getHours(), u = window.MiCuenta && MiCuenta.user && MiCuenta.user();
+    const nm = u && u.name ? String(u.name).trim().split(/\s+/)[0] : "";
+    const g = en() ? (h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening") : (h < 12 ? "¡Buenos días" : h < 19 ? "¡Buenas tardes" : "¡Buenas noches");
+    return en() ? g + (nm ? ", " + nm : "") + "! I'm your chef. What are we cooking today?" : g + (nm ? ", " + nm : "") + "! Soy tu chef. ¿Qué vamos a cocinar hoy?";
+  }
+  const CHEF_ASK = () => en()
+    ? ["Do you want to make something quick?", "Not really in the mood to cook?", "Want me to check your Freezer?", "What would you like to make today?"]
+    : ["¿Quieres preparar algo rápido?", "¿No tienes muchas ganas de cocinar?", "¿Quieres que revise tu Freezer?", "¿Qué te gustaría preparar hoy?"];
+  const START_CHIPS = () => en()
+    ? [["⚡ Something quick", "quick"], ["😴 Not in the mood", "lazy"], ["🧊 Check my Freezer", "freezer"], ["🥫 Check fridge & pantry", "refri"]]
+    : [["⚡ Algo rápido", "quick"], ["😴 No tengo ganas", "lazy"], ["🧊 Revisa mi Freezer", "freezer"], ["🥫 Revisa refri y despensa", "refri"]];
+
+  function openChef() {
+    closeSheet(); closeChef();
+    const box = el("section", "chef-chat"); box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-label", T("¿Qué cocino?"));
+    const head = el("header", "chef-head");
+    const back = el("button", "rv-back chef-back"); back.type = "button"; back.setAttribute("aria-label", T("Cerrar"));
+    back.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>';
+    back.onclick = closeChef;
+    const stage = el("div", "chef-stage"); stage.innerHTML = CHEF_SVG; stage.dataset.mode = "wave";
+    const ht = el("div", "chef-htxt"); ht.append(el("b", "", "Tu chef"), el("small", "", "Recetas con lo que tienes"));
+    head.append(back, stage, ht);
+    const log = el("div", "chef-log"); log.setAttribute("aria-live", "polite");
+    const chips = el("div", "chef-chips");
+    const form = el("form", "chef-form"); form.autocomplete = "off";
+    const inp = el("input"); inp.type = "text"; inp.placeholder = T("Escríbele a tu chef…"); inp.enterKeyHint = "send"; inp.setAttribute("aria-label", T("Escríbele a tu chef…"));
+    const send = el("button", "chef-send"); send.type = "submit"; send.setAttribute("aria-label", T("Enviar"));
+    send.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+    form.append(inp, send);
+    form.onsubmit = e => { e.preventDefault(); const t = inp.value.trim(); if (!t || chat.busy) return; inp.value = ""; userSays(t); };
+    box.append(head, log, chips, form);
+    document.body.append(box); document.body.classList.add("rv-open");
+    chat = { box, stage, log, chips, inp, history: [], busy: false };
+    chefSays(greetText(), null, 300).then(() => {
+      if (!chat) return;
+      const asks = CHEF_ASK();
+      chefSays(asks[Math.floor(Math.random() * asks.length)], START_CHIPS(), 700);
+    });
+  }
+
+  const scrollLog = () => { if (chat) chat.log.scrollTo({ top: chat.log.scrollHeight, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); };
+  function setChips(list) {
+    if (!chat) return;
+    chat.chips.replaceChildren();
+    (list || []).forEach(c => {
+      const [label, intent] = Array.isArray(c) ? c : [c, null];
+      chat.chips.append(btn(label, "chef-chip", () => { if (!chat.busy) userSays(label.replace(/^\p{Extended_Pictographic}️?\s*/u, ""), intent); }));
+    });
+  }
+  // La chef "habla": aparece su globo y mueve la boca un momento.
+  function chefSays(text, chipList, delay) {
+    return new Promise(done => setTimeout(() => {
+      if (!chat) return done();
+      const b = el("div", "chef-msg chef"); b.textContent = text; chat.log.append(b);
+      chat.history.push({ who: "chef", text });
+      chefFace("talk"); scrollLog();
+      clearTimeout(chat.faceT); chat.faceT = setTimeout(() => chefFace("idle"), Math.min(3500, 600 + text.length * 40));
+      setChips(chipList);
+      done();
+    }, delay || 0));
+  }
+  function typing(on) {
+    if (!chat) return;
+    if (on) { chat.dots = el("div", "chef-msg chef chef-dots"); chat.dots.innerHTML = "<i></i><i></i><i></i>"; chat.log.append(chat.dots); chefFace("think"); scrollLog(); }
+    else if (chat.dots) { chat.dots.remove(); chat.dots = null; }
+  }
+  const PLACE_NAME = { freezer: ["Freezer", "Freezer"], refri: ["refri", "fridge"], despensa: ["despensa", "pantry"] };
+  function invLine(i) {
+    const d = i.days;
+    const when = d == null ? "" : d < 0 ? (en() ? " (expired)" : " (vencido)") : d === 0 ? (en() ? " (today)" : " (hoy)") : d <= 7 ? (en() ? " (" + d + " d)" : " (" + d + " d)") : "";
+    return i.name + when;
+  }
+  async function userSays(text, intent) {
+    if (!chat) return;
+    const m = el("div", "chef-msg me"); m.textContent = text; chat.log.append(m);
+    chat.history.push({ who: "me", text }); setChips([]); scrollLog();
+    // Si pide revisar el Freezer / refri / despensa, la chef mira el inventario real primero.
+    const all = freezerItems();
+    const lower = text.toLowerCase();
+    const want = intent === "freezer" || /freezer|congelador/.test(lower) ? ["freezer"] : intent === "refri" ? ["refri", "despensa"] : /refri|fridge|nevera/.test(lower) ? ["refri"] : /despensa|pantry|alacena/.test(lower) ? ["despensa"] : null;
+    if (want) {
+      const found = all.filter(i => want.includes(i.place)).sort((a, b) => (a.days ?? 999) - (b.days ?? 999));
+      const placeTxt = want.map(p => PLACE_NAME[p][en() ? 1 : 0]).join(en() ? " and " : " y ");
+      if (!found.length) {
+        const other = all.length;
+        await chefSays(en() ? "I checked your " + placeTxt + " and it's empty right now." + (other ? " But you have other things at home. Want me to use those?" : " Add what you have in NoPencil and I'll use it. Meanwhile, what are you craving?")
+                            : "Revisé tu " + placeTxt + " y ahorita está vacío." + (other ? " Pero tienes otras cosas en casa. ¿Uso esas?" : " Agrega lo que tienes en NoPencil y lo uso. Mientras, ¿qué se te antoja?"),
+          other ? (en() ? [["👍 Yes, use them", "all"], ["✍️ Something else"]] : [["👍 Sí, úsalas", "all"], ["✍️ Otra cosa"]]) : null, 500);
+        return;
+      }
+      const names = found.slice(0, 6).map(invLine).join(", ") + (found.length > 6 ? (en() ? " and " + (found.length - 6) + " more" : " y " + (found.length - 6) + " más") : "");
+      await chefSays((en() ? "I checked your " + placeTxt + " 👀 You have: " : "Revisé tu " + placeTxt + " 👀 Tienes: ") + names + ".", null, 450);
+    }
+    await askChef(all);
+  }
+  async function askChef(items) {
+    if (!chat) return;
+    chat.busy = true; typing(true);
+    const u = window.MiCuenta && MiCuenta.user && MiCuenta.user();
+    let d;
+    try { d = await ai({ action: "chef", history: chat.history, items, name: u && u.name ? String(u.name).split(/\s+/)[0] : "" }); }
+    catch (err) {
+      typing(false); if (!chat) return; chat.busy = false;
+      const msg = err.message === "limit" ? T("Llegaste al límite de hoy de funciones con IA. Mañana puedes usarlas otra vez.") : !navigator.onLine ? T("Sin conexión. Esta función necesita internet.") : T("No se pudo completar. Intenta de nuevo en un momento.");
+      chefFace("idle"); const b = el("div", "chef-msg chef chef-err"); b.textContent = msg; chat.log.append(b); scrollLog();
+      chat.chips.replaceChildren(btn(en() ? "🔄 Try again" : "🔄 Intentar otra vez", "chef-chip", () => { if (chat.busy) return; setChips([]); b.remove(); askChef(items); }));
+      return;
+    }
+    typing(false); if (!chat) return; chat.busy = false;
+    await chefSays(d.reply, d.chips && d.chips.length ? d.chips : null, 0);
+    if (d.recipes && d.recipes.length) { showChatRecipes(d.recipes); chefFace("happy"); clearTimeout(chat.faceT); chat.faceT = setTimeout(() => chefFace("idle"), 2600); }
+  }
+  function showChatRecipes(recipes) {
     lastRecipes = recipes;
-    showRecipeList(recipes);
-  };
+    const row = el("div", "chef-recipes");
+    recipes.forEach(r => {
+      const card = el("button", "rc-card chef-rc"); card.type = "button";
+      const body = el("div", "rc-body"); body.append(el("b", "rc-title", r.title), metaRow(r));
+      const haveN = r.ingredients.filter(i => i.have).length, missN = r.ingredients.filter(i => !i.have && !i.basic).length;
+      const inv = el("div", "rc-inv"); inv.append(el("span", "rc-have", "✓ " + T("Usa") + " " + haveN + " " + T(haveN === 1 ? "cosa tuya" : "cosas tuyas"))); if (missN) inv.append(el("span", "rc-miss", T("Falta") + " " + missN));
+      body.append(inv);
+      card.append(dishArt(r, "dish-card"), body);
+      card.onclick = () => openRecipe(r);
+      row.append(card);
+    });
+    chat.log.append(row, el("p", "chef-hint", "Toca una receta para verla completa."));
+    scrollLog();
+  }
+  $("cookBtn").onclick = openChef;
   // Mostrar el botón de recetas al abrir el Freezer si hay productos.
   const fz = $("freezerBtn");
   if (fz) fz.addEventListener("click", () => setTimeout(() => setAI(aiOn), 50));
@@ -526,9 +747,38 @@
   function openCompras(then) { $("comprasBtn").click(); if (then) setTimeout(then, 120); }
   function explainHabits() {
     const list = suggestions();
-    if (list.length) { const c = $("smartCard"); c.scrollIntoView({ behavior: "smooth", block: "center" }); c.classList.add("flash"); setTimeout(() => c.classList.remove("flash"), 1200); return; }
-    openSheet(title("Te toca comprar"), el("p", "", "NoPencil aprende cada cuánto compras cada cosa. Cuando ya te toca comprar algo otra vez (el café, las tortillas, la leche…), aparece arriba de tu lista para agregarlo con un toque."),
-      el("p", "smart-note", "Para aprender, marca los productos como comprados (el círculo de la derecha) cuando los eches al carrito. Después de 2 compras de lo mismo empieza a avisarte."), actions(btn("Entendido", "primary", closeSheet)));
+    const cfg = shopCfg(), today = isShopDay();
+    const stage = el("div", "shop-stage" + (today ? " is-today" : ""));
+    stage.append(mascot(today ? "walking" : "waiting"));
+    const msg = el("p", "shop-msg");
+    const paintMsg = () => {
+      const c = shopCfg();
+      if (c.days.includes(new Date().getDay())) { msg.textContent = en() ? "It's shopping day! Let's go to the market!" : "¡Hoy es día de compras! ¡Vamos al Market!"; return; }
+      if (!c.days.length) { msg.textContent = en() ? "Which day do you usually go grocery shopping?" : "¿Qué día sueles ir de compras?"; return; }
+      const t = new Date().getDay(); let k = 1; while (k < 8 && !c.days.includes((t + k) % 7)) k++;
+      const dn = dayName((t + k) % 7);
+      msg.textContent = en() ? "Your next shopping day: " + dn + (k === 1 ? " (tomorrow)" : " (in " + k + " days)") : "Tu próximo día de compras: " + dn + (k === 1 ? " (mañana)" : " (en " + k + " días)");
+    };
+    const days = el("div", "shop-days"); days.setAttribute("role", "group"); days.setAttribute("aria-label", T("Tu día de compras"));
+    [1, 2, 3, 4, 5, 6, 0].forEach(d => {
+      const b = btn(dayName(d, "short").replace(".", ""), "shop-dayb", () => {
+        const c = shopCfg(); c.days = c.days.includes(d) ? c.days.filter(x => x !== d) : c.days.concat(d); c.hide = ""; shopSave(c);
+        b.setAttribute("aria-pressed", c.days.includes(d)); paintMsg(); renderCard();
+        const on = c.days.includes(new Date().getDay());
+        stage.classList.toggle("is-today", on); stage.replaceChildren(mascot(on ? "walking" + (d === new Date().getDay() ? " walk-in" : "") : "waiting"));
+      });
+      b.setAttribute("aria-pressed", cfg.days.includes(d)); b.setAttribute("aria-label", dayName(d));
+      days.append(b);
+    });
+    paintMsg();
+    const nodes = [title("Te toca comprar"), stage, msg, el("p", "shop-label", "Tu día de compras"), days];
+    if (list.length) nodes.push(btn("💡 " + (en() ? "See what's due (" + list.length + ")" : "Ver lo que te toca (" + list.length + ")"), "shop-see", () => {
+      closeSheet(); const c = $("smartCard"); c.scrollIntoView({ behavior: "smooth", block: "center" }); c.classList.add("flash"); setTimeout(() => c.classList.remove("flash"), 1200);
+    }));
+    else nodes.push(el("p", "", "NoPencil aprende cada cuánto compras cada cosa. Cuando ya te toca comprar algo otra vez (el café, las tortillas, la leche…), aparece arriba de tu lista para agregarlo con un toque."),
+      el("p", "smart-note", "Para aprender, marca los productos como comprados (el círculo de la derecha) cuando los eches al carrito. Después de 2 compras de lo mismo empieza a avisarte."));
+    nodes.push(actions(btn("Listo", "primary", closeSheet)));
+    openSheet(...nodes);
   }
   function startVoice() {
     $("typeIn").click();
@@ -543,7 +793,7 @@
         { e: "🥦", c: "#3FA35B", n: "Categorías", s: "Productos comunes", go: () => $("typeIn").click() },
         aiOn && { e: "📝", c: "#8B67CF", n: "Lista de papel", s: "Tómale foto", ai: true, go: () => $("paperIn").click() },
         { e: "💡", c: "#E3B93B", n: "Te toca comprar", s: "Te recuerda", go: explainHabits },
-        aiOn && { e: "👩‍🍳", c: "#DD6A9E", n: "¿Qué cocino?", s: "Recetas con lo tuyo", ai: true, go: () => { if (!freezerItems().length) { toast(T("Agrega productos al Freezer, Refri o Despensa primero")); return; } $("cookBtn").click(); } },
+        aiOn && { e: "👩‍🍳", c: "#DD6A9E", n: "¿Qué cocino?", s: "Recetas con lo tuyo", ai: true, go: openChef },
       ] },
       { t: "En tu cocina", items: [
         { e: "❄️", c: "#58B9E6", n: "Freezer", s: "Fechas y avisos", go: () => openFreezerAt("freezer") },
