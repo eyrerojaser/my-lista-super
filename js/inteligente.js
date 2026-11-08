@@ -262,6 +262,124 @@
       return { name: i.name, days, place: i.loc || "freezer" };
     }).filter(Boolean);
   }
+  /* --- ¿Qué cocino? Recetario: tarjetas y ficha completa --- */
+  const DIFF_TXT = { 1: "Fácil", 2: "Media", 3: "Difícil" };
+  const PALETTES = [["#FFB23F", "#FF7A2E"], ["#3FA35B", "#2B7A43"], ["#DD6A9E", "#B24A7E"], ["#58B9E6", "#2F7FB8"], ["#C98A3C", "#9A6A2A"], ["#8B67CF", "#6A46B8"]];
+  let lastRecipes = null;
+  const mins = n => n == null ? "" : n >= 60 ? Math.floor(n / 60) + " h" + (n % 60 ? " " + (n % 60) + " min" : "") : n + " min";
+  const ingText = i => [i.qty, i.unit, i.name].filter(Boolean).join(" ");
+  // Imagen del plato: foto real (Wikipedia) o, si no hay una confiable, un diseño con el ingrediente principal.
+  function dishArt(r, cls) {
+    const box = el("div", "dish " + cls);
+    const pal = PALETTES[Math.abs([...r.title].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7)) % PALETTES.length];
+    box.style.setProperty("--d1", pal[0]); box.style.setProperty("--d2", pal[1]);
+    const fallback = () => {
+      box.classList.add("no-photo");
+      const em = el("span", "dish-emoji", r.emoji || "🍽️"); em.setAttribute("aria-hidden", "true");
+      const deco = el("span", "dish-deco"); deco.setAttribute("aria-hidden", "true");
+      const ems = r.ingredients.map(i => window.Products ? Products.emojiFor([], i.name) : "").filter(e => e && e !== "🛒" && e !== r.emoji);
+      deco.textContent = [...new Set(ems)].slice(0, 4).join("  ");
+      box.replaceChildren(em, deco);
+    };
+    if (r.photo && r.photo.src) {
+      const img = el("img"); img.alt = r.title; img.loading = "lazy"; img.decoding = "async"; img.referrerPolicy = "no-referrer";
+      img.src = r.photo.src; img.onerror = fallback;
+      box.append(img);
+    } else fallback();
+    return box;
+  }
+  function metaRow(r) {
+    const row = el("div", "rc-meta");
+    const total = (r.prep || 0) + (r.cook || 0);
+    if (total) row.append(el("span", "", "⏱ " + mins(total)));
+    if (r.servings) row.append(el("span", "", "🍽 " + r.servings + " " + T(r.servings === 1 ? "porción" : "porciones")));
+    if (r.difficulty) row.append(el("span", "", "👩‍🍳 " + T(DIFF_TXT[r.difficulty])));
+    return row;
+  }
+  function showRecipeList(recipes) {
+    const list = el("div", "rc-list");
+    recipes.forEach(r => {
+      const card = el("button", "rc-card"); card.type = "button";
+      const haveN = r.ingredients.filter(i => i.have).length, missN = r.ingredients.filter(i => !i.have && !i.basic).length;
+      const body = el("div", "rc-body");
+      body.append(el("b", "rc-title", r.title));
+      if (r.description) body.append(el("p", "rc-desc", r.description));
+      body.append(metaRow(r));
+      const inv = el("div", "rc-inv");
+      inv.append(el("span", "rc-have", "✓ " + T("Usa") + " " + haveN + " " + T(haveN === 1 ? "cosa tuya" : "cosas tuyas")));
+      if (missN) inv.append(el("span", "rc-miss", T("Falta") + " " + missN));
+      body.append(inv);
+      card.append(dishArt(r, "dish-card"), body);
+      card.onclick = () => openRecipe(r);
+      list.append(card);
+    });
+    openSheet(title("Ideas para cocinar"), el("p", "", "Usan primero lo que está por vencer. Toca una receta para verla completa."), list, actions(btn("Cerrar", "primary", closeSheet)));
+  }
+  // Ficha completa de la receta (pantalla entera)
+  let rv = null;
+  function closeRecipe() { if (rv) { rv.remove(); rv = null; document.body.classList.remove("rv-open"); } }
+  function openRecipe(r) {
+    closeRecipe();
+    rv = el("section", "rv"); rv.setAttribute("role", "dialog"); rv.setAttribute("aria-modal", "true"); rv.setAttribute("aria-label", r.title);
+    const hero = el("div", "rv-hero");
+    hero.append(dishArt(r, "dish-hero"));
+    const back = el("button", "rv-back"); back.type = "button"; back.setAttribute("aria-label", T("Volver a las recetas"));
+    back.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>';
+    back.onclick = closeRecipe;
+    hero.append(back);
+    const main = el("div", "rv-main");
+    main.append(el("h2", "rv-title", r.title));
+    if (r.description) main.append(el("p", "rv-desc", r.description));
+    // Datos rápidos
+    const stats = el("div", "rv-stats");
+    const stat = (k, v) => { const d = el("div", "rv-stat"); d.append(el("small", "", T(k)), el("b", "", v || "—")); stats.append(d); };
+    stat("Preparación", mins(r.prep)); stat("Cocción", mins(r.cook)); stat("Porciones", r.servings ? String(r.servings) : ""); stat("Dificultad", r.difficulty ? T(DIFF_TXT[r.difficulty]) : "");
+    main.append(stats);
+    // Ingredientes: lo que tienes, básicos y lo que falta
+    main.append(el("h3", "rv-h", "Ingredientes"));
+    const group = (label, cls, arr) => {
+      if (!arr.length) return;
+      const g = el("div", "rv-ing " + cls);
+      g.append(el("div", "rv-ing-head", T(label) + " · " + arr.length));
+      const ul = el("ul");
+      arr.forEach(i => { const li = el("li"); li.append(el("span", "rv-dot"), el("span", "", ingText(i))); ul.append(li); });
+      g.append(ul); main.append(g);
+    };
+    const have = r.ingredients.filter(i => i.have), basic = r.ingredients.filter(i => !i.have && i.basic), miss = r.ingredients.filter(i => !i.have && !i.basic);
+    group("De tu inventario", "have", have);
+    group("Básicos de cocina", "basic", basic);
+    group("Te falta comprar", "miss", miss);
+    if (miss.length) {
+      const addMiss = btn("🛒 " + T("Agregar lo que falta a mi lista"), "rv-addmiss", () => {
+        miss.forEach(i => MiLista.add({ name: i.name.charAt(0).toUpperCase() + i.name.slice(1) }));
+        toast(miss.length === 1 ? T("Se agregó 1 producto") : T("Se agregaron") + " " + miss.length + " " + T("productos"));
+        addMiss.disabled = true; addMiss.textContent = "✓ " + T("Agregado a tu lista");
+      });
+      main.append(addMiss);
+    }
+    // Preparación
+    main.append(el("h3", "rv-h", "Preparación"));
+    const ol = el("ol", "rv-steps");
+    r.steps.forEach((st, k) => { const li = el("li"); li.append(el("span", "rv-num", String(k + 1)), el("p", "", st)); ol.append(li); });
+    main.append(ol);
+    // Consejos
+    if (r.tips && r.tips.length) {
+      main.append(el("h3", "rv-h", "Consejos"));
+      r.tips.forEach(tp => { const d = el("div", "rv-tip"); d.append(el("span", "rv-tip-ico", "💡"), el("p", "", tp)); main.append(d); });
+    }
+    // Crédito de la foto (Wikimedia pide dar crédito)
+    if (r.photo && r.photo.src) {
+      const c = el("p", "rv-credit");
+      c.append(document.createTextNode(T("Foto:") + " " + r.photo.credit + (r.photo.license ? " · " + r.photo.license : "") + " · "));
+      const a = el("a", "", "Wikimedia Commons"); a.href = r.photo.link || "https://commons.wikimedia.org"; a.target = "_blank"; a.rel = "noopener";
+      c.append(a); main.append(c);
+    }
+    main.append(el("p", "rv-ai", "Receta creada con IA a partir de lo que tienes. Revisa cantidades y tiempos según tu cocina."));
+    rv.append(hero, main);
+    document.body.append(rv); document.body.classList.add("rv-open");
+    rv.scrollTop = 0; back.focus();
+  }
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && rv) { e.stopImmediatePropagation(); closeRecipe(); } }, true);
   $("cookBtn").onclick = async () => {
     const items = freezerItems();
     if (!items.length) { toast(T("Agrega productos al Freezer, Refri o Despensa primero")); return; }
@@ -269,20 +387,8 @@
     let recipes;
     try { recipes = (await ai({ action: "recipes", items })).recipes || []; } catch (err) { aiError(err); return; }
     if (!recipes.length) { aiError(new Error("fail")); return; }
-    const list = el("div", "recipe-list");
-    recipes.forEach((r, i) => {
-      const card = el("details", "recipe");
-      if (i === 0) card.open = true;
-      const sum = el("summary");
-      const st = el("div", "recipe-st"); st.append(el("b", "", r.title), el("small", "", (r.time ? "⏱ " + r.time + " · " : "") + r.uses.join(", ")));
-      sum.append(st);
-      card.append(sum);
-      if (r.extra && r.extra.length) card.append(el("p", "recipe-extra", T("También necesitas:") + " " + r.extra.join(", ")));
-      const ol = el("ol", "recipe-steps"); r.steps.forEach(s => ol.append(el("li", "", s)));
-      card.append(ol);
-      list.append(card);
-    });
-    openSheet(title("Ideas para cocinar"), el("p", "", "Usan primero lo que está por vencer."), list, actions(btn("Cerrar", "primary", closeSheet)));
+    lastRecipes = recipes;
+    showRecipeList(recipes);
   };
   // Mostrar el botón de recetas al abrir el Freezer si hay productos.
   const fz = $("freezerBtn");
