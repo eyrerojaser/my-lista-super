@@ -255,12 +255,12 @@
     const acts = $("shActions");
     $("shStatus").classList.add("hidden"); $("shCodeBox").classList.add("hidden"); $("shJoinBox").classList.add("hidden");
     if (!configured()) {
-      $("shText").textContent = "La lista compartida todavía no está activada en esta app. (La lista compartida funciona cuando la app está publicada en Netlify.)";
+      $("shText").textContent = "La lista compartida no está disponible por ahora.";
       acts.replaceChildren(btn("Cerrar", "sh-ghost", closeSheet));
       return;
     }
     if (!info) {
-      $("shText").textContent = "Toca Compartir mi lista y la app te dará un código para invitar a tu familia. Cuando alguien agregue, quite o marque un producto, el cambio aparecerá en los demás teléfonos en unos segundos.";
+      $("shText").textContent = "La misma lista en los teléfonos de tu familia.";
       // Unirse con código es para quien RECIBE la invitación: queda escondido detrás de su propio botón.
       const joinBtn = btn("Me invitaron: tengo un código", "sh-ghost", () => {
         $("shJoinBox").classList.remove("hidden");
@@ -270,7 +270,8 @@
       acts.replaceChildren(
         btn(status === "connecting" ? "Creando…" : "Compartir mi lista", "sh-primary", () => { if (status !== "connecting") createList(); }),
         joinBtn,
-        btn("Cerrar", "sh-ghost", closeSheet));
+        btn("Cerrar", "sh-ghost", closeSheet),
+        window.Manual.link("shared"));
       return;
     }
     $("shText").textContent = "Esta lista está compartida. Invita a quien quieras con el enlace o el código.";
@@ -295,9 +296,9 @@
     });
   }
   const confirmJoin = n => confirmSheet("Te invitaron a una lista",
-    "Es una lista compartida con " + (n === 1 ? "1 producto" : n + " productos") + ". Al unirte, tus productos pendientes se agregan a ella y los cambios se verán en todos los teléfonos en unos segundos.", "Unirme a la lista");
+    "Es una lista compartida con " + (n === 1 ? "1 producto" : n + " productos") + ". Tus productos pendientes se agregarán a ella.", "Unirme a la lista");
   const confirmLeave = () => confirmSheet("¿Salir de la lista compartida?",
-    "Te quedas con una copia en este teléfono, pero tus cambios ya no se verán en los otros teléfonos.", "Salir", true);
+    "Te quedas con una copia, pero ya no se compartirá.", "Salir", true);
   function openSheet() { $("shTitle").textContent = "Lista compartida"; renderSheet(); $("shSheet").classList.remove("hidden"); }
   function closeSheet() { $("shSheet").classList.add("hidden"); }
   $("shareLiveBtn").onclick = openSheet;

@@ -1,0 +1,145 @@
+[
+ {
+  "id": "start",
+  "title": "Primeros pasos",
+  "page": 3
+ },
+ {
+  "id": "home",
+  "title": "La pantalla principal",
+  "page": 5
+ },
+ {
+  "id": "add",
+  "title": "Agrega a tu lista",
+  "page": 8
+ },
+ {
+  "id": "scan",
+  "title": "Escanear",
+  "page": 8,
+  "sub": true
+ },
+ {
+  "id": "voice",
+  "title": "Con tu voz",
+  "page": 8,
+  "sub": true
+ },
+ {
+  "id": "cats",
+  "title": "Categorías",
+  "page": 9,
+  "sub": true
+ },
+ {
+  "id": "paper",
+  "title": "Lista de papel (IA)",
+  "page": 9,
+  "sub": true
+ },
+ {
+  "id": "habits",
+  "title": "Te toca comprar",
+  "page": 10,
+  "sub": true
+ },
+ {
+  "id": "shopday",
+  "title": "Tu día de compras",
+  "page": 10,
+  "sub": true
+ },
+ {
+  "id": "chef",
+  "title": "¿Qué cocino? (IA)",
+  "page": 11,
+  "sub": true
+ },
+ {
+  "id": "recipe",
+  "title": "La ficha de la receta",
+  "page": 12,
+  "sub": true
+ },
+ {
+  "id": "kitchen",
+  "title": "En tu cocina: Freezer, Refri y Despensa",
+  "page": 13
+ },
+ {
+  "id": "fzadd",
+  "title": "Agregar un producto",
+  "page": 14,
+  "sub": true
+ },
+ {
+  "id": "alerts",
+  "title": "Activar los avisos",
+  "page": 15,
+  "sub": true
+ },
+ {
+  "id": "spend",
+  "title": "Tus gastos",
+  "page": 16
+ },
+ {
+  "id": "cart",
+  "title": "Mi carrito",
+  "page": 16,
+  "sub": true
+ },
+ {
+  "id": "purchases",
+  "title": "Mis Compras",
+  "page": 18,
+  "sub": true
+ },
+ {
+  "id": "budget",
+  "title": "Presupuesto",
+  "page": 19,
+  "sub": true
+ },
+ {
+  "id": "prices",
+  "title": "Comparar precios",
+  "page": 19,
+  "sub": true
+ },
+ {
+  "id": "family",
+  "title": "Familia y cuenta",
+  "page": 20
+ },
+ {
+  "id": "shared",
+  "title": "Lista compartida",
+  "page": 20,
+  "sub": true
+ },
+ {
+  "id": "send",
+  "title": "Enviar lista",
+  "page": 20,
+  "sub": true
+ },
+ {
+  "id": "account",
+  "title": "Mi cuenta",
+  "page": 21,
+  "sub": true
+ },
+ {
+  "id": "plans",
+  "title": "Planes",
+  "page": 21,
+  "sub": true
+ },
+ {
+  "id": "help",
+  "title": "Preguntas frecuentes",
+  "page": 22
+ }
+]

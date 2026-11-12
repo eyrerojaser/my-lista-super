@@ -9,6 +9,8 @@
   const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9ñ ]/g, " ").replace(/\s+/g, " ").trim();
   const T = s => (window.I18N && I18N.t ? I18N.t(s) : s);
   const en = () => window.I18N && I18N.lang() === "en";
+  // Enlace al Manual de uso (la explicación larga de cada función vive en el manual).
+  const manualLink = sec => window.Manual.link(sec);
   const toast = (m, u) => window.MiLista && MiLista.toast(m, u);
   const DAY = 864e5;
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -469,7 +471,7 @@
       const a = el("a", "", "Wikimedia Commons"); a.href = r.photo.link || "https://commons.wikimedia.org"; a.target = "_blank"; a.rel = "noopener";
       c.append(a); main.append(c);
     }
-    main.append(el("p", "rv-ai", "Receta creada con IA a partir de lo que tienes. Revisa cantidades y tiempos según tu cocina."));
+    main.append(el("p", "rv-ai", "Receta creada con IA: revisa cantidades y tiempos."));
     rv.append(hero, main);
     document.body.append(rv); document.body.classList.add("rv-open");
     rv.scrollTop = 0; back.focus();
@@ -573,7 +575,7 @@
   }
   function typing(on) {
     if (!chat) return;
-    if (on) { chat.dots = el("div", "chef-msg chef chef-dots"); chat.dots.innerHTML = "<i></i><i></i><i></i>"; chat.log.append(chat.dots); chefFace("think"); scrollLog(); }
+    if (on) { clearTimeout(chat.faceT); chat.dots = el("div", "chef-msg chef chef-dots"); chat.dots.innerHTML = "<i></i><i></i><i></i>"; chat.log.append(chat.dots); chefFace("think"); scrollLog(); }
     else if (chat.dots) { chat.dots.remove(); chat.dots = null; }
   }
   const PLACE_NAME = { freezer: ["Freezer", "Freezer"], refri: ["refri", "fridge"], despensa: ["despensa", "pantry"] };
@@ -605,22 +607,45 @@
     }
     await askChef(all);
   }
+  // Pide a la IA y, si falla por algo pasajero (conexión lenta, servidor ocupado), lo intenta otra vez sola.
+  async function aiTry(body) {
+    try { return await ai(body); }
+    catch (err) {
+      if (err.message === "limit" || !navigator.onLine) throw err;
+      await new Promise(ok => setTimeout(ok, 900));
+      return ai(body);
+    }
+  }
+  function chefError(err, retry) {
+    typing(false); if (!chat) return; chat.busy = false;
+    const msg = err.message === "limit" ? T("Llegaste al límite de hoy de funciones con IA. Mañana puedes usarlas otra vez.") : !navigator.onLine ? T("Sin conexión. Esta función necesita internet.") : T("No se pudo completar. Intenta de nuevo en un momento.");
+    chefFace("idle"); const b = el("div", "chef-msg chef chef-err"); b.textContent = msg; chat.log.append(b); scrollLog();
+    chat.chips.replaceChildren(btn(en() ? "🔄 Try again" : "🔄 Intentar otra vez", "chef-chip", () => { if (chat.busy) return; setChips([]); b.remove(); retry(); }));
+  }
   async function askChef(items) {
     if (!chat) return;
     chat.busy = true; typing(true);
     const u = window.MiCuenta && MiCuenta.user && MiCuenta.user();
     let d;
-    try { d = await ai({ action: "chef", history: chat.history, items, name: u && u.name ? String(u.name).split(/\s+/)[0] : "" }); }
-    catch (err) {
-      typing(false); if (!chat) return; chat.busy = false;
-      const msg = err.message === "limit" ? T("Llegaste al límite de hoy de funciones con IA. Mañana puedes usarlas otra vez.") : !navigator.onLine ? T("Sin conexión. Esta función necesita internet.") : T("No se pudo completar. Intenta de nuevo en un momento.");
-      chefFace("idle"); const b = el("div", "chef-msg chef chef-err"); b.textContent = msg; chat.log.append(b); scrollLog();
-      chat.chips.replaceChildren(btn(en() ? "🔄 Try again" : "🔄 Intentar otra vez", "chef-chip", () => { if (chat.busy) return; setChips([]); b.remove(); askChef(items); }));
-      return;
-    }
+    try { d = await aiTry({ action: "chef", history: chat.history, items, name: u && u.name ? String(u.name).split(/\s+/)[0] : "" }); }
+    catch (err) { chefError(err, () => askChef(items)); return; }
+    typing(false); if (!chat) return;
+    await chefSays(d.reply, d.ideas && d.ideas.length ? null : (d.chips && d.chips.length ? d.chips : null), 0);
+    if (d.ideas && d.ideas.length) { chat.busy = false; await chefRecipes(items, d.ideas, d.chips); }
+    else chat.busy = false;
+  }
+  // Segundo paso: la chef escribe las recetas completas de los platos que eligió.
+  async function chefRecipes(items, ideas, chips) {
+    if (!chat) return;
+    chat.busy = true; typing(true);
+    let d;
+    try { d = await aiTry({ action: "chef_recipes", ideas, items }); }
+    catch (err) { chefError(err, () => chefRecipes(items, ideas, chips)); return; }
     typing(false); if (!chat) return; chat.busy = false;
-    await chefSays(d.reply, d.chips && d.chips.length ? d.chips : null, 0);
-    if (d.recipes && d.recipes.length) { showChatRecipes(d.recipes); chefFace("happy"); clearTimeout(chat.faceT); chat.faceT = setTimeout(() => chefFace("idle"), 2600); }
+    if (d.recipes && d.recipes.length) {
+      showChatRecipes(d.recipes); setChips(chips && chips.length ? chips : null);
+      chefFace("happy"); clearTimeout(chat.faceT); chat.faceT = setTimeout(() => chefFace("idle"), 2600);
+    }
   }
   function showChatRecipes(recipes) {
     lastRecipes = recipes;
@@ -694,7 +719,7 @@
     f.onsubmit = e => { e.preventDefault(); save(); };
     const acts = [btn("Cancelar", "ghost", closeSheet), btn("Guardar", "primary", save)];
     if (b.cents) acts.splice(1, 0, btn("Quitar", "ghost", () => { inp.value = ""; save(); }));
-    openSheet(title("Presupuesto del mes"), el("p", "", "¿Cuánto quieres gastar en el súper este mes? Te aviso al llegar al 80% y si te pasas."), f, actions(...acts));
+    openSheet(title("Presupuesto del mes"), el("p", "", "¿Cuánto quieres gastar en el súper este mes?"), f, actions(...acts));
     setTimeout(() => inp.focus(), 80);
   }
   // Mis Compras vuelve a dibujar el total cada vez que cambia algo: ahí se actualiza el presupuesto.
@@ -774,8 +799,8 @@
     if (list.length) nodes.push(btn("💡 " + (en() ? "See what's due (" + list.length + ")" : "Ver lo que te toca (" + list.length + ")"), "shop-see", () => {
       closeSheet(); const c = $("smartCard"); c.scrollIntoView({ behavior: "smooth", block: "center" }); c.classList.add("flash"); setTimeout(() => c.classList.remove("flash"), 1200);
     }));
-    else nodes.push(el("p", "", "NoPencil aprende cada cuánto compras cada cosa. Cuando ya te toca comprar algo otra vez (el café, las tortillas, la leche…), aparece arriba de tu lista para agregarlo con un toque."),
-      el("p", "smart-note", "Para aprender, marca los productos como comprados (el círculo de la derecha) cuando los eches al carrito. Después de 2 compras de lo mismo empieza a avisarte."));
+    else nodes.push(el("p", "shop-note", "Cuando ya te toca comprar algo otra vez, aparece arriba de tu lista."));
+    nodes.push(manualLink("habits"));
     nodes.push(actions(btn("Listo", "primary", closeSheet)));
     openSheet(...nodes);
   }
@@ -830,6 +855,13 @@
       });
       sec.append(grid); parts.push(sec);
     });
+    // Manual de uso, debajo de "Familia y cuenta"
+    const man = el("button", "tools-manual"); man.type = "button";
+    const mi = el("span", "tool-ico", "📖"); mi.style.setProperty("--tc", "#6A46B8"); mi.setAttribute("aria-hidden", "true");
+    const mt = el("span", "tools-manual-txt"); mt.append(el("b", "", "Manual de uso"), el("small", "", "Cómo usar cada función, paso a paso"));
+    man.append(mi, mt, el("span", "tools-manual-go", "›"));
+    man.onclick = () => window.Manual.open();
+    parts.push(man);
     box.replaceChildren(...parts);
   }
   // El total de Mis Compras cambia: se actualiza en el menú.
@@ -935,8 +967,7 @@
     const lim = el("input"); lim.type = "text"; lim.inputMode = "decimal"; lim.placeholder = "$80"; lim.value = c.limit ? (c.limit / 100).toFixed(2) : "";
     const l2 = el("label", "", T("Impuesto (%) — opcional"));
     const tax = el("input"); tax.type = "text"; tax.inputMode = "decimal"; tax.placeholder = "0"; tax.value = c.tax || "";
-    const hint = el("small", "cart-hint", "En Texas casi toda la comida no paga impuesto. Déjalo en 0 si compras solo comida.");
-    f.append(l1, lim, l2, tax, hint);
+    f.append(l1, lim, l2, tax, manualLink("cart"));
     const save = btn("Guardar", "primary", () => {
       const d = cartData(); d.limit = toCents(lim.value); d.tax = Math.max(0, Math.min(20, parseFloat(String(tax.value).replace(",", ".")) || 0));
       d.warned = 0; cartAlert(d); d.warned = cartLevel(d, cartTotal(d)); cartSave(d); cartModalClose(); paintCart();

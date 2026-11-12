@@ -585,7 +585,7 @@
     }
     if (!("Notification" in window) || !("serviceWorker" in navigator)) {
       if (isIOS && !standalone) {
-        await ask({ title: "Instala la app primero", text: "En iPhone los avisos solo funcionan con la app instalada: en Safari toca Compartir → Agregar a inicio, y ábrela desde el ícono.", noInput: true, ok: "Entendido" });
+        await ask({ title: "Instala la app primero", text: "En iPhone, los avisos funcionan con la app instalada (Compartir → Agregar a inicio).", noInput: true, ok: "Entendido" });
       } else toast("Este navegador no permite avisos.");
       return;
     }

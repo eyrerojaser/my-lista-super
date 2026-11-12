@@ -345,7 +345,7 @@
     if (!d) { box.append(el("p", "plus-note", "No se pudo cargar tu familia. Revisa tu conexión.")); return; }
     if (d.members) {
       box.append(el("b", "fam-title", "👨‍👩‍👧 Tu familia (" + d.members.length + " de " + d.max + ")"));
-      if (!d.members.length) box.append(el("p", "plus-note", "Todavía nadie. Comparte tu lista (Lista compartida → Invitar a alguien): cada persona que se una entra gratis con tu plan."));
+      if (!d.members.length) box.append(el("p", "plus-note", "Todavía nadie. Invita a tu familia desde Lista compartida."));
       d.members.forEach(m => {
         const row = el("div", "fam-row");
         const av = el("span", "fam-ava"); setAvatar(av, m);

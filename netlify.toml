@@ -29,3 +29,14 @@
   [headers.values]
     Content-Type = "application/manifest+json"
     Cache-Control = "no-cache"
+
+# Manual de uso: el lector de PDF (pdf.js) son módulos .mjs y deben servirse como JavaScript.
+[[headers]]
+  for = "/vendor/pdfjs/*"
+  [headers.values]
+    Content-Type = "text/javascript; charset=utf-8"
+    Cache-Control = "public, max-age=604800"
+[[headers]]
+  for = "/manual/*.pdf"
+  [headers.values]
+    Content-Type = "application/pdf"

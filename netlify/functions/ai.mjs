@@ -33,8 +33,8 @@ async function claude(content, maxTokens) {
   if (!r.ok) { console.error("ai error", r.status, JSON.stringify(d).slice(0, 400)); throw new Error("ai " + r.status); }
   const text = (d.content || []).filter(c => c.type === "text").map(c => c.text).join("");
   const m = text.match(/\{[\s\S]*\}/);
-  if (!m) throw new Error("ai sin json");
-  return JSON.parse(m[0]);
+  if (!m) throw new Error("ai sin json (" + d.stop_reason + ")");
+  try { return JSON.parse(m[0]); } catch { throw new Error("ai json cortado (" + d.stop_reason + ")"); }
 }
 
 /* ---------- Fotos de platos (Wikipedia / Wikimedia Commons) ----------
@@ -196,43 +196,61 @@ export default async (req) => {
       });
     }
 
-    if (b.action === "chef") {
-      // Conversación con la chef de "¿Qué cocino?": responde, sugiere respuestas y, cuando ya sabe qué quieres, da recetas.
+    if (b.action === "chef" || b.action === "chef_recipes") {
+      // Conversación con la chef de "¿Qué cocino?".
+      // En dos pasos para que sea rápida y nunca se corte: "chef" responde y elige 2-3 platos;
+      // "chef_recipes" escribe esos platos completos, cada uno en paralelo.
       const items = (Array.isArray(b.items) ? b.items : []).slice(0, 60)
         .map(i => ({ name: clean(i.name, 80), days: Number.isFinite(+i.days) ? Math.round(+i.days) : null, place: clean(i.place, 12) }))
         .filter(i => i.name);
+      const PLACE = { freezer: "Freezer", refri: "Fridge", despensa: "Pantry" };
+      const inv = items.length ? items.map(i => "- " + i.name + " [" + (PLACE[i.place] || i.place || "Freezer") + "]" + (i.days !== null ? " (" + (i.days < 0 ? "expired" : i.days + " days left") + ")" : "")).join("\n") : "(empty: they have not added anything yet)";
+      const lang = en ? "English" : "Spanish (Latin American, warm, simple, using 'tú')";
+
+      if (b.action === "chef_recipes") {
+        const ideas = (Array.isArray(b.ideas) ? b.ideas : []).slice(0, 3)
+          .map(x => ({ title: clean(x && x.title, 90), brief: clean(x && x.brief, 240) })).filter(x => x.title);
+        if (!ideas.length) return json({ error: "empty" }, 400);
+        if (!(await useQuota(user.uid, "chef"))) return json({ error: "limit" }, 429);
+        const one = idea => claude([{ type: "text", text:
+          "You are a professional home-cooking recipe writer. Write the full recipe for this dish: " + idea.title + (idea.brief ? " — " + idea.brief : "") + "\n" +
+          "The family's real kitchen inventory (Freezer / Fridge / Pantry):\n" + inv + "\n\nRules:\n" + recipeRules(en) +
+          'Answer ONLY with JSON for ONE recipe: ' + RECIPE_JSON }], 2200)
+          .catch(() => claude([{ type: "text", text: "Write a short home recipe for: " + idea.title + ". Rules:\n" + recipeRules(en) + "Keep it brief: at most 6 steps and 1 tip.\nAnswer ONLY with JSON for ONE recipe: " + RECIPE_JSON }], 1600));
+        const got = await Promise.allSettled(ideas.map(one));
+        const recipes = normRecipes(got.filter(g => g.status === "fulfilled").map(g => g.value));
+        if (!recipes.length) throw new Error("sin recetas");
+        await attachPhotos(recipes, req);
+        return json({ recipes });
+      }
+
       const hist = (Array.isArray(b.history) ? b.history : []).slice(-14)
         .map(m => ({ who: m && m.who === "me" ? "me" : "chef", text: clean(m && m.text, 500) })).filter(m => m.text);
       if (!hist.some(m => m.who === "me")) return json({ error: "empty" }, 400);
       if (!(await useQuota(user.uid, "chef"))) return json({ error: "limit" }, 429);
-      const PLACE = { freezer: "Freezer", refri: "Fridge", despensa: "Pantry" };
-      const inv = items.length ? items.map(i => "- " + i.name + " [" + (PLACE[i.place] || i.place || "Freezer") + "]" + (i.days !== null ? " (" + (i.days < 0 ? "expired" : i.days + " days left") + ")" : "")).join("\n") : "(empty: they have not added anything yet)";
       const name = clean(b.name, 30);
-      const lang = en ? "English" : "Spanish (Latin American, warm, simple, using 'tú')";
       const out = await claude([{ type: "text", text:
         "You are the friendly virtual chef inside NoPencil, a grocery list app. You talk with " + (name || "the user") + " to decide what to cook today, like a warm, cheerful friend who cooks very well.\n" +
         "Their real kitchen inventory from the app:\n" + inv + "\n\n" +
         "Conversation so far:\n" + hist.map(m => (m.who === "me" ? "USER: " : "CHEF: ") + m.text).join("\n") + "\n\n" +
         "Write the CHEF's next message. Rules:\n" +
         "- Reply in " + lang + ". 1 to 3 short sentences, natural and warm, at most one emoji. Never mention being an AI or JSON.\n" +
-        "- Ask at most one question per message, and at most two questions in the whole conversation before suggesting recipes.\n" +
-        "- Suggest recipes right away when the user asks you to check their Freezer, fridge or pantry, wants something quick, is not in the mood to cook, names a dish or ingredient, or after you already asked a question.\n" +
-        "- If they ask about a place (Freezer, fridge, pantry), base the recipes mainly on the items in that place, plus anything else they have. Prefer items with fewer days left; never use expired items.\n" +
+        "- Ask at most one question per message, and at most two questions in the whole conversation before suggesting dishes.\n" +
+        "- Suggest dishes right away when the user asks you to check their Freezer, fridge or pantry, wants something quick, is not in the mood to cook, names a dish or ingredient, or after you already asked a question.\n" +
+        "- If they ask about a place (Freezer, fridge, pantry), choose dishes based mainly on the items in that place, plus anything else they have. Prefer items with fewer days left; never use expired items.\n" +
         "- Quick means 25 minutes or less in total. Not in the mood means very few steps and little cleanup.\n" +
-        "- If the inventory is empty or does not fit what they want, say so kindly and still suggest recipes, marking what they need to buy.\n" +
-        "- When you suggest, put 2 or 3 recipes in recipes and your message just introduces them briefly (do not list them in the text). Otherwise recipes is an empty list.\n" +
-        "- If they ask to change the ideas (faster, no meat, other ideas…), suggest new recipes.\n" +
+        "- If the inventory is empty or does not fit what they want, say so kindly and still suggest dishes.\n" +
+        "- When you suggest, put 2 or 3 different dishes in ideas (title in " + lang + " with common names, never brand names; brief = one short line in English on the main ingredients and style). Your message just introduces them briefly, without listing them. Otherwise ideas is an empty list.\n" +
+        "- If they ask to change the ideas (faster, no meat, other ideas…), suggest new dishes.\n" +
         "- chips: 2 to 4 short answers the user might tap next (max 5 words each), in the same language.\n" +
-        "Recipe rules (only when you include recipes):\n" + recipeRules(en) +
-        'Answer ONLY with JSON: {"reply":"","chips":[""],"recipes":[' + RECIPE_JSON + ']}' }], 4000);
-      const recipes = normRecipes(out.recipes).slice(0, 3);
-      await attachPhotos(recipes, req);
+        'Answer ONLY with JSON: {"reply":"","chips":[""],"ideas":[{"title":"","brief":""}]}' }], 700);
       return json({
         reply: clean(out.reply, 600) || (en ? "Here are some ideas for you!" : "¡Aquí tienes unas ideas!"),
         chips: (Array.isArray(out.chips) ? out.chips : []).slice(0, 4).map(x => clean(x, 40)).filter(Boolean),
-        recipes,
+        ideas: (Array.isArray(out.ideas) ? out.ideas : []).slice(0, 3).map(x => ({ title: clean(x && x.title, 90), brief: clean(x && x.brief, 240) })).filter(x => x.title),
       });
     }
+
 
     if (b.action === "recipes") {
       const items = (Array.isArray(b.items) ? b.items : []).slice(0, 60)

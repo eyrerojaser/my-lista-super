@@ -1,0 +1,145 @@
+[
+ {
+  "id": "start",
+  "title": "Getting started",
+  "page": 3
+ },
+ {
+  "id": "home",
+  "title": "The main screen",
+  "page": 5
+ },
+ {
+  "id": "add",
+  "title": "Add to your list",
+  "page": 8
+ },
+ {
+  "id": "scan",
+  "title": "Scan",
+  "page": 8,
+  "sub": true
+ },
+ {
+  "id": "voice",
+  "title": "By voice",
+  "page": 8,
+  "sub": true
+ },
+ {
+  "id": "cats",
+  "title": "Categories",
+  "page": 9,
+  "sub": true
+ },
+ {
+  "id": "paper",
+  "title": "Paper list (AI)",
+  "page": 9,
+  "sub": true
+ },
+ {
+  "id": "habits",
+  "title": "Time to buy",
+  "page": 10,
+  "sub": true
+ },
+ {
+  "id": "shopday",
+  "title": "Your shopping day",
+  "page": 10,
+  "sub": true
+ },
+ {
+  "id": "chef",
+  "title": "What to cook? (AI)",
+  "page": 11,
+  "sub": true
+ },
+ {
+  "id": "recipe",
+  "title": "The recipe card",
+  "page": 12,
+  "sub": true
+ },
+ {
+  "id": "kitchen",
+  "title": "In your kitchen: Freezer, Fridge and Pantry",
+  "page": 13
+ },
+ {
+  "id": "fzadd",
+  "title": "Add an item",
+  "page": 14,
+  "sub": true
+ },
+ {
+  "id": "alerts",
+  "title": "Turn on alerts",
+  "page": 15,
+  "sub": true
+ },
+ {
+  "id": "spend",
+  "title": "Your spending",
+  "page": 16
+ },
+ {
+  "id": "cart",
+  "title": "My cart",
+  "page": 16,
+  "sub": true
+ },
+ {
+  "id": "purchases",
+  "title": "My Purchases",
+  "page": 18,
+  "sub": true
+ },
+ {
+  "id": "budget",
+  "title": "Budget",
+  "page": 19,
+  "sub": true
+ },
+ {
+  "id": "prices",
+  "title": "Compare prices",
+  "page": 19,
+  "sub": true
+ },
+ {
+  "id": "family",
+  "title": "Family and account",
+  "page": 20
+ },
+ {
+  "id": "shared",
+  "title": "Shared list",
+  "page": 20,
+  "sub": true
+ },
+ {
+  "id": "send",
+  "title": "Send list",
+  "page": 20,
+  "sub": true
+ },
+ {
+  "id": "account",
+  "title": "My account",
+  "page": 21,
+  "sub": true
+ },
+ {
+  "id": "plans",
+  "title": "Plans",
+  "page": 21,
+  "sub": true
+ },
+ {
+  "id": "help",
+  "title": "Frequently asked questions",
+  "page": 22
+ }
+]
