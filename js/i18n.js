@@ -220,7 +220,7 @@
     [/^Regístrate ahora y, si estás entre las primeras (\d+), usas la app gratis para siempre\.$/, "Sign up now and, if you're among the first $1, you use the app free forever."],
     [/^Regístrate ahora y usa la app gratis para siempre\.$/, "Sign up now and use the app free forever."],
     [/^Quedan (\d+) de (\d+) lugares$/, "$1 of $2 spots left"], [/^Hola, (.+)$/, "Hi, $1"],
-    [/^Te enviamos un código a (.+)\. Revisa también la carpeta de spam\.$/, "We sent a code to $1. Also check your spam folder."],
+    [/^Te llegará un correo de NoPencil \((.+)\) a (.+) con tu código\. Si no lo ves, revisa spam\.$/, "You'll get an email from NoPencil ($1) at $2 with your code. If you don't see it, check spam."],
     [/^Pide tu código a soporte(.*) y escríbelo aquí\. Vence en 30 minutos\.$/, "Ask support for your code$1 and type it here. It expires in 30 minutes."],
     [/^(.+) es parte de Plus\.$/, "$1 is part of Plus."], [/^Desbloquea (.+)$/, "Unlock $1"],
     [/^eres la número (\d+)$/, "you're number $1"], [/^se renueva o vence el (.+)$/, "renews or ends on $1"],

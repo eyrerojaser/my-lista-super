@@ -123,7 +123,7 @@
         if (r.ok) {
           mode = "reset"; render();
           $("authSub").textContent = r.data.byEmail
-            ? "Te enviamos un código a " + resetEmail + ". Revisa también la carpeta de spam."
+            ? "Te llegará un correo de NoPencil (" + (r.data.from || "NoPencil") + ") a " + resetEmail + " con tu código. Si no lo ves, revisa spam."
             : "Pide tu código a soporte" + (CFG.supportEmail ? " (" + CFG.supportEmail + ")" : "") + " y escríbelo aquí. Vence en 30 minutos.";
           return;
         }

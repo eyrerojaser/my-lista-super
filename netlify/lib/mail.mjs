@@ -1,9 +1,10 @@
 /* Envío de correos de NoPencil (por ahora, el código para cambiar la contraseña).
    Funciona con Brevo (variable BREVO_API_KEY) o con Resend (RESEND_API_KEY). Además hace falta
-   MAIL_FROM con el remitente, por ejemplo:  NoPencil <hola@nopencil.app>
+   MAIL_FROM con el remitente, por ejemplo:  NoPencil <support@nopencil.app>
    Ese correo (o su dominio) tiene que estar verificado en Brevo o en Resend. */
 export const mailOn = () => !!((process.env.BREVO_API_KEY || process.env.RESEND_API_KEY) && process.env.MAIL_FROM);
 
+export const mailFrom = () => parseFrom(process.env.MAIL_FROM).email;
 function parseFrom(v) {
   const m = /^\s*(.*?)\s*<\s*([^>]+)\s*>\s*$/.exec(v || "");
   return m ? { name: m[1].replace(/^"|"$/g, "") || "NoPencil", email: m[2] } : { name: "NoPencil", email: String(v || "").trim() };

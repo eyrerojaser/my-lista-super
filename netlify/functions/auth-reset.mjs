@@ -1,5 +1,5 @@
 import { notifyAdmins } from "../lib/admin-notify.mjs";
-import { mailOn, sendMail } from "../lib/mail.mjs";
+import { mailOn, mailFrom, sendMail } from "../lib/mail.mjs";
 import { store, normEmail, emailKey, hashPassword, resetCode, json, readBody, sessionFor, publicProfile } from "../lib/auth-core.mjs";
 
 // Olvidé mi contraseña.
@@ -35,7 +35,7 @@ export default async (req) => {
       }
     }
     // Misma respuesta exista o no la cuenta (así nadie puede averiguar qué correos están registrados).
-    return json({ ok: true, byEmail: emailOn });
+    return json({ ok: true, byEmail: emailOn, from: emailOn ? mailFrom() : "" });
   }
   if (b.step === "confirm") {
     const pw = String(b.password || "");
