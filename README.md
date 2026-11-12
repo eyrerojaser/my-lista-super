@@ -145,7 +145,7 @@ Para usar la app hay que crear una cuenta con **nombre, correo y contraseña**. 
 |---|---|---|
 | `ADMIN_PASSWORD` | Contraseña de tu panel de cuentas (mínimo 10 caracteres, que no uses en otro lado) | Sí |
 | `FOUNDERS_LIMIT` | Cuántas de las primeras cuentas tienen la app gratis. Si no la pones, son 5 | No |
-| `RESEND_API_KEY` y `MAIL_FROM` | Para enviar por correo el código de "Olvidé mi contraseña" (con una cuenta gratis de resend.com). Sin esto, el código lo ves tú en el panel y se lo das | No |
+| `BREVO_API_KEY` (o `RESEND_API_KEY`) y `MAIL_FROM` | Para enviar por correo el código de "Olvidé mi contraseña", con Brevo o con Resend. `MAIL_FROM` es el remitente, por ejemplo `NoPencil <hola@nopencil.app>`, y debe estar verificado en Brevo/Resend. Sin esto, el código lo ves tú en el panel y se lo das | No |
 
 Después de agregarlas: **Deploys → Trigger deploy**.
 
@@ -198,7 +198,7 @@ Hazlo primero en **modo de prueba** de Stripe (Test mode) y, cuando todo funcion
 
 ## ¿Cómo sé que tengo la versión nueva?
 
-Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 2.12.0*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
+Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 2.12.1*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
 
 ## Cambiar algo después
 

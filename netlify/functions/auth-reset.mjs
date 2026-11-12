@@ -1,9 +1,10 @@
 import { notifyAdmins } from "../lib/admin-notify.mjs";
+import { mailOn, sendMail } from "../lib/mail.mjs";
 import { store, normEmail, emailKey, hashPassword, resetCode, json, readBody, sessionFor, publicProfile } from "../lib/auth-core.mjs";
 
 // Olvidé mi contraseña.
-//  step "request": genera un código de 6 números válido 30 minutos. Si configuraste RESEND_API_KEY y MAIL_FROM
-//                  en Netlify, se envía por correo; si no, lo ves tú en el panel de administración para dárselo.
+//  step "request": genera un código de 6 números válido 30 minutos. Si configuraste BREVO_API_KEY (o RESEND_API_KEY)
+//                  y MAIL_FROM en Netlify, se envía por correo; si no, lo ves tú en el panel de administración para dárselo.
 //  step "confirm": con el código se pone una contraseña nueva.
 export default async (req) => {
   if (req.method !== "POST") return json({ error: "Método no permitido" }, 405);
@@ -11,7 +12,7 @@ export default async (req) => {
   const email = normEmail(b.email), key = emailKey(email), s = store();
   const user = await s.get(key, { type: "json" });
   if (b.step === "request") {
-    const emailOn = !!(process.env.RESEND_API_KEY && process.env.MAIL_FROM);
+    const emailOn = mailOn();
     if (user) {
       const code = resetCode();
       user.reset = { code, exp: Date.now() + 30 * 60 * 1000, tries: 0, at: Date.now() };
@@ -19,12 +20,18 @@ export default async (req) => {
       // Aviso para la dueña con el código, para que se lo pueda dar enseguida.
       await notifyAdmins("🔑 Código de contraseña", user.name + " (" + email + "): " + code + " · vence en 30 min", "admin-reset-" + user.uid);
       if (emailOn) {
-        await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: { Authorization: "Bearer " + process.env.RESEND_API_KEY, "Content-Type": "application/json" },
-          body: JSON.stringify({ from: process.env.MAIL_FROM, to: email, subject: "Tu código para cambiar la contraseña",
-            text: "Hola " + user.name + ",\n\nTu código para cambiar la contraseña de NoPencil es: " + code + "\n\nVence en 30 minutos. Si no lo pediste, ignora este correo." }),
-        }).catch(() => {});
+        const first = String(user.name || "").split(/\s+/)[0].replace(/[<>&"]/g, "");
+        const box = 'style="font-size:32px;font-weight:800;letter-spacing:6px;background:#FFF0DD;color:#2A1636;padding:14px 20px;border-radius:12px;display:inline-block"';
+        await sendMail({
+          to: email,
+          subject: "NoPencil: " + code + " es tu código · your code",
+          text: "Hola " + first + ",\n\nTu código para cambiar la contraseña de NoPencil es: " + code + "\nVence en 30 minutos. Si no lo pediste, ignora este correo.\n\n—\n\nHi " + first + ",\n\nYour NoPencil password code is: " + code + "\nIt expires in 30 minutes. If you didn't ask for it, ignore this email.",
+          html: '<div style="font-family:Arial,Helvetica,sans-serif;color:#2A1636;max-width:480px;margin:auto;padding:20px">' +
+            '<p style="font-size:22px;font-weight:800;margin:0 0 16px">No<span style="color:#FF8A1F">Pencil</span></p>' +
+            "<p>Hola " + first + ",</p><p>Tu código para cambiar la contraseña es:</p><p " + box + ">" + code + "</p>" +
+            '<p style="color:#6B5A73">Vence en 30 minutos. Si no lo pediste, ignora este correo.</p><hr style="border:0;border-top:1px solid #eee;margin:20px 0">' +
+            "<p>Hi " + first + ", your password code is <b>" + code + '</b>.</p><p style="color:#6B5A73">It expires in 30 minutes. If you didn\'t ask for it, ignore this email.</p></div>',
+        });
       }
     }
     // Misma respuesta exista o no la cuenta (así nadie puede averiguar qué correos están registrados).
