@@ -73,6 +73,7 @@ Queda un ícono propio en tu pantalla de inicio y se abre a pantalla completa, c
   2. Crea una API key (API Keys → Create key) y pégala en Netlify como variable **`ANTHROPIC_API_KEY`**. Nunca la pegues en un chat ni en GitHub.
   3. Opcional: **`AI_DAILY_LIMIT`** (usos por cuenta al día, 15 por defecto) y **`AI_MODEL`** (por defecto `claude-haiku-5-5`, el más económico).
   4. Deploys → Trigger deploy. Sin la variable, los botones de IA no aparecen y todo lo demás sigue igual.
+- *Lista compartida por correo*: en Lista compartida → *Invitar por su correo de NoPencil* escribes el correo de la cuenta de tu familiar. Cuando esa persona abre NoPencil (en cualquier teléfono) le aparece "X te invitó a su lista" y se une con un toque, sin códigos ni enlaces (almacén `invitaciones`, función `/api/list-invite`). El enlace y el código siguen funcionando para quien aún no tiene la app; si abre el enlace sin haber entrado a su cuenta, se une sola al entrar. La lista compartida a la que perteneces se guarda en tu cuenta, así que aparece en todos tus teléfonos.
 - *Manual de uso* (menú → al final, debajo de Familia y cuenta): manual completo en PDF con capturas reales, en español o inglés según el idioma de la app. Se abre dentro de NoPencil (lector pdf.js en `vendor/pdfjs`), con índice, número de página y botón para descargar el PDF. Algunas pantallas tienen el enlace "📖 Más en el Manual de uso" que lo abre en esa sección. Archivos: `manual/nopencil-manual-es.pdf`, `manual/nopencil-manual-en.pdf` y su índice `manual/toc-*.json`.
 - *Te toca comprar* con el muñequito de NoPencil: en esa sección eliges tu día (o días) de compras. Ese día, arriba de tu lista aparece el muñequito empujando su carrito: entran caminando, las ruedas giran, caen alimentos dentro del carrito y salen, una y otra vez (parpadea, sonríe, mueve la cabeza) y dice "¡Hoy es día de compras! ¡Vamos al Market!" (en inglés si la app está en inglés). Se puede cerrar por ese día con la ✕. Las sugerencias de "Te toca comprar" siguen igual. El día elegido se guarda en la cuenta.
 - *¿Qué cocino?* con la chef: una chef animada (parpadea, habla, piensa y se alegra) saluda según la hora y tu nombre, y conversa contigo con botones de respuesta rápida o escribiendo. Si le pides revisar el Freezer, el refri o la despensa, primero te dice lo que realmente tienes en NoPencil y luego te propone recetas con eso. Al tocar una receta se abre su ficha completa. La chef responde rápido y luego escribe las recetas completas en paralelo (así nunca pasa el límite de tiempo de Netlify); si algo falla por un momento, lo vuelve a intentar sola. Cada mensaje con la chef usa la IA (límite aparte: `AI_CHEF_DAILY`, 40 al día por cuenta).
@@ -198,7 +199,7 @@ Hazlo primero en **modo de prueba** de Stripe (Test mode) y, cuando todo funcion
 
 ## ¿Cómo sé que tengo la versión nueva?
 
-Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 2.12.2*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
+Al final de la página *Mis Compras* aparece el número de versión (por ejemplo, *Versión 2.13.0*). Si ves un número anterior o no aparece, cierra la app por completo y ábrela otra vez (dos veces si hace falta).
 
 ## Cambiar algo después
 

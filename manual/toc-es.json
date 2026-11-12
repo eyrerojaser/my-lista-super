@@ -122,7 +122,7 @@
  {
   "id": "send",
   "title": "Enviar lista",
-  "page": 20,
+  "page": 21,
   "sub": true
  },
  {
@@ -134,12 +134,12 @@
  {
   "id": "plans",
   "title": "Planes",
-  "page": 21,
+  "page": 22,
   "sub": true
  },
  {
   "id": "help",
   "title": "Preguntas frecuentes",
-  "page": 22
+  "page": 23
  }
 ]

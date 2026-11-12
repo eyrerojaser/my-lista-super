@@ -3,7 +3,7 @@
 (function () {
   const T = s => (window.I18N ? I18N.t(s) : s);
   const lang = () => (window.I18N && I18N.lang() === "en" ? "en" : "es");
-  const VER = "1"; // cambia cuando se actualiza el manual
+  const VER = "2"; // cambia cuando se actualiza el manual
   let view = null, pdfjs = null;
 
   function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }

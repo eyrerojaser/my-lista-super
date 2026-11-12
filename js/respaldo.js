@@ -4,7 +4,7 @@
    Funciona solo: cada cambio se sube a los pocos segundos, y al abrir la app se trae lo más nuevo.
    Se carga antes que las demás partes de la app para enterarse de cada cambio. */
 (function () {
-  const KEYS = ["grocery-list-v1", "purchases-v1", "freezer-items-v1", "custom-products-v1", "cat-overrides-v1", "buy-history-v1", "budget-v1", "shop-day-v1"];
+  const KEYS = ["grocery-list-v1", "purchases-v1", "freezer-items-v1", "custom-products-v1", "cat-overrides-v1", "buy-history-v1", "budget-v1", "shop-day-v1", "share-v1"];
   const META = "cloud-meta-v1";
   const ACC = () => window.MiCuenta;
   const ls = window.localStorage;

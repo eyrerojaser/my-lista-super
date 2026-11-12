@@ -1184,3 +1184,4 @@ body.man-open{overflow:hidden}
 .man-toc button span{color:#8A7A92;font-weight:600}
 .man-toc button:active{background:#F3EEF7}
 .shop-note{margin:14px 0 0;color:var(--muted);font-size:.9rem}
+.sh-email{width:100%;box-sizing:border-box;font:inherit;font-size:1.05rem;padding:13px 14px;border-radius:14px;border:2px solid var(--line);background:var(--bg);color:var(--ink);margin-bottom:4px}

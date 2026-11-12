@@ -172,13 +172,12 @@
       lastRemote = {}; Object.keys(map).forEach(k => { lastRemote[k] = json(map[k]); });
       listen();
       renderSheet();
-      invite();
     } catch (e) {
       setStatus("error"); renderSheet();
       window.MiLista.toast("No se pudo crear la lista compartida. Revisa tu conexión.");
     }
   }
-  async function join(codeRaw) {
+  async function join(codeRaw, preConfirmed) {
     const code = cleanCode(codeRaw);
     if (code.length !== 12) { window.MiLista.toast("El código tiene 12 letras y números."); return; }
     if (info && info.code === code) { openSheet(); return; }
@@ -188,7 +187,7 @@
       const data = await backend.get(code);
       if (!data) { setStatus(info ? status : "off"); renderSheet(); window.MiLista.toast("No encontré esa lista. Revisa el código."); return; }
       const remote = Object.values(data.items || {});
-      const ok = await confirmJoin(remote.length);
+      const ok = preConfirmed ? true : await confirmJoin(remote.length);
       if (!ok) { setStatus(info ? "live" : "off"); renderSheet(); return; }
       if (unsub) { try { unsub(); } catch {} unsub = null; }
       info = { code }; saveInfo();
@@ -228,6 +227,54 @@
       try { await navigator.share({ text }); return; } catch (e) { if (e && e.name === "AbortError") return; }
     }
     location.href = "https://wa.me/?text=" + encodeURIComponent(text);
+  }
+  // Invitar con el correo de la cuenta NoPencil de la otra persona: le aparece al abrir su app, sin códigos.
+  const tok = () => window.MiCuenta && MiCuenta.token();
+  async function inviteApi(body) {
+    const r = await fetch("/api/list-invite", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.assign({ token: tok() }, body)) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) { const e = new Error(d.error || "error"); e.status = r.status; throw e; }
+    return d;
+  }
+  function inviteByEmail() {
+    $("shTitle").textContent = "Invitar a tu familia";
+    $("shText").textContent = "Escribe el correo con el que esa persona entra a NoPencil.";
+    $("shStatus").classList.add("hidden"); $("shCodeBox").classList.add("hidden"); $("shJoinBox").classList.add("hidden");
+    const inp = document.createElement("input");
+    inp.type = "email"; inp.autocomplete = "off"; inp.autocapitalize = "none"; inp.inputMode = "email"; inp.placeholder = "correo@ejemplo.com"; inp.className = "sh-email";
+    const send = btn("Enviar invitación", "sh-primary", async () => {
+      const email = inp.value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { inp.focus(); window.MiLista.toast("Escribe un correo válido."); return; }
+      send.disabled = true;
+      try {
+        await inviteApi({ op: "send", code: info.code, email });
+        $("shTitle").textContent = "Lista compartida"; renderSheet();
+        window.MiLista.toast("Listo. Cuando abra NoPencil con ese correo, le aparecerá tu invitación.");
+      } catch (e) {
+        send.disabled = false;
+        window.MiLista.toast(e.message === "self" ? "Ese es tu propio correo." : e.status === 401 ? "Inicia sesión para invitar." : "No se pudo enviar la invitación. Revisa tu conexión.");
+      }
+    });
+    inp.addEventListener("keydown", e => { if (e.key === "Enter") send.click(); });
+    $("shActions").replaceChildren(inp, send, btn("Cancelar", "sh-ghost", () => { $("shTitle").textContent = "Lista compartida"; renderSheet(); }));
+    setTimeout(() => inp.focus(), 50);
+  }
+  // Al abrir la app: ¿alguien me invitó a su lista?
+  let checking = false, lastCheck = 0;
+  async function checkInvites() {
+    if (checking || !tok() || !configured() || !navigator.onLine || Date.now() - lastCheck < 60000) return;
+    checking = true; lastCheck = Date.now();
+    try {
+      const d = await inviteApi({ op: "check" });
+      const inv = (d.invites || []).find(x => !info || info.code !== x.code);
+      (d.invites || []).filter(x => info && info.code === x.code).forEach(x => inviteApi({ op: "clear", code: x.code }).catch(() => {}));
+      if (!inv) return;
+      const who = inv.from || "Alguien";
+      const ok = await confirmSheet(who + " te invitó a su lista",
+        "Únete y verán la misma lista del súper en los dos teléfonos." + (info ? " Saldrás de la lista compartida que tienes ahora." : ""), "Unirme a la lista");
+      await inviteApi({ op: "clear", code: inv.code }).catch(() => {});
+      if (ok) { if (info) leave(); await join(inv.code, true); } else closeSheet();
+    } catch {} finally { checking = false; }
   }
   async function copyCode() {
     try { await navigator.clipboard.writeText(pretty(info.code)); window.MiLista.toast("Código copiado"); }
@@ -274,11 +321,12 @@
         window.Manual.link("shared"));
       return;
     }
-    $("shText").textContent = "Esta lista está compartida. Invita a quien quieras con el enlace o el código.";
+    $("shText").textContent = "Esta lista está compartida. Si tu familia ya tiene NoPencil, invítala con el correo de su cuenta: le aparecerá al abrir la app.";
     $("shStatus").classList.remove("hidden"); $("shStatusDot").dataset.s = status; $("shStatusTxt").textContent = STATUS_TXT[status] || "";
     $("shCodeBox").classList.remove("hidden"); $("shCode").textContent = pretty(info.code);
     acts.replaceChildren(
-      btn("Invitar a alguien", "sh-primary", invite),
+      btn("Invitar por su correo de NoPencil", "sh-primary", inviteByEmail),
+      btn("Enviar enlace", "sh-ghost", invite),
       btn("Copiar código", "sh-ghost", copyCode),
       btn("Salir de la lista compartida", "sh-danger", async () => {
         const ok = await confirmLeave(); if (ok) leave();
@@ -322,5 +370,14 @@
     try { sessionStorage.setItem("invite-code", inviteCode); } catch {} // para el plan familiar (después de registrarse)
   }
   setStatus(info ? "connecting" : "off");
-  resume().then(() => { if (inviteCode && configured()) join(inviteCode); });
+  resume().then(() => {
+    const loggedIn = () => !!tok();
+    // Enlace de invitación: si todavía no entró a su cuenta, se une en cuanto entre (sin volver a escribir el código).
+    if (inviteCode && configured()) {
+      if (loggedIn()) join(inviteCode);
+      else if (window.MiCuenta) { let done = false; MiCuenta.onChange(a => { if (!done && a && a.token) { done = true; setTimeout(() => join(inviteCode), 600); } }); }
+    } else setTimeout(checkInvites, 1500);
+    if (window.MiCuenta) MiCuenta.onChange(a => { if (a && a.token) { lastCheck = 0; setTimeout(checkInvites, 1500); } });
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) checkInvites(); });
+  });
 })();
